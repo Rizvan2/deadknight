@@ -1,0 +1,93 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.javamodularity.moduleplugin' version '1.8.12'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'org.beryx.jlink' version '2.25.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group 'org.example'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+
+}
+
+ext {
+    junitVersion = '5.10.2'
+}
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'org.example.deadknight'
+    mainClass = 'org.example.deadknight.DeadKnightApp' // класс FXGL
+}
+
+javafx {
+    version = '17.0.6'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.media']
+}
+
+dependencies {
+    implementation('com.github.almasb:fxgl:17.3') {
+        exclude(group: 'org.openjfx')
+        // исключение kotlin убираем!
+    }
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// ShadowJar
+shadowJar {
+    archiveBaseName.set('deadknight')
+    archiveVersion.set(project.version)
+    archiveClassifier.set('')
+    mergeServiceFiles()
+
+    from('src/main/resources') {
+        into('/') // копируем ресурсы в корень fat JAR
+    }
+}
+
+// JLink + JPackage
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+
+    launcher {
+        name = 'DeadKnight'
+    }
+
+    jpackage {
+        installerType = 'exe'
+        mainClass = 'org.example.deadknight.DeadKnightApp'
+        installerOptions = [
+                '--win-menu', '--win-shortcut',
+                '--icon', 'C:/Users/W-11/IdeaProjects/deadknight/icon/deadknight.ico'
+        ]
+        resourceDir = file('src/main/resources/assets/textures') // FXML и текстуры
+    }
+}
+
+// явные зависимости
+tasks.named('jlink') { dependsOn shadowJar }
+tasks.named('jpackage') { dependsOn shadowJar }
+tasks.named('prepareMergedJarsDir') { dependsOn shadowJar }
+
+
+
+
