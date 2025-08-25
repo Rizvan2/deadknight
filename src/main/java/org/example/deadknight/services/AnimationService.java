@@ -2,8 +2,14 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.Texture;
+import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Универсальный сервис анимации для персонажей.
@@ -15,6 +21,7 @@ import javafx.util.Duration;
 public class AnimationService {
 
     private static final double FRAME_SIZE = 64;
+    private static final String ORIGINAL_NODE_KEY = "originalNode";
 
     private final Entity entity;
     private final ImageView[] rightFrames;
@@ -22,6 +29,8 @@ public class AnimationService {
     private final ImageView idleRight;
     private final ImageView idleLeft;
     private int frameIndex = 0;
+    private static final Map<Entity, Texture> originalTextures = new HashMap<>();
+
 
     /**
      * Конструктор сервиса анимации.
@@ -58,20 +67,37 @@ public class AnimationService {
     private void update() {
         if (!entity.isActive()) return;
 
-        boolean moving = entity.getProperties().getBoolean("moving");
-        String spriteDir = entity.getProperties().getString("spriteDir");
-        entity.getViewComponent().clearChildren();
+        // Проверка, идёт ли атака — тогда анимация движения не обновляется
+        boolean attacking = entity.getProperties().getBoolean("isAttacking");
+        if (attacking) return;
 
+        boolean moving = entity.getProperties().getBoolean("moving");
+        String spriteDir = entity.getProperties().getString("spriteDir"); // LEFT или RIGHT
+        var view = entity.getViewComponent();
+
+        // Если уже есть overlay атаки — не трогаем базовый спрайт
+        boolean hasAttackOverlay = view.getChildren().stream()
+                .anyMatch(n -> n.getUserData() != null && n.getUserData().equals("attack"));
+        if (hasAttackOverlay) return;
+
+        // Очищаем текущие кадры
+        view.clearChildren();
+
+        // Выбираем спрайт в зависимости от направления движения
         if (!moving) {
-            entity.getViewComponent().addChild("RIGHT".equals(spriteDir) ? idleRight : idleLeft);
+            // Статический спрайт (idle)
+            view.addChild("RIGHT".equals(spriteDir) ? idleRight : idleLeft);
         } else if ("RIGHT".equals(spriteDir)) {
-            entity.getViewComponent().addChild(rightFrames[frameIndex]);
+            view.addChild(rightFrames[frameIndex]);
             frameIndex = (frameIndex + 1) % rightFrames.length;
         } else if ("LEFT".equals(spriteDir)) {
-            entity.getViewComponent().addChild(leftFrames[frameIndex]);
+            view.addChild(leftFrames[frameIndex]);
             frameIndex = (frameIndex + 1) % leftFrames.length;
         }
     }
+
+
+
 
     /**
      * Создает ImageView для одного кадра спрайта с заданным размером.
@@ -121,5 +147,51 @@ public class AnimationService {
         idleRight.setScaleX(-1);
 
         new AnimationService(entity, rightFrames, leftFrames, idleRight, idleLeft).start();
+    }
+
+    public static void playAttack(Entity knight, String attackImage, double durationSeconds) {
+        Boolean isAttacking = knight.getProperties().getBoolean("isAttacking");
+        if (isAttacking != null && isAttacking) return;
+
+        knight.getProperties().setValue("isAttacking", true);
+
+        // Используем spriteDir для горизонтального зеркалирования
+        String spriteDir = knight.getProperties().getString("spriteDir"); // LEFT или RIGHT
+
+        // Размер старой текстуры
+        double width = 64, height = 64;
+        if (!knight.getViewComponent().getChildren().isEmpty() &&
+                knight.getViewComponent().getChildren().get(0) instanceof ImageView oldIv) {
+            width = oldIv.getFitWidth();
+            height = oldIv.getFitHeight();
+        }
+
+        // Чистим и добавляем кадр атаки
+        knight.getViewComponent().clearChildren();
+        ImageView attackIv = new ImageView(FXGL.image(attackImage));
+        attackIv.setFitWidth(width);
+        attackIv.setFitHeight(height);
+        if ("RIGHT".equals(spriteDir)) attackIv.setScaleX(-1); // зеркалим только при движении вправо
+        knight.getViewComponent().addChild(attackIv);
+
+        // Волна
+        WaveService.shoot(knight);
+
+        // Возвращаем анимацию ходьбы
+        FXGL.runOnce(() -> {
+            knight.getProperties().setValue("isAttacking", false);
+            knight.getViewComponent().clearChildren();
+            startWalkAnimation(knight, 64, 64, spriteDir); // тоже используем spriteDir
+        }, Duration.seconds(durationSeconds));
+    }
+
+    public static void startWalkAnimation(Entity knight, double width, double height, String spriteDir) {
+        knight.getProperties().setValue("walkFrameIndex", 0);
+
+        ImageView iv = new ImageView(FXGL.image("knight_left-1.png"));
+        iv.setFitWidth(width);
+        iv.setFitHeight(height);
+        if ("RIGHT".equals(spriteDir)) iv.setScaleX(-1);
+        knight.getViewComponent().addChild(iv);
     }
 }

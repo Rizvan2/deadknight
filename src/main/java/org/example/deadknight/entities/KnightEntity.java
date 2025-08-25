@@ -1,9 +1,12 @@
 package org.example.deadknight.entities;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.components.SpeedComponent;
-import org.example.deadknight.skills.Skill;
 
+@Getter
+@Setter
 public class KnightEntity {
 
     private final HealthComponent health;
@@ -14,21 +17,5 @@ public class KnightEntity {
         this.health = new HealthComponent(hp);
         this.speed = new SpeedComponent(speedValue);
         this.direction = initialDirection;
-    }
-
-    public HealthComponent getHealth() {
-        return health;
-    }
-
-    public SpeedComponent getSpeed() {
-        return speed;
-    }
-
-    public String getDirection() {
-        return direction;
-    }
-
-    public void setDirection(String direction) {
-        this.direction = direction;
     }
 }

@@ -2,33 +2,51 @@ package org.example.deadknight.components;
 
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.physics.BoundingShape;
-import com.almasb.fxgl.physics.HitBox;
 import javafx.geometry.Point2D;
-import org.example.deadknight.components.HealthComponent;
-import org.example.deadknight.exceptions.ComponentNotFoundException;
-import org.example.deadknight.types.EntityType;
-
 import java.util.List;
-
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+/**
+ * Компонент для магической волны, выпускаемой рыцарем.
+ * Волна движется в заданном направлении, наносит урон
+ * сущностям с флагом "canTakeDamage" и исчезает после первого удара.
+ */
 public class WaveComponent extends Component {
 
+    /** Направление движения волны */
     private final Point2D direction;
-    private final double speed = 200; // скорость движения
-    private final int damage = 20;    // урон волны
 
+    /** Скорость движения волны в пикселях/сек */
+    private final double speed = 500;
+
+    /** Урон, наносимый волной при попадании */
+    private final int damage = 20;
+
+    /**
+     * Создает компонент волны.
+     *
+     * @param direction Направление движения волны (единичный вектор)
+     */
     public WaveComponent(Point2D direction) {
         this.direction = direction;
     }
 
+    /**
+     * Обновляет состояние волны:
+     * <ul>
+     *   <li>Двигает волну по направлению</li>
+     *   <li>Проверяет столкновения с другими сущностями</li>
+     *   <li>Наносит урон и удаляет волну после первого попадания</li>
+     * </ul>
+     *
+     * @param tpf Время, прошедшее с предыдущего кадра (Time Per Frame)
+     */
     @Override
     public void onUpdate(double tpf) {
-        // двигаем волну
+        // Двигаем волну
         entity.translate(direction.multiply(speed * tpf));
 
-        // Собираем в отдельный список все сущности, по которым волна должна ударить
+        // Список сущностей, которые можно повредить
         List<Entity> toDamage = getGameWorld().getEntities()
                 .stream()
                 .filter(e -> e != null)
@@ -42,18 +60,15 @@ public class WaveComponent extends Component {
                 })
                 .toList(); // если Java <16: collect(Collectors.toList())
 
-        // Применяем урон и удаляем волну
+        // Применяем урон и удаляем волну после попадания
         for (Entity e : toDamage) {
-            HealthComponent health = null;
             try {
-                health = e.getComponent(HealthComponent.class);
+                HealthComponent health = e.getComponent(HealthComponent.class);
+                if (health != null) {
+                    health.takeDamage(damage);
+                    entity.removeFromWorld();
+                }
             } catch (Exception ignored) {}
-
-            if (health != null) {
-                health.takeDamage(damage);
-                entity.removeFromWorld(); // волна исчезает после удара
-            }
         }
     }
-
 }

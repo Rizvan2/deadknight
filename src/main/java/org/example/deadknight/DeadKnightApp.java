@@ -39,17 +39,17 @@ public class DeadKnightApp extends GameApplication {
     }
 
     @Override
-    protected void initInput() {
-        KnightController.initInput(() -> knight);
-    }
-
-    @Override
     protected void initGame() {
         knight = GameInitializer.initGame();
 
         movementController = new MovementController(knight);
         collisionSystem = new CollisionSystem();
         uiController = new UIController(knight);
+    }
+
+    @Override
+    protected void initInput() {
+        KnightController.initInput(() -> knight);
     }
 
     @Override

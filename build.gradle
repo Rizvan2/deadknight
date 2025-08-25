@@ -40,13 +40,17 @@ javafx {
 dependencies {
     implementation('com.github.almasb:fxgl:17.3') {
         exclude(group: 'org.openjfx')
-        // исключение kotlin убираем!
     }
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 }
+
 
 test {
     useJUnitPlatform()
