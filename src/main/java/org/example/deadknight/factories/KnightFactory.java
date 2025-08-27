@@ -9,17 +9,26 @@ import org.example.deadknight.entities.KnightEntity;
 import org.example.deadknight.services.AnimationService;
 import org.example.deadknight.types.EntityType;
 
+/**
+ * Фабрика для создания сущностей рыцаря.
+ * <p>
+ * Отвечает за построение игровой сущности рыцаря, установку спрайта, hitbox,
+ * свойств и подключения сервисов анимации и атаки.
+ */
 public class KnightFactory {
 
+    /**
+     * Создает игровую сущность рыцаря.
+     *
+     * @param knightData объект {@link KnightEntity} с базовыми параметрами рыцаря (здоровье, скорость, направление)
+     * @param x          координата X для размещения рыцаря в мире
+     * @param y          координата Y для размещения рыцаря в мире
+     * @return созданная сущность {@link Entity} рыцаря
+     */
     public static Entity create(KnightEntity knightData, double x, double y) {
-        // Дефолтный спрайт
-        ImageView knightSprite = new ImageView(FXGL.image("knight_left-1.png"));
-        knightSprite.setFitWidth(64);
-        knightSprite.setFitHeight(64);
 
         Entity knight = FXGL.entityBuilder()
                 .at(x, y)
-                .view(knightSprite)
                 .bbox(new HitBox("BODY", BoundingShape.box(44, 44)))
                 .with(knightData.getHealth())
                 .with(knightData.getSpeed())
@@ -27,7 +36,21 @@ public class KnightFactory {
                 .zIndex(100)
                 .build();
 
-        // Свойства сущности
+        initProperties(knight, knightData);
+
+        return knight;
+    }
+
+    /**
+     * Инициализирует свойства сущности рыцаря.
+     * <p>
+     * Устанавливает флаги атаки и движения, направление, спрайт и подключает
+     * анимацию ходьбы и метод атаки.
+     *
+     * @param knight     сущность рыцаря {@link Entity}
+     * @param knightData объект {@link KnightEntity} с параметрами
+     */
+    private static void initProperties(Entity knight, KnightEntity knightData) {
         knight.getProperties().setValue("isAttacking", false);
         knight.getProperties().setValue("moving", false);
         knight.getProperties().setValue("direction", knightData.getDirection());
@@ -44,11 +67,9 @@ public class KnightFactory {
         };
         AnimationService.attach(knight, frames);
 
+        // Метод атаки: запускается через Runnable
         knight.getProperties().setValue("playAttack", (Runnable) () ->
                 AnimationService.playAttack(knight, "knight_attack.png", 0.25)
         );
-
-
-        return knight;
     }
 }

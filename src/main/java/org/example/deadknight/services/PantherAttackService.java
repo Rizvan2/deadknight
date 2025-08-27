@@ -7,17 +7,18 @@ import javafx.util.Duration;
 
 /**
  * Сервис для управления атакой пантеры.
- * Отвечает за анимацию, рывок и возврат к обычному спрайту.
+ * <p>
+ * Отвечает за анимацию атаки, рывок и последующее возвращение к обычному спрайту.
  */
 public class PantherAttackService {
 
     /**
      * Выполняет атаку пантеры с анимацией и рывком.
      *
-     * @param panther        объект пантеры
-     * @param attackImage    путь к спрайту атаки
+     * @param panther         объект пантеры
+     * @param attackImage     путь к спрайту атаки
      * @param durationSeconds длительность атаки в секундах
-     * @param dashDistance    дистанция рывка
+     * @param dashDistance    дистанция рывка (пиксели)
      */
     public static void playAttack(Entity panther, String attackImage, double durationSeconds, double dashDistance) {
         if (Boolean.TRUE.equals(panther.getProperties().getBoolean("isAttacking"))) return;
@@ -30,7 +31,7 @@ public class PantherAttackService {
         attackSprite.setImage(FXGL.image(attackImage));
         AnimationService.setSprite(panther, attackSprite, spriteDir);
 
-        // Рывок
+        // Рывок: перемещаем пантеру по X
         double dx = "RIGHT".equals(spriteDir) ? dashDistance : -dashDistance;
         FXGL.getGameTimer().runAtInterval(
                 () -> panther.setX(panther.getX() + dx),

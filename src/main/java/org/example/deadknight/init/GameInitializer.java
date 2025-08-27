@@ -4,13 +4,26 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.paint.Color;
 import org.example.deadknight.entities.KnightEntity;
-import org.example.deadknight.entities.IlyasPantherEntity; // твоя будущая пантера
+import org.example.deadknight.entities.IlyasPantherEntity;
 import org.example.deadknight.entities.Spikes;
 import org.example.deadknight.factories.KnightFactory;
-import org.example.deadknight.factories.PantherFactory;    // фабрика пантеры
+import org.example.deadknight.factories.PantherFactory;
 
+/**
+ * Класс инициализации игры.
+ * <p>
+ * Создает игрового персонажа (рыцарь или пантера), добавляет его в мир,
+ * расставляет препятствия и устанавливает фон сцены.
+ */
 public class GameInitializer {
 
+    /**
+     * Инициализирует игрового персонажа и базовый игровой мир.
+     *
+     * @param characterType тип персонажа: "knight" или "panther"
+     * @return созданная сущность персонажа {@link Entity}
+     * @throws IllegalArgumentException если передан неизвестный тип персонажа
+     */
     public static Entity initGame(String characterType) {
         Entity character;
 
@@ -21,7 +34,7 @@ public class GameInitializer {
                 break;
 
             case "panther":
-                IlyasPantherEntity pantherData = new IlyasPantherEntity(120, 60, "RIGHT"); // свои статы
+                IlyasPantherEntity pantherData = new IlyasPantherEntity(120, 60, "RIGHT");
                 character = PantherFactory.create(pantherData, 100, 300);
                 break;
 
@@ -29,10 +42,14 @@ public class GameInitializer {
                 throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
         }
 
+        // Добавляем персонажа в мир
         FXGL.getGameWorld().addEntity(character);
 
+        // Добавляем препятствия
         FXGL.getGameWorld().addEntity(Spikes.create(200, 300));
         FXGL.getGameWorld().addEntity(Spikes.create(400, 300));
+
+        // Устанавливаем фон сцены
         FXGL.getGameScene().setBackgroundColor(Color.BLACK);
 
         return character;

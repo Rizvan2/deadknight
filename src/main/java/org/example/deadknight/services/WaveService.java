@@ -4,12 +4,24 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.texture.Texture;
 import javafx.geometry.Point2D;
 import static com.almasb.fxgl.dsl.FXGL.*;
-
 import javafx.util.Duration;
 import org.example.deadknight.components.WaveComponent;
 
+/**
+ * Сервис для создания и управления волновыми атаками персонажей.
+ * <p>
+ * Волна создаётся в направлении персонажа и автоматически удаляется через заданное время.
+ */
 public class WaveService {
 
+    /**
+     * Выпускает волну из позиции персонажа.
+     * <p>
+     * Направление волны определяется свойством "direction" объекта shooter.
+     * Волна создаётся с текстурой "wave.png", масштабируется и вращается в зависимости от направления.
+     *
+     * @param shooter объект, выпускающий волну (например, игрок или враг)
+     */
     public static void shoot(Entity shooter) {
         if (shooter == null) return;
 
@@ -40,12 +52,11 @@ public class WaveService {
                 .with(new WaveComponent(vector))
                 .buildAndAttach();
 
-        // Удаляем волны через 10 секунд
+        // Удаляем волну через 1 секунду
         runOnce(() -> {
             if (wave.isActive()) {
                 wave.removeFromWorld();
             }
         }, Duration.seconds(1));
     }
-
 }

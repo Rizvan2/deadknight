@@ -10,17 +10,26 @@ import org.example.deadknight.services.AnimationService;
 import org.example.deadknight.services.PantherAttackService;
 import org.example.deadknight.types.EntityType;
 
+/**
+ * Фабрика для создания сущностей пантеры.
+ * <p>
+ * Отвечает за построение игровой сущности пантеры, установку спрайта, hitbox,
+ * свойств и подключения сервисов анимации и атаки.
+ */
 public class PantherFactory {
 
+    /**
+     * Создает игровую сущность пантеры.
+     *
+     * @param data объект {@link IlyasPantherEntity} с базовыми параметрами пантеры (здоровье, скорость, направление)
+     * @param x    координата X для размещения пантеры в мире
+     * @param y    координата Y для размещения пантеры в мире
+     * @return созданная сущность {@link Entity} пантеры
+     */
     public static Entity create(IlyasPantherEntity data, double x, double y) {
-        ImageView pantherSprite = new ImageView(FXGL.image("panter1-1.png"));
-        pantherSprite.setFitWidth(122);
-        pantherSprite.setFitHeight(122);
-
         Entity panther = FXGL.entityBuilder()
                 .at(x, y)
-                .view(pantherSprite)
-                .bbox(new HitBox("BODY", BoundingShape.box(122, 122)))
+                .bbox(new HitBox("BODY", BoundingShape.box(64, 64)))
                 .with(data.getHealth())
                 .with(data.getSpeed())
                 .type(EntityType.PANTHER)
@@ -32,6 +41,15 @@ public class PantherFactory {
         return panther;
     }
 
+    /**
+     * Инициализирует свойства сущности пантеры.
+     * <p>
+     * Устанавливает флаги атаки и движения, направление, спрайт и подключает
+     * анимацию ходьбы и метод атаки.
+     *
+     * @param panther сущность пантеры {@link Entity}
+     * @param data    объект {@link IlyasPantherEntity} с параметрами
+     */
     private static void initProperties(Entity panther, IlyasPantherEntity data) {
         panther.getProperties().setValue("isAttacking", false);
         panther.getProperties().setValue("moving", false);
@@ -39,11 +57,11 @@ public class PantherFactory {
         panther.getProperties().setValue("spriteDir", data.getDirection());
         panther.getProperties().setValue("shootDir", data.getDirection());
 
-        // Анимация ходьбы
+        // Анимация ходьбы (один кадр по умолчанию)
         String[] frames = {"panter1.png"};
         AnimationService.attach(panther, frames);
 
-        // Убираем хардкод атаки, только команда:
+        // Метод атаки: запускается через Runnable
         panther.getProperties().setValue("playAttack", (Runnable) () ->
                 PantherAttackService.playAttack(panther, "panter_attack.png", 0.3, 150)
         );

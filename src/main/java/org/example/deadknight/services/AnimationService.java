@@ -5,7 +5,6 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.texture.Texture;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +12,7 @@ import java.util.Map;
  * Универсальный сервис анимации для персонажей.
  * <p>
  * Позволяет управлять анимацией спрайтов персонажей:
- * движение вправо/влево и idle состояние.
+ * движение вправо/влево, idle состояние и анимация атаки.
  * Анимация обновляется через таймер FXGL.
  */
 public class AnimationService {
@@ -28,7 +27,6 @@ public class AnimationService {
     private final ImageView idleLeft;
     private int frameIndex = 0;
     private static final Map<Entity, Texture> originalTextures = new HashMap<>();
-
 
     /**
      * Конструктор сервиса анимации.
@@ -52,20 +50,19 @@ public class AnimationService {
     }
 
     /**
-     * Запускает анимацию, обновляя кадры каждые 0.1 секунды.
+     * Запускает анимацию движения персонажа с обновлением кадров каждые 0.1 секунды.
      */
     public void start() {
         FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.1));
     }
 
     /**
-     * Обновляет текущий кадр анимации в зависимости от направления
-     * и состояния движения персонажа.
+     * Обновляет кадр анимации в зависимости от направления движения и состояния персонажа.
+     * Игнорирует обновление при атаке или наложенной атаке.
      */
     private void update() {
         if (!entity.isActive()) return;
 
-        // Проверка, идёт ли атака — тогда анимация движения не обновляется
         boolean attacking = entity.getProperties().getBoolean("isAttacking");
         if (attacking) return;
 
@@ -73,17 +70,13 @@ public class AnimationService {
         String spriteDir = entity.getProperties().getString("spriteDir"); // LEFT или RIGHT
         var view = entity.getViewComponent();
 
-        // Если уже есть overlay атаки — не трогаем базовый спрайт
         boolean hasAttackOverlay = view.getChildren().stream()
                 .anyMatch(n -> n.getUserData() != null && n.getUserData().equals("attack"));
         if (hasAttackOverlay) return;
 
-        // Очищаем текущие кадры
         view.clearChildren();
 
-        // Выбираем спрайт в зависимости от направления движения
         if (!moving) {
-            // Статический спрайт (idle)
             view.addChild("RIGHT".equals(spriteDir) ? idleRight : idleLeft);
         } else if ("RIGHT".equals(spriteDir)) {
             view.addChild(rightFrames[frameIndex]);
@@ -94,12 +87,11 @@ public class AnimationService {
         }
     }
 
-
     /**
-     * Создает ImageView для одного кадра спрайта с заданным размером.
+     * Создает ImageView для кадра спрайта с указанным размером.
      *
-     * @param name Имя файла изображения в ресурсах.
-     * @param size Размер стороны кадра (ширина и высота).
+     * @param name имя файла изображения.
+     * @param size размер стороны кадра (ширина и высота).
      * @return ImageView с установленными размерами.
      */
     public static ImageView createFrame(String name, double size) {
@@ -110,13 +102,10 @@ public class AnimationService {
     }
 
     /**
-     * Универсальный метод attach для любого персонажа.
-     * <p>
-     * Создает массивы кадров для движения влево и вправо,
-     * а также idle спрайты, и запускает анимацию.
+     * Инициализирует анимацию персонажа: движение влево/вправо и idle.
      *
-     * @param entity         Сущность персонажа для анимации.
-     * @param baseFrameNames Массив имен файлов кадров спрайтов.
+     * @param entity         сущность персонажа.
+     * @param baseFrameNames массив имен файлов кадров спрайтов.
      */
     public static void attach(Entity entity, String[] baseFrameNames) {
         ImageView[] baseFrames = new ImageView[baseFrameNames.length];
@@ -128,11 +117,10 @@ public class AnimationService {
 
         for (int i = 0; i < baseFrames.length; i++) {
             leftFrames[i] = baseFrames[i];
-
             ImageView right = new ImageView(baseFrames[i].getImage());
             right.setFitWidth(FRAME_SIZE);
             right.setFitHeight(FRAME_SIZE);
-            right.setScaleX(-1); // зеркально для движения вправо
+            right.setScaleX(-1);
             rightFrames[i] = right;
         }
 
@@ -145,24 +133,36 @@ public class AnimationService {
         new AnimationService(entity, rightFrames, leftFrames, idleRight, idleLeft).start();
     }
 
-    public static void playAttack(Entity knight, String attackImage, double durationSeconds) {
-        if (Boolean.TRUE.equals(knight.getProperties().getBoolean("isAttacking"))) return;
-        knight.getProperties().setValue("isAttacking", true);
+    /**
+     * Выполняет анимацию атаки персонажа с возвращением к idle спрайту.
+     *
+     * @param entity          персонаж.
+     * @param attackImage     путь к изображению атаки.
+     * @param durationSeconds длительность анимации атаки в секундах.
+     */
+    public static void playAttack(Entity entity, String attackImage, double durationSeconds) {
+        if (Boolean.TRUE.equals(entity.getProperties().getBoolean("isAttacking"))) return;
+        entity.getProperties().setValue("isAttacking", true);
 
-        String spriteDir = knight.getProperties().getString("spriteDir");
+        String spriteDir = entity.getProperties().getString("spriteDir");
 
-        // Получаем текущий спрайт и устанавливаем его как кадр атаки
-        ImageView attackSprite = getCurrentSprite(knight, 64, 64);
+        ImageView attackSprite = getCurrentSprite(entity, 64, 64);
         attackSprite.setImage(FXGL.image(attackImage));
-        setSprite(knight, attackSprite, spriteDir);
+        setSprite(entity, attackSprite, spriteDir);
 
-        // Волна
-        WaveService.shoot(knight);
+        WaveService.shoot(entity);
 
-        // Возврат к idle спрайту
-        restoreIdleSprite(knight, "knight_left-1.png", 64, 64, spriteDir, durationSeconds);
+        restoreIdleSprite(entity, "knight_left-1.png", 64, 64, spriteDir, durationSeconds);
     }
 
+    /**
+     * Получает текущий спрайт персонажа.
+     *
+     * @param entity        персонаж.
+     * @param defaultWidth  ширина спрайта по умолчанию.
+     * @param defaultHeight высота спрайта по умолчанию.
+     * @return ImageView текущего спрайта.
+     */
     public static ImageView getCurrentSprite(Entity entity, double defaultWidth, double defaultHeight) {
         double width = defaultWidth, height = defaultHeight;
         ImageView oldIv = null;
@@ -179,12 +179,29 @@ public class AnimationService {
         return sprite;
     }
 
+    /**
+     * Устанавливает спрайт персонажа, учитывая направление.
+     *
+     * @param entity    персонаж.
+     * @param sprite    спрайт.
+     * @param spriteDir направление (LEFT или RIGHT).
+     */
     public static void setSprite(Entity entity, ImageView sprite, String spriteDir) {
         entity.getViewComponent().clearChildren();
         if ("RIGHT".equals(spriteDir)) sprite.setScaleX(-1);
         entity.getViewComponent().addChild(sprite);
     }
 
+    /**
+     * Восстанавливает idle спрайт персонажа после атаки.
+     *
+     * @param entity        персонаж.
+     * @param idleImage     путь к idle изображению.
+     * @param width         ширина спрайта.
+     * @param height        высота спрайта.
+     * @param spriteDir     направление (LEFT или RIGHT).
+     * @param durationSeconds задержка перед восстановлением в секундах.
+     */
     public static void restoreIdleSprite(Entity entity, String idleImage, double width, double height, String spriteDir, double durationSeconds) {
         FXGL.runOnce(() -> {
             entity.getProperties().setValue("isAttacking", false);
@@ -197,6 +214,4 @@ public class AnimationService {
             entity.getViewComponent().addChild(defaultIv);
         }, Duration.seconds(durationSeconds));
     }
-
-
 }

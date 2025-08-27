@@ -1,8 +1,9 @@
 package org.example.deadknight.controllers;
 
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.controllers.WASDController;
+import lombok.Getter;
 
+@Getter
 public class MovementController {
 
     private final Entity entity;
@@ -15,7 +16,4 @@ public class MovementController {
         WASDController.setCurrentTpf(tpf);
     }
 
-    public Entity getEntity() {
-        return entity;
-    }
 }
