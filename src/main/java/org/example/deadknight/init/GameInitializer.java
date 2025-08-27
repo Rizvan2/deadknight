@@ -29,7 +29,7 @@ public class GameInitializer {
 
         switch (characterType) {
             case "knight":
-                KnightEntity knightData = new KnightEntity(30, 40, "RIGHT");
+                KnightEntity knightData = new KnightEntity(100, 40, "RIGHT");
                 character = KnightFactory.create(knightData, 100, 300);
                 break;
 
