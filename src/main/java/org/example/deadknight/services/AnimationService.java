@@ -2,9 +2,7 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.Texture;
-import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
@@ -97,8 +95,6 @@ public class AnimationService {
     }
 
 
-
-
     /**
      * Создает ImageView для одного кадра спрайта с заданным размером.
      *
@@ -150,48 +146,57 @@ public class AnimationService {
     }
 
     public static void playAttack(Entity knight, String attackImage, double durationSeconds) {
-        Boolean isAttacking = knight.getProperties().getBoolean("isAttacking");
-        if (isAttacking != null && isAttacking) return;
-
+        if (Boolean.TRUE.equals(knight.getProperties().getBoolean("isAttacking"))) return;
         knight.getProperties().setValue("isAttacking", true);
 
-        // Используем spriteDir для горизонтального зеркалирования
-        String spriteDir = knight.getProperties().getString("spriteDir"); // LEFT или RIGHT
+        String spriteDir = knight.getProperties().getString("spriteDir");
 
-        // Размер старой текстуры
-        double width = 64, height = 64;
-        if (!knight.getViewComponent().getChildren().isEmpty() &&
-                knight.getViewComponent().getChildren().get(0) instanceof ImageView oldIv) {
-            width = oldIv.getFitWidth();
-            height = oldIv.getFitHeight();
-        }
-
-        // Чистим и добавляем кадр атаки
-        knight.getViewComponent().clearChildren();
-        ImageView attackIv = new ImageView(FXGL.image(attackImage));
-        attackIv.setFitWidth(width);
-        attackIv.setFitHeight(height);
-        if ("RIGHT".equals(spriteDir)) attackIv.setScaleX(-1); // зеркалим только при движении вправо
-        knight.getViewComponent().addChild(attackIv);
+        // Получаем текущий спрайт и устанавливаем его как кадр атаки
+        ImageView attackSprite = getCurrentSprite(knight, 64, 64);
+        attackSprite.setImage(FXGL.image(attackImage));
+        setSprite(knight, attackSprite, spriteDir);
 
         // Волна
         WaveService.shoot(knight);
 
-        // Возвращаем анимацию ходьбы
+        // Возврат к idle спрайту
+        restoreIdleSprite(knight, "knight_left-1.png", 64, 64, spriteDir, durationSeconds);
+    }
+
+    public static ImageView getCurrentSprite(Entity entity, double defaultWidth, double defaultHeight) {
+        double width = defaultWidth, height = defaultHeight;
+        ImageView oldIv = null;
+        if (!entity.getViewComponent().getChildren().isEmpty() &&
+                entity.getViewComponent().getChildren().get(0) instanceof ImageView iv) {
+            oldIv = iv;
+            width = iv.getFitWidth();
+            height = iv.getFitHeight();
+        }
+        ImageView sprite = (oldIv != null) ? new ImageView(oldIv.getImage()) : new ImageView();
+        sprite.setFitWidth(width);
+        sprite.setFitHeight(height);
+        sprite.setPreserveRatio(true);
+        return sprite;
+    }
+
+    public static void setSprite(Entity entity, ImageView sprite, String spriteDir) {
+        entity.getViewComponent().clearChildren();
+        if ("RIGHT".equals(spriteDir)) sprite.setScaleX(-1);
+        entity.getViewComponent().addChild(sprite);
+    }
+
+    public static void restoreIdleSprite(Entity entity, String idleImage, double width, double height, String spriteDir, double durationSeconds) {
         FXGL.runOnce(() -> {
-            knight.getProperties().setValue("isAttacking", false);
-            knight.getViewComponent().clearChildren();
-            startWalkAnimation(knight, 64, 64, spriteDir); // тоже используем spriteDir
+            entity.getProperties().setValue("isAttacking", false);
+            ImageView defaultIv = new ImageView(FXGL.image(idleImage));
+            defaultIv.setFitWidth(width);
+            defaultIv.setFitHeight(height);
+            defaultIv.setPreserveRatio(true);
+            if ("RIGHT".equals(spriteDir)) defaultIv.setScaleX(-1);
+            entity.getViewComponent().clearChildren();
+            entity.getViewComponent().addChild(defaultIv);
         }, Duration.seconds(durationSeconds));
     }
 
-    public static void startWalkAnimation(Entity knight, double width, double height, String spriteDir) {
-        knight.getProperties().setValue("walkFrameIndex", 0);
 
-        ImageView iv = new ImageView(FXGL.image("knight_left-1.png"));
-        iv.setFitWidth(width);
-        iv.setFitHeight(height);
-        if ("RIGHT".equals(spriteDir)) iv.setScaleX(-1);
-        knight.getViewComponent().addChild(iv);
-    }
 }

@@ -3,6 +3,7 @@ package org.example.deadknight.controllers;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import javafx.scene.input.KeyCode;
+import lombok.Setter;
 import org.example.deadknight.components.SpeedComponent;
 
 import java.util.HashSet;
@@ -19,11 +20,9 @@ import static com.almasb.fxgl.dsl.FXGLForKtKt.getInput;
 public class WASDController {
 
     private static final Set<String> pressedKeys = new HashSet<>();
-    private static double currentTpf = 0;
 
-    public static void setCurrentTpf(double tpf) {
-        currentTpf = tpf;
-    }
+    @Setter
+    private static double currentTpf = 0;
 
     /**
      * Инициализация управления движением для сущности.

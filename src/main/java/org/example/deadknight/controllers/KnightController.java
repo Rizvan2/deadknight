@@ -1,18 +1,12 @@
 package org.example.deadknight.controllers;
 
-import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.input.UserAction;
 import javafx.scene.input.KeyCode;
-import org.example.deadknight.components.SpeedComponent;
 import org.example.deadknight.skills.KnightSkills;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
-import static com.almasb.fxgl.dsl.FXGL.getInput;
 
 /**
  * Контроллер для управления рыцарем.
