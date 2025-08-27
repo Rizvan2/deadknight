@@ -8,6 +8,7 @@ import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.controllers.MovementController;
 import org.example.deadknight.controllers.PantherController;
 import org.example.deadknight.controllers.KnightController;
+import org.example.deadknight.factories.MobAndPlayerFactory;
 import org.example.deadknight.init.GameInitializer;
 import org.example.deadknight.init.SettingsInitializer;
 import org.example.deadknight.systems.CollisionSystem;
@@ -50,6 +51,9 @@ public class DeadKnightApp extends GameApplication {
 
     @Override
     protected void initGame() {
+        // Регистрируем фабрику
+        FXGL.getGameWorld().addEntityFactory(new MobAndPlayerFactory());
+
         // Экран выбора персонажа
         CharacterSelectScreen.show(characterType -> {
             currentCharacterType = characterType; // сохраняем выбранного персонажа
@@ -65,6 +69,15 @@ public class DeadKnightApp extends GameApplication {
         FXGL.getInput().clearAll(); // очищаем старые действия
 
         knight = GameInitializer.initGame(characterType);
+
+        // --- СПАВН ВРАГОВ ---
+        FXGL.spawn("goblin", 100, 100);
+        FXGL.spawn("goblin", 300, 200);
+        FXGL.spawn("goblin", 500, 150);
+        // Можно через цикл для нескольких мобов
+        // for (int i = 0; i < 5; i++) {
+        //     FXGL.spawn("goblin", 50 + i*100, 50 + i*50);
+        // }
 
         movementController = new MovementController(knight);
         collisionSystem = new CollisionSystem();

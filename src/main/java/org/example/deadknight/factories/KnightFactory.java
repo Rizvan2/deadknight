@@ -52,6 +52,8 @@ public class KnightFactory {
     private static void initProperties(Entity knight, KnightEntity knightData) {
         knight.getProperties().setValue("isAttacking", false);
         knight.getProperties().setValue("moving", false);
+        // Дополнительная метка
+        knight.getProperties().setValue("isPlayer", true);
         knight.getProperties().setValue("direction", knightData.getDirection());
         knight.getProperties().setValue("spriteDir", knightData.getDirection());
         knight.getProperties().setValue("shootDir", knightData.getDirection());
