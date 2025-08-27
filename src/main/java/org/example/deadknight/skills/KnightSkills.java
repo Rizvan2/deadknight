@@ -4,13 +4,12 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import javafx.scene.input.KeyCode;
+import org.example.deadknight.utils.InputActionManager;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
-/**
- * Класс для управления навыками рыцаря.
- * Здесь регистрируем все действия вроде атаки, специальных умений и т.д.
- */
 public class KnightSkills {
 
     private final Supplier<Entity> knightSupplier;
@@ -19,19 +18,8 @@ public class KnightSkills {
         this.knightSupplier = knightSupplier;
     }
 
-    /** Регистрирует действие атаки на пробел. */
+    /** Регистрирует действие атаки на пробел только один раз. */
     public void registerAttack() {
-        FXGL.getInput().addAction(new UserAction("Attack") {
-            @Override
-            protected void onActionBegin() {
-                Entity knight = knightSupplier.get();
-                if (knight == null || knight.getWorld() == null) return;
-
-                Runnable playAttack = knight.getProperties().getValue("playAttack");
-                if (playAttack != null) {
-                    playAttack.run();
-                }
-            }
-        }, KeyCode.SPACE);
+        InputActionManager.registerAttack(knightSupplier, KeyCode.SPACE);
     }
 }

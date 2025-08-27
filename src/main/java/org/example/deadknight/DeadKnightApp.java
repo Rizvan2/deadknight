@@ -4,6 +4,7 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.controllers.MovementController;
 import org.example.deadknight.controllers.PantherController;
 import org.example.deadknight.controllers.KnightController;
@@ -11,23 +12,23 @@ import org.example.deadknight.init.GameInitializer;
 import org.example.deadknight.init.SettingsInitializer;
 import org.example.deadknight.systems.CollisionSystem;
 import org.example.deadknight.ui.CharacterSelectScreen;
+import org.example.deadknight.ui.GameOverUI;
 import org.example.deadknight.ui.UIController;
 
 import java.util.function.Supplier;
 
-
 /**
  * Главный класс приложения DeadKnight.
- * <p>
+ *
  * Отвечает за инициализацию игры, управление вводом,
  * обновление состояния персонажа и взаимодействие с объектами мира.
  */
 public class DeadKnightApp extends GameApplication {
 
-    /** Сущность рыцаря, которой управляет игрок. */
+    /** Сущность персонажа, которой управляет игрок. */
     private Entity knight;
 
-    /** Контроллер движения рыцаря. */
+    /** Контроллер движения персонажа. */
     private MovementController movementController;
 
     /** Система обработки столкновений и урона. */
@@ -36,6 +37,12 @@ public class DeadKnightApp extends GameApplication {
     /** Контроллер UI (например, HealthBar). */
     private UIController uiController;
 
+    /** Тип текущего выбранного персонажа ("knight"/"panther"). */
+    private String currentCharacterType;
+
+    /** Флаг для остановки апдейтов после смерти персонажа. */
+    private boolean isGameOver = false;
+
     @Override
     protected void initSettings(GameSettings settings) {
         SettingsInitializer.initSettings(settings);
@@ -43,17 +50,19 @@ public class DeadKnightApp extends GameApplication {
 
     @Override
     protected void initGame() {
+        // Экран выбора персонажа
         CharacterSelectScreen.show(characterType -> {
-            FXGL.getGameScene().clearUINodes(); // убираем экран выбора
-            startGame(characterType);           // запускаем игру
+            currentCharacterType = characterType; // сохраняем выбранного персонажа
+            FXGL.getGameScene().clearUINodes();  // убираем экран выбора
+            startGame(characterType);            // запускаем игру
         });
     }
-
-
 
     private void startGame(String characterType) {
         FXGL.getGameWorld().removeEntities(FXGL.getGameWorld().getEntitiesCopy());
         FXGL.getGameScene().clearUINodes();
+
+        FXGL.getInput().clearAll(); // очищаем старые действия
 
         knight = GameInitializer.initGame(characterType);
 
@@ -61,28 +70,35 @@ public class DeadKnightApp extends GameApplication {
         collisionSystem = new CollisionSystem();
         uiController = new UIController(knight);
 
-        // Подключаем контроллер ввода динамически
         Supplier<Entity> entitySupplier = () -> knight;
         switch (characterType) {
             case "knight" -> KnightController.initInput(entitySupplier);
             case "panther" -> PantherController.initInput(entitySupplier);
         }
-        System.out.println("Starting game with: " + characterType);
-        System.out.println("Knight: " + (knight != null));
     }
+
 
 
     @Override
     protected void onUpdate(double tpf) {
-        if (knight == null) return;
+        if (knight == null || isGameOver) return;
 
         movementController.update(tpf);
         collisionSystem.update(knight, tpf);
         uiController.update();
+
+        HealthComponent health = knight.getComponent(HealthComponent.class);
+        if (health.isDead()) {
+            isGameOver = true; // останавливаем апдейты
+            GameOverUI.show(() -> {
+                FXGL.getGameScene().clearUINodes();
+                startGame(currentCharacterType); // рестарт
+                isGameOver = false;              // разрешаем апдейты снова
+            });
+        }
     }
 
     public static void main(String[] args) {
         launch(args);
     }
 }
-

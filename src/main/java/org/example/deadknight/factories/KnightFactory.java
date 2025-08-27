@@ -4,7 +4,6 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
-import javafx.scene.image.ImageView;
 import org.example.deadknight.entities.KnightEntity;
 import org.example.deadknight.services.AnimationService;
 import org.example.deadknight.types.EntityType;

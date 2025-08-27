@@ -21,4 +21,8 @@ public class HealthComponent extends Component {
     public int getValue() {
         return value;
     }
+
+    public boolean isDead() {
+        return value <= 0;
+    }
 }
