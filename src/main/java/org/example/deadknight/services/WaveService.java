@@ -1,6 +1,8 @@
 package org.example.deadknight.services;
 
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.physics.BoundingShape;
+import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.texture.Texture;
 import javafx.geometry.Point2D;
 import static com.almasb.fxgl.dsl.FXGL.*;
@@ -28,35 +30,41 @@ public class WaveService {
         String dir = shooter.getProperties().getValue("direction");
         Point2D vector;
 
+        double width = 64;
+        double height = 64;
+
         switch (dir) {
-            case "UP": vector = new Point2D(0, -1); break;
-            case "DOWN": vector = new Point2D(0, 1); break;
-            case "LEFT": vector = new Point2D(-1, 0); break;
-            default: vector = new Point2D(1, 0); // RIGHT
+            case "UP" -> { vector = new Point2D(0, -1); width = 20; height = 64; }
+            case "DOWN" -> { vector = new Point2D(0, 1); width = 20; height = 64; }
+            case "LEFT" -> { vector = new Point2D(-1, 0); width = 64; height = 20; }
+            default -> { vector = new Point2D(1, 0); width = 64; height = 20; } // RIGHT
         }
 
         Texture waveTex = texture("wave.png");
         waveTex.setFitWidth(64);
         waveTex.setFitHeight(64);
 
+        // Поворот и отражение для визуала
         switch (dir) {
-            case "UP": waveTex.setRotate(90); waveTex.setScaleX(1); break;
-            case "DOWN": waveTex.setRotate(-90); waveTex.setScaleX(1); break;
-            case "LEFT": waveTex.setRotate(0); waveTex.setScaleX(1); break;
-            case "RIGHT": waveTex.setRotate(0); waveTex.setScaleX(-1); break;
+            case "UP" -> waveTex.setRotate(90);
+            case "DOWN" -> waveTex.setRotate(-90);
+            case "LEFT" -> waveTex.setRotate(0);
+            case "RIGHT" -> {
+                waveTex.setRotate(0);
+                waveTex.setScaleX(-1);
+            }
         }
 
         Entity wave = entityBuilder()
                 .at(shooter.getCenter())
                 .viewWithBBox(waveTex)
+                .bbox(new HitBox("BODY", BoundingShape.box(width, height))) // хитбокс по направлению
                 .with(new WaveComponent(vector))
                 .buildAndAttach();
 
-        // Удаляем волну через 1 секунду
         runOnce(() -> {
-            if (wave.isActive()) {
-                wave.removeFromWorld();
-            }
+            if (wave.isActive()) wave.removeFromWorld();
         }, Duration.seconds(1));
     }
+
 }

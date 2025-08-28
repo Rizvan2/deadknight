@@ -8,6 +8,8 @@ import javafx.geometry.Point2D;
 
 public class EnemyComponent extends Component {
 
+    private double elapsed = 0;
+
     @Override
     public void onUpdate(double tpf) {
         Entity player = FXGL.getGameWorld()
@@ -18,13 +20,18 @@ public class EnemyComponent extends Component {
                 .orElse(null);
 
         if (player != null) {
-            // берем скорость из свойств сущности, если не задано — дефолт 50
-            double speed = entity.getProperties().exists("speed")
+            elapsed += tpf;
+
+            double maxSpeed = entity.getProperties().exists("speed")
                     ? entity.getProperties().getDouble("speed")
                     : 50;
 
+            // линейно увеличиваем скорость первые 0.5 сек
+            double factor = Math.min(1, elapsed / 2);
+            double effectiveSpeed = maxSpeed * factor;
+
             Point2D direction = player.getPosition().subtract(entity.getPosition()).normalize();
-            entity.translate(direction.multiply(speed * tpf));
+            entity.translate(direction.multiply(effectiveSpeed * tpf));
         }
     }
 
