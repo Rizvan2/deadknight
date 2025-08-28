@@ -49,21 +49,6 @@ public class CharacterSelectScreen {
 
         btnPanther.setOnAction(e -> onCharacterSelected.accept("panther"));
 
-        // Hover-эффект: меняем картинку при наведении
-        btnPanther.hoverProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                var ilesImage = new ImageView(
-                        new Image(CharacterSelectScreen.class.getResource("/assets/textures/Iles.png").toExternalForm())
-                );
-                ilesImage.setFitWidth(pantherImage.getFitWidth());
-                ilesImage.setFitHeight(pantherImage.getFitHeight());
-                ilesImage.setPreserveRatio(true);
-                btnPanther.setGraphic(ilesImage);
-            } else {
-                btnPanther.setGraphic(pantherImage);
-            }
-        });
-
         // VBox с кнопками
         VBox menuBox = new VBox(20, btnKnight, btnPanther);
         menuBox.setAlignment(Pos.CENTER);
