@@ -4,48 +4,52 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
 import javafx.animation.AnimationTimer;
+import javafx.animation.Timeline;
+import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.example.deadknight.handlers.AnimationHandler;
-import org.example.deadknight.handlers.AttackHandler;
-import org.example.deadknight.handlers.MovementHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EnemyComponent extends Component {
 
+    private double elapsed = 0;
+    private boolean attacking = false;
+    private List<Image> walkFrames;
+    private List<Image> attackFrames;
     private ImageView goblinView;
-    private AnimationHandler animationHandler;
-    private MovementHandler movementHandler;
-    private AttackHandler attackHandler;
-
     private double lastAttackTime = 0;
-    private final double attackCooldown = 1.0; // секунды между атаками
-    private final double walkFrameTime = 0.1;
-    private final double attackDuration = 0.04;
+    private int attackIndex = 0;
+    private double walkElapsed = 0;
+    private double attackElapsed = 0;
+    private int walkIndex = 0;
 
     @Override
     public void onAdded() {
         goblinView = (ImageView) entity.getViewComponent().getChildren().get(0);
+
+
         goblinView.setSmooth(true);
         goblinView.setCache(true);
-        goblinView.setCacheHint(CacheHint.SPEED);
+        goblinView.setCacheHint(CacheHint.SPEED); // ускоряем отрисовку
 
-        // Загружаем кадры
-        List<Image> walkFrames = new ArrayList<>();
-        List<Image> attackFrames = new ArrayList<>();
-        for (int i = 1; i <= 25; i++) walkFrames.add(FXGL.image("goblin-" + i + ".png"));
-        for (int i = 1; i <= 15; i++) attackFrames.add(FXGL.image("goblin_attack-" + i + ".png"));
 
-        // Инициализация хендлеров
-        animationHandler = new AnimationHandler(goblinView, walkFrames, attackFrames, walkFrameTime, attackDuration);
-        movementHandler = new MovementHandler(entity, entity.getProperties().exists("speed") ? entity.getProperties().getDouble("speed") : 50);
-        attackHandler = new AttackHandler(10);
+        // Загружаем walk кадры заранее в фиксированном размере
+        walkFrames = new ArrayList<>();
+        for (int i = 1; i <= 25; i++) {
+            walkFrames.add(FXGL.image("goblin-" + i + ".png"));
+        }
 
-        // Запуск AnimationTimer для обновления анимаций
-        AnimationTimer timer = new AnimationTimer() {
+        // Загружаем attack кадры заранее в фиксированном размере
+        attackFrames = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            attackFrames.add(FXGL.image("goblin_attack-" + i + ".png"));
+        }
+
+        // Создаем AnimationTimer
+        AnimationTimer animationTimer = new AnimationTimer() {
             private long lastTime = 0;
 
             @Override
@@ -54,16 +58,55 @@ public class EnemyComponent extends Component {
                     lastTime = now;
                     return;
                 }
-                double tpf = (now - lastTime) / 1_000_000_000.0;
+
+                double tpf = (now - lastTime) / 1_000_000_000.0; // секунды
                 lastTime = now;
 
-                updateComponent(tpf);
+                updateAnimation(tpf);
             }
         };
-        timer.start();
+        animationTimer.start();
     }
 
-    private void updateComponent(double tpf) {
+    private void updateAnimation(double tpf) {
+        if (attacking) {
+            attackElapsed += tpf;
+            // сколько секунд длится атака
+            double attackDuration = 0.04;
+            if (attackElapsed >= attackDuration && attackIndex < attackFrames.size()) {
+                goblinView.setImage(attackFrames.get(attackIndex));
+                attackIndex++;
+                attackElapsed = 0;
+            }
+            if (attackIndex >= attackFrames.size()) {
+                attacking = false;
+                attackIndex = 0;
+            }
+        } else {
+            walkElapsed += tpf;
+            // время на кадр ходьбы
+            double walkFrameTime = 0.1;
+            if (walkElapsed >= walkFrameTime) {
+                walkIndex = (walkIndex + 1) % walkFrames.size();
+                goblinView.setImage(walkFrames.get(walkIndex));
+                walkElapsed = 0;
+            }
+        }
+    }
+
+    private void startAttack(Entity player) {
+        if (!isValidPlayer(player)) return;
+
+        attacking = true;
+        attackIndex = 0;
+        attackElapsed = 0;
+
+        // Наносим урон один раз при старте
+        attackPlayer(player);
+    }
+
+    @Override
+    public void onUpdate(double tpf) {
         Entity player = FXGL.getGameWorld()
                 .getEntities().stream()
                 .filter(e -> e.getProperties().exists("isPlayer") && e.getProperties().getBoolean("isPlayer"))
@@ -72,29 +115,52 @@ public class EnemyComponent extends Component {
 
         if (player == null) return;
 
+        elapsed += tpf;
         lastAttackTime += tpf;
 
-        // Движение к игроку
-        double distance = player.getPosition().subtract(entity.getPosition()).magnitude();
-        if (distance > 40) {
-            movementHandler.moveTowards(player, tpf);
+        double maxSpeed = entity.getProperties().exists("speed") ? entity.getProperties().getDouble("speed") : 50;
+        double factor = Math.min(1, elapsed / 2);
+        double effectiveSpeed = maxSpeed * factor;
 
-            // Смотрим на игрока
-            double dx = player.getX() - entity.getX();
-            goblinView.setScaleX(dx >= 0 ? 1 : -1);
+        Point2D direction = player.getPosition().subtract(entity.getPosition());
+        double distance = direction.magnitude();
+
+        if (distance > 40) {
+            Point2D move = direction.normalize().multiply(effectiveSpeed * tpf);
+            entity.translate(move);
+            goblinView.setScaleX(move.getX() >= 0 ? 1 : -1);
+            // НЕ меняем attacking здесь!
         } else {
-            // Атака
-            if (!animationHandler.isAttacking() && lastAttackTime >= attackCooldown) {
+            // секунды между атаками
+            double attackCooldown = 1.0;
+            if (!attacking && lastAttackTime >= attackCooldown) {
                 lastAttackTime = 0;
-                animationHandler.startAttack();
+                startAttack(player);
             }
         }
 
-        // Обновление анимаций и атаки в середине анимации
-        animationHandler.update(tpf, () -> {
-            if (distance <= 40) {
-                attackHandler.attack(player);
+    }
+
+    private void attackPlayer(Entity player) {
+        if (!isValidPlayer(player)) return;
+
+        player.getComponentOptional(HealthComponent.class).ifPresent(h -> {
+            if (!h.isDead()) {
+                h.takeDamage(10);
+
+                // Если игрок умер после удара — удаляем
+                if (h.isDead()) {
+                    player.removeFromWorld();
+                }
             }
         });
     }
+
+    // Вспомогательный метод для проверки, что игрок живой и существует
+    private boolean isValidPlayer(Entity player) {
+        return player != null &&
+                player.getWorld() != null &&
+                player.hasComponent(HealthComponent.class);
+    }
+
 }
