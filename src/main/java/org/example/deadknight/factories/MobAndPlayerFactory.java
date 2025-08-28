@@ -30,11 +30,9 @@ public class MobAndPlayerFactory implements EntityFactory {
 
     @Spawns("goblin")
     public Entity newGoblin(SpawnData data) {
-        int health = data.getData().containsKey("health")
-                ? (int) data.get("health")
-                : 50;
+        int health = data.getData().containsKey("health") ? (int) data.get("health") : 50;
 
-        // Загружаем все кадры
+        // Загружаем кадры
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 25; i++) {
             frames.add(FXGL.image("goblin-" + i + ".png"));
@@ -45,7 +43,7 @@ public class MobAndPlayerFactory implements EntityFactory {
         goblinView.setFitHeight(110);
         goblinView.setPreserveRatio(true);
 
-        // Timeline для плавной анимации
+        // Timeline для анимации кадров
         Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), event -> {
             int nextIndex = (frames.indexOf(goblinView.getImage()) + 1) % frames.size();
             goblinView.setImage(frames.get(nextIndex));
@@ -53,7 +51,6 @@ public class MobAndPlayerFactory implements EntityFactory {
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
 
-        // Создаем сущность
         Entity goblin = FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(goblinView)
@@ -68,6 +65,7 @@ public class MobAndPlayerFactory implements EntityFactory {
 
         return goblin;
     }
+
 
 
     @Spawns("player")

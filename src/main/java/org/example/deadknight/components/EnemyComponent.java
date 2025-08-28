@@ -1,10 +1,9 @@
 package org.example.deadknight.components;
 
 import com.almasb.fxgl.dsl.FXGL;
-import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
+import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
-
 
 public class EnemyComponent extends Component {
 
@@ -19,21 +18,28 @@ public class EnemyComponent extends Component {
                 .findFirst()
                 .orElse(null);
 
-        if (player != null) {
-            elapsed += tpf;
+        if (player == null) return;
 
-            double maxSpeed = entity.getProperties().exists("speed")
-                    ? entity.getProperties().getDouble("speed")
-                    : 50;
+        elapsed += tpf;
 
-            // линейно увеличиваем скорость первые 0.5 сек
-            double factor = Math.min(1, elapsed / 2);
-            double effectiveSpeed = maxSpeed * factor;
+        double maxSpeed = entity.getProperties().exists("speed") ? entity.getProperties().getDouble("speed") : 50;
 
-            Point2D direction = player.getPosition().subtract(entity.getPosition()).normalize();
-            entity.translate(direction.multiply(effectiveSpeed * tpf));
+        // Линейно увеличиваем скорость первые 2 сек
+        double factor = Math.min(1, elapsed / 2);
+        double effectiveSpeed = maxSpeed * factor;
+
+        Point2D direction = player.getPosition().subtract(entity.getPosition());
+        double distance = direction.magnitude();
+
+        if (distance > 1) { // пока не дошёл до рыцаря
+            Point2D move = direction.normalize().multiply(effectiveSpeed * tpf);
+            entity.translate(move);
+
+            // Смотрим направление
+            if (entity.getViewComponent().getChildren().get(0) instanceof javafx.scene.image.ImageView view) {
+                view.setScaleX(move.getX() >= 0 ? 1 : -1); // вправо или влево
+            }
         }
+        // Когда достиг рыцаря, scaleX сохраняется
     }
-
-
 }

@@ -90,6 +90,8 @@ public class DeadKnightApp extends GameApplication {
 
         // --- СПАВН ВРАГОВ ---
         FXGL.spawn("goblin", 100, 100);
+        FXGL.spawn("goblin", 200, 100);
+        FXGL.spawn("goblin", 300, 100);
 
         // Можно через цикл для нескольких мобов
         // for (int i = 0; i < 5; i++) {
