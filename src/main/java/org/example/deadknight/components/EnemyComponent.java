@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import lombok.Getter;
 import org.example.deadknight.entities.GoblinEntity;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.List;
  */
 public class EnemyComponent extends Component {
 
+    @Getter
     private final GoblinEntity goblinData;
     private ImageView goblinView;
     private boolean attacking = false;
@@ -33,6 +35,7 @@ public class EnemyComponent extends Component {
     private double walkElapsed = 0;
     private double attackElapsed = 0;
     private double elapsed = 0;
+
 
     private AttackComponent attackComponent;
 

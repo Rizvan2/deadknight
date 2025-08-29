@@ -2,12 +2,9 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.texture.Texture;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Универсальный сервис анимации для персонажей.

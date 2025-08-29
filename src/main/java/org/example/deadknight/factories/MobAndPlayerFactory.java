@@ -10,9 +10,7 @@ import com.almasb.fxgl.physics.HitBox;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.example.deadknight.components.EnemyComponent;
-import org.example.deadknight.components.HealthComponent;
-import org.example.deadknight.components.SeparationComponent;
+import org.example.deadknight.components.*;
 import org.example.deadknight.entities.GoblinEntity;
 import org.example.deadknight.types.EntityType;
 
@@ -49,6 +47,7 @@ public class MobAndPlayerFactory implements EntityFactory {
      */
     @Spawns("goblin")
     public Entity newGoblin(SpawnData data) {
+
         int health = data.getData().containsKey("health") ? (int) data.get("health") : 50;
 
         // Загружаем кадры для анимации ходьбы
@@ -79,9 +78,10 @@ public class MobAndPlayerFactory implements EntityFactory {
                 .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
-                .with(new SeparationComponent(50, 0.5)) // предотвращение наслаивания гоблинов
+                .with(new SeparationComponent(50, 0.5))// предотвращение наслаивания гоблинов
                 .collidable()
                 .build();
+
 
         // Устанавливаем свойства сущности
         goblin.getProperties().setValue("canTakeDamage", true);

@@ -2,7 +2,9 @@ package org.example.deadknight.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.SpawnData;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import org.example.deadknight.entities.KnightEntity;
 import org.example.deadknight.entities.IlyasPantherEntity;
 import org.example.deadknight.entities.Spikes;
@@ -51,6 +53,19 @@ public class GameInitializer {
 
         // Устанавливаем фон сцены
         FXGL.getGameScene().setBackgroundColor(Color.BLACK);
+
+        for (int i = 0; i < 10; i++) {
+            int x = 200 + i * 50;
+            int y = 200;
+
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                FXGL.spawn("goblin", new SpawnData(x, y)
+
+                );
+            }, Duration.seconds(8 + i));
+        }
+
+
 
         return character;
     }

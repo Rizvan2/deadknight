@@ -92,8 +92,12 @@ public class DeadKnightApp extends GameApplication {
         gameInitService.spawnEnemies(List.of(
                 new double[]{100, 100},
                 new double[]{200, 100},
-                new double[]{300, 100}
-        ));
+                new double[]{300, 100},
+                new double[]{250, 100},
+                new double[]{250, 100},
+                new double[]{350, 100}
+
+                ));
 
         movementController = new MovementController(player);
         uiService.initUI(player);
