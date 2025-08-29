@@ -66,7 +66,7 @@ public class MobAndPlayerFactory implements EntityFactory {
         Entity goblin = FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(goblinView)
-                .bbox(new HitBox("BODY", new Point2D(40, 70), BoundingShape.box(20, 30)))
+                .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
 
                 .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
