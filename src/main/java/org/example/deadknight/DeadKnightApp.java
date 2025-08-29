@@ -4,19 +4,17 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.controllers.MovementController;
-import org.example.deadknight.controllers.PantherController;
 import org.example.deadknight.controllers.KnightController;
-import org.example.deadknight.factories.MobAndPlayerFactory;
-import org.example.deadknight.init.GameInitializer;
+import org.example.deadknight.controllers.PantherController;
 import org.example.deadknight.init.LoadingScreenSubScene;
 import org.example.deadknight.init.SettingsInitializer;
+import org.example.deadknight.services.GameInitializerService;
+import org.example.deadknight.services.UIService;
 import org.example.deadknight.systems.CollisionSystem;
 import org.example.deadknight.ui.CharacterSelectScreen;
-import org.example.deadknight.ui.GameOverUI;
-import org.example.deadknight.ui.UIController;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -24,32 +22,33 @@ import java.util.function.Supplier;
  * <p>
  * Отвечает за:
  * <ul>
- *     <li>Инициализацию игры и настроек</li>
- *     <li>Создание персонажей и врагов</li>
- *     <li>Обработку ввода игрока</li>
- *     <li>Обновление состояния персонажа и UI</li>
- *     <li>Обработку конца игры и перезапуска</li>
+ *     <li>Инициализацию настроек игры</li>
+ *     <li>Выбор персонажа и показ экрана загрузки</li>
+ *     <li>Инициализацию игрока и врагов через {@link GameInitializerService}</li>
+ *     <li>Инициализацию UI через {@link UIService}</li>
+ *     <li>Обновление состояния игрока, UI и системы столкновений</li>
+ *     <li>Обработку конца игры и перезапуск</li>
  * </ul>
  */
 public class DeadKnightApp extends GameApplication {
 
-    /** Сущность персонажа, которой управляет игрок. */
-    private Entity knight;
+    /** Сущность игрока, которой управляет пользователь */
+    private Entity player;
 
-    /** Контроллер движения персонажа. */
+    /** Контроллер движения игрока */
     private MovementController movementController;
 
-    /** Система обработки столкновений и урона. */
+    /** Система обработки столкновений и урона */
     private CollisionSystem collisionSystem;
 
-    /** Контроллер UI (например, HealthBar). */
-    private UIController uiController;
+    /** Сервис для управления интерфейсом игрока */
+    private UIService uiService;
 
-    /** Тип текущего выбранного персонажа ("knight"/"panther"). */
+    /** Сервис инициализации игрока и врагов */
+    private GameInitializerService gameInitService;
+
+    /** Тип текущего выбранного персонажа ("knight"/"panther") */
     private String currentCharacterType;
-
-    /** Флаг для остановки апдейтов после смерти персонажа. */
-    private boolean isGameOver = false;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -58,50 +57,48 @@ public class DeadKnightApp extends GameApplication {
 
     @Override
     protected void initGame() {
-        FXGL.getGameWorld().addEntityFactory(new MobAndPlayerFactory());
+        gameInitService = new GameInitializerService();
+        uiService = new UIService();
+        collisionSystem = new CollisionSystem();
 
         CharacterSelectScreen.show(characterType -> {
             currentCharacterType = characterType;
-            FXGL.getGameScene().clearUINodes(); // убираем выбор персонажа
+            FXGL.getGameScene().clearUINodes();
 
-            // 1. Создаём экран загрузки
             LoadingScreenSubScene loadingScreen = new LoadingScreenSubScene(
                     FXGL.getAppWidth(),
                     FXGL.getAppHeight()
             );
+            FXGL.getGameScene().addUINode(loadingScreen);
 
-            FXGL.getGameScene().addUINode(loadingScreen); // показываем экран загрузки
-
-            // 2. Загружаем текстуры и запускаем игру после завершения
             loadingScreen.loadTextures(() -> {
-                FXGL.getGameScene().removeUINode(loadingScreen); // убираем экран загрузки
-                startGame(characterType);                         // запускаем игру
+                FXGL.getGameScene().removeUINode(loadingScreen);
+                startGame(characterType);
             });
         });
     }
 
     /**
-     * Инициализация самой игры: спавн игрока и врагов, настройка контроллеров.
+     * Инициализирует игрока и врагов, настраивает контроллеры и ввод.
      *
-     * @param characterType выбранный игроком тип персонажа
+     * @param characterType выбранный тип персонажа
      */
     private void startGame(String characterType) {
         FXGL.getGameWorld().removeEntities(FXGL.getGameWorld().getEntitiesCopy());
         FXGL.getGameScene().clearUINodes();
-        FXGL.getInput().clearAll(); // очищаем старые действия
+        FXGL.getInput().clearAll();
 
-        knight = GameInitializer.initGame(characterType);
+        player = gameInitService.initPlayer(characterType);
+        gameInitService.spawnEnemies(List.of(
+                new double[]{100, 100},
+                new double[]{200, 100},
+                new double[]{300, 100}
+        ));
 
-        // --- Спавн врагов ---
-        FXGL.spawn("goblin", 100, 100);
-        FXGL.spawn("goblin", 200, 100);
-        FXGL.spawn("goblin", 300, 100);
+        movementController = new MovementController(player);
+        uiService.initUI(player);
 
-        movementController = new MovementController(knight);
-        collisionSystem = new CollisionSystem();
-        uiController = new UIController(knight);
-
-        Supplier<Entity> entitySupplier = () -> knight;
+        Supplier<Entity> entitySupplier = () -> player;
         switch (characterType) {
             case "knight" -> KnightController.initInput(entitySupplier);
             case "panther" -> PantherController.initInput(entitySupplier);
@@ -110,25 +107,17 @@ public class DeadKnightApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
-        if (knight == null || isGameOver) return;
+        if (player == null) return;
 
         movementController.update(tpf);
-        collisionSystem.update(knight, tpf);
-        uiController.update();
+        collisionSystem.update(player, tpf);
+        uiService.update();
 
-        HealthComponent health = knight.getComponent(HealthComponent.class);
-        if (health.isDead()) {
-            isGameOver = true; // останавливаем апдейты
-            GameOverUI.show(() -> {
-                FXGL.getGameScene().clearUINodes();
-                startGame(currentCharacterType); // рестарт
-                isGameOver = false;              // разрешаем апдейты снова
-            });
-        }
+        uiService.checkGameOver(player, () -> startGame(currentCharacterType));
     }
 
     /**
-     * Запуск игры.
+     * Точка входа в игру.
      *
      * @param args аргументы командной строки
      */
