@@ -2,7 +2,7 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.factories.MobAndPlayerFactory;
+import org.example.deadknight.factories.GoblinFactory;
 import org.example.deadknight.init.GameInitializer;
 
 import java.util.List;
@@ -21,10 +21,10 @@ public class GameInitializerService {
 
     /**
      * Конструктор сервиса.
-     * Регистрирует {@link MobAndPlayerFactory} в игровом мире.
+     * Регистрирует {@link GoblinFactory} в игровом мире.
      */
     public GameInitializerService() {
-        FXGL.getGameWorld().addEntityFactory(new MobAndPlayerFactory());
+        FXGL.getGameWorld().addEntityFactory(new GoblinFactory());
     }
 
     /**

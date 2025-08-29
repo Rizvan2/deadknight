@@ -58,17 +58,29 @@ public class WaveComponent extends Component {
                     } catch (Exception ignored) {}
                     return canTakeDamageObj instanceof Boolean && (Boolean) canTakeDamageObj;
                 })
-                .toList(); // если Java <16: collect(Collectors.toList())
+                .toList();
 
-        // Применяем урон и удаляем волну после попадания
+        // Применяем урон и отталкивание
         for (Entity e : toDamage) {
             try {
                 HealthComponent health = e.getComponent(HealthComponent.class);
                 if (health != null) {
                     health.takeDamage(damage);
+
+                    // Получаем силу отталкивания из свойства сущности
+                    double pushStrength = 100; // дефолтная
+                    Object prop = e.getProperties().getValue("pushStrength");
+                    if (prop instanceof Number) pushStrength = ((Number) prop).doubleValue();
+
+                    // Отталкиваем по направлению волны
+                    e.translate(direction.multiply(pushStrength * tpf));
+
+                    // Волна исчезает после попадания
                     entity.removeFromWorld();
                 }
             } catch (Exception ignored) {}
         }
+
     }
+
 }
