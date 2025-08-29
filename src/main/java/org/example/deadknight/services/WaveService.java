@@ -13,14 +13,18 @@ import org.example.deadknight.components.WaveComponent;
  * Сервис для создания и управления волновыми атаками персонажей.
  * <p>
  * Волна создаётся в направлении персонажа и автоматически удаляется через заданное время.
+ * <p>
+ * Для каждой волны:
+ * <ul>
+ *     <li>Определяется направление движения на основе свойства "direction" shooter'а</li>
+ *     <li>В зависимости от направления подбирается размер хитбокса (width, height)</li>
+ *     <li>Применяется поворот и отражение текстуры для визуала</li>
+ * </ul>
  */
 public class WaveService {
 
     /**
      * Выпускает волну из позиции персонажа.
-     * <p>
-     * Направление волны определяется свойством "direction" объекта shooter.
-     * Волна создаётся с текстурой "wave.png", масштабируется и вращается в зависимости от направления.
      *
      * @param shooter объект, выпускающий волну (например, игрок или враг)
      */
@@ -30,6 +34,7 @@ public class WaveService {
         String dir = shooter.getProperties().getValue("direction");
         Point2D vector;
 
+        // Эти переменные определяют размер хитбокса волны в зависимости от направления
         double width = 64;
         double height = 64;
 
@@ -44,27 +49,24 @@ public class WaveService {
         waveTex.setFitWidth(64);
         waveTex.setFitHeight(64);
 
-        // Поворот и отражение для визуала
+        // Поворот и отражение текстуры для визуала
         switch (dir) {
             case "UP" -> waveTex.setRotate(90);
             case "DOWN" -> waveTex.setRotate(-90);
             case "LEFT" -> waveTex.setRotate(0);
-            case "RIGHT" -> {
-                waveTex.setRotate(0);
-                waveTex.setScaleX(-1);
-            }
+            case "RIGHT" -> { waveTex.setRotate(0); waveTex.setScaleX(-1); }
         }
 
         Entity wave = entityBuilder()
                 .at(shooter.getCenter())
                 .viewWithBBox(waveTex)
-                .bbox(new HitBox("BODY", BoundingShape.box(5, 5))) // хитбокс по направлению
+                .bbox(new HitBox("BODY", BoundingShape.box(width, height))) // хитбокс под направление
                 .with(new WaveComponent(vector))
                 .buildAndAttach();
 
+        // Удаляем волну через 1 секунду
         runOnce(() -> {
             if (wave.isActive()) wave.removeFromWorld();
         }, Duration.seconds(1));
     }
-
 }

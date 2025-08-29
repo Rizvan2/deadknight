@@ -5,6 +5,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.texture.Texture;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +19,6 @@ import java.util.Map;
 public class AnimationService {
 
     private static final double FRAME_SIZE = 64;
-    private static final String ORIGINAL_NODE_KEY = "originalNode";
 
     private final Entity entity;
     private final ImageView[] rightFrames;
@@ -26,7 +26,6 @@ public class AnimationService {
     private final ImageView idleRight;
     private final ImageView idleLeft;
     private int frameIndex = 0;
-    private static final Map<Entity, Texture> originalTextures = new HashMap<>();
 
     /**
      * Конструктор сервиса анимации.
@@ -195,11 +194,11 @@ public class AnimationService {
     /**
      * Восстанавливает idle спрайт персонажа после атаки.
      *
-     * @param entity        персонаж.
-     * @param idleImage     путь к idle изображению.
-     * @param width         ширина спрайта.
-     * @param height        высота спрайта.
-     * @param spriteDir     направление (LEFT или RIGHT).
+     * @param entity          персонаж.
+     * @param idleImage       путь к idle изображению.
+     * @param width           ширина спрайта.
+     * @param height          высота спрайта.
+     * @param spriteDir       направление (LEFT или RIGHT).
      * @param durationSeconds задержка перед восстановлением в секундах.
      */
     public static void restoreIdleSprite(Entity entity, String idleImage, double width, double height, String spriteDir, double durationSeconds) {

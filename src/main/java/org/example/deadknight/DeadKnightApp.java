@@ -21,9 +21,15 @@ import java.util.function.Supplier;
 
 /**
  * Главный класс приложения DeadKnight.
- *
- * Отвечает за инициализацию игры, управление вводом,
- * обновление состояния персонажа и взаимодействие с объектами мира.
+ * <p>
+ * Отвечает за:
+ * <ul>
+ *     <li>Инициализацию игры и настроек</li>
+ *     <li>Создание персонажей и врагов</li>
+ *     <li>Обработку ввода игрока</li>
+ *     <li>Обновление состояния персонажа и UI</li>
+ *     <li>Обработку конца игры и перезапуска</li>
+ * </ul>
  */
 public class DeadKnightApp extends GameApplication {
 
@@ -56,44 +62,40 @@ public class DeadKnightApp extends GameApplication {
 
         CharacterSelectScreen.show(characterType -> {
             currentCharacterType = characterType;
-            FXGL.getGameScene().clearUINodes(); // убираем выбор
+            FXGL.getGameScene().clearUINodes(); // убираем выбор персонажа
 
-            // 1. Создаём наш экран загрузки
+            // 1. Создаём экран загрузки
             LoadingScreenSubScene loadingScreen = new LoadingScreenSubScene(
                     FXGL.getAppWidth(),
                     FXGL.getAppHeight()
             );
 
-            FXGL.getGameScene().addUINode(loadingScreen); // показываем
+            FXGL.getGameScene().addUINode(loadingScreen); // показываем экран загрузки
 
-            // 2. Загружаем текстуры через метод loadTextures
+            // 2. Загружаем текстуры и запускаем игру после завершения
             loadingScreen.loadTextures(() -> {
-                FXGL.getGameScene().removeUINode(loadingScreen); // убираем загрузку
+                FXGL.getGameScene().removeUINode(loadingScreen); // убираем экран загрузки
                 startGame(characterType);                         // запускаем игру
             });
         });
     }
 
-
-
-
+    /**
+     * Инициализация самой игры: спавн игрока и врагов, настройка контроллеров.
+     *
+     * @param characterType выбранный игроком тип персонажа
+     */
     private void startGame(String characterType) {
         FXGL.getGameWorld().removeEntities(FXGL.getGameWorld().getEntitiesCopy());
         FXGL.getGameScene().clearUINodes();
-
         FXGL.getInput().clearAll(); // очищаем старые действия
 
         knight = GameInitializer.initGame(characterType);
 
-        // --- СПАВН ВРАГОВ ---
+        // --- Спавн врагов ---
         FXGL.spawn("goblin", 100, 100);
         FXGL.spawn("goblin", 200, 100);
         FXGL.spawn("goblin", 300, 100);
-
-        // Можно через цикл для нескольких мобов
-        // for (int i = 0; i < 5; i++) {
-        //     FXGL.spawn("goblin", 50 + i*100, 50 + i*50);
-        // }
 
         movementController = new MovementController(knight);
         collisionSystem = new CollisionSystem();
@@ -105,8 +107,6 @@ public class DeadKnightApp extends GameApplication {
             case "panther" -> PantherController.initInput(entitySupplier);
         }
     }
-
-
 
     @Override
     protected void onUpdate(double tpf) {
@@ -127,6 +127,11 @@ public class DeadKnightApp extends GameApplication {
         }
     }
 
+    /**
+     * Запуск игры.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) {
         launch(args);
     }

@@ -13,12 +13,23 @@ import javafx.util.Duration;
 import org.example.deadknight.components.HealthComponent;
 import com.almasb.fxgl.entity.Entity;
 
+/**
+ * UI-компонент для отображения здоровья персонажа.
+ * <p>
+ * Показывает красный фон и зеленую полоску здоровья,
+ * которая плавно уменьшается при уроне.
+ */
 public class HealthBar {
 
     private final Rectangle backgroundBar;
     private final Rectangle foregroundBar;
     private final Entity knight;
 
+    /**
+     * Создаёт индикатор здоровья для указанного персонажа.
+     *
+     * @param knight сущность персонажа (например, рыцаря)
+     */
     public HealthBar(Entity knight) {
         this.knight = knight;
 
@@ -42,9 +53,14 @@ public class HealthBar {
         FXGL.getGameScene().addUINode(foregroundBar);
     }
 
+    /**
+     * Обновляет ширину зеленой полоски в зависимости от текущего здоровья персонажа.
+     * <p>
+     * Используется плавная анимация ширины.
+     */
     public void update() {
         if (knight == null || knight.getWorld() == null) {
-            return; // рыцарь мёртв, обновлять нечего
+            return; // персонаж мёртв, обновлять нечего
         }
         HealthComponent health = knight.getComponent(HealthComponent.class);
         double targetWidth = 200 * Math.max(0, health.getValue() / 100.0);

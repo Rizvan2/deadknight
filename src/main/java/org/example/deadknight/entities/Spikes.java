@@ -8,9 +8,27 @@ import javafx.scene.image.ImageView;
 import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.types.EntityType;
 
+/**
+ * Класс, создающий колючки (Spikes) на игровом поле.
+ * <p>
+ * Сущность имеет:
+ * <ul>
+ *     <li>Визуальное представление через {@link ImageView}</li>
+ *     <li>HitBox для коллизий</li>
+ *     <li>Тип {@link EntityType#SPIKES}</li>
+ *     <li>Компонент здоровья {@link HealthComponent}</li>
+ *     <li>Свойство {@code canTakeDamage} для возможности получения урона</li>
+ * </ul>
+ */
 public class Spikes {
 
-
+    /**
+     * Создаёт сущность колючек на указанных координатах.
+     *
+     * @param x координата X
+     * @param y координата Y
+     * @return новая сущность колючек
+     */
     public static Entity create(double x, double y) {
         ImageView texture = FXGL.texture("spikes.png");
         texture.setFitWidth(64);
@@ -28,5 +46,4 @@ public class Spikes {
 
         return spikes;
     }
-
 }
