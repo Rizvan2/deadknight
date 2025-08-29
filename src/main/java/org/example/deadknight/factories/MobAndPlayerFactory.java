@@ -14,6 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.example.deadknight.components.EnemyComponent;
 import org.example.deadknight.components.HealthComponent;
+import org.example.deadknight.components.SeparationComponent;
 import org.example.deadknight.entities.GoblinEntity;
 import org.example.deadknight.types.EntityType;
 
@@ -67,9 +68,9 @@ public class MobAndPlayerFactory implements EntityFactory {
                 .type(EntityType.HOSTILE_MOB)
                 .view(goblinView)
                 .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
-
                 .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
+                .with(new SeparationComponent(50, 0.5))
                 .collidable()
                 .build();
 
