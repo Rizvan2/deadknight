@@ -5,7 +5,9 @@ import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.texture.Texture;
 import javafx.geometry.Point2D;
+
 import static com.almasb.fxgl.dsl.FXGL.*;
+
 import javafx.util.Duration;
 import org.example.deadknight.components.WaveComponent;
 
@@ -39,34 +41,68 @@ public class WaveService {
         double height = 64;
 
         switch (dir) {
-            case "UP" -> { vector = new Point2D(0, -1); width = 20; height = 64; }
-            case "DOWN" -> { vector = new Point2D(0, 1); width = 20; height = 64; }
-            case "LEFT" -> { vector = new Point2D(-1, 0); width = 64; height = 20; }
-            default -> { vector = new Point2D(1, 0); width = 64; height = 20; } // RIGHT
+            case "UP" -> {
+                vector = new Point2D(0, -1);
+                width = 64;
+                height = 2;
+            }
+            case "DOWN" -> {
+                vector = new Point2D(0, 1);
+                width = 64;
+                height = 2;
+            }
+            case "LEFT" -> {
+                vector = new Point2D(-1, 0);
+                width = 2;
+                height = 64;
+            }
+            default -> {
+                vector = new Point2D(1, 0);
+                width = 2;
+                height = 64;
+            } // RIGHT
         }
+
 
         Texture waveTex = texture("wave.png");
         waveTex.setFitWidth(64);
         waveTex.setFitHeight(64);
 
-        // Поворот и отражение текстуры для визуала
+// Поворот и отражение только для визуала
         switch (dir) {
             case "UP" -> waveTex.setRotate(90);
             case "DOWN" -> waveTex.setRotate(-90);
             case "LEFT" -> waveTex.setRotate(0);
-            case "RIGHT" -> { waveTex.setRotate(0); waveTex.setScaleX(-1); }
+            case "RIGHT" -> {
+                waveTex.setRotate(0);
+                waveTex.setScaleX(-1);
+            }
         }
 
+// Считаем смещение для хитбокса
+        double offsetX = (64 - width) / 2;
+        double offsetY = (64 - height) / 2;
+
+// Для горизонтальных направлений хитбокс тонкий, и нужно центрировать его по вертикали
+        if (dir.equals("LEFT") || dir.equals("RIGHT")) {
+            offsetY = (64 - 2) / 2; // центрировать тонкую полоску
+        }
+
+// Стартовая позиция: центр стрелка минус половина текстуры
+        double startX = shooter.getCenter().getX() - 32;
+        double startY = shooter.getCenter().getY() - 32;
+
         Entity wave = entityBuilder()
-                .at(shooter.getCenter())
-                .viewWithBBox(waveTex)
-                .bbox(new HitBox("BODY", BoundingShape.box(width, height))) // хитбокс под направление
+                .at(startX, startY)
+                .view(waveTex)
+                .bbox(new HitBox("BODY", new Point2D(offsetX, offsetY), BoundingShape.box(width, height)))
                 .with(new WaveComponent(vector))
                 .buildAndAttach();
 
-        // Удаляем волну через 1 секунду
+
         runOnce(() -> {
             if (wave.isActive()) wave.removeFromWorld();
         }, Duration.seconds(1));
+
     }
 }
