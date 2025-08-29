@@ -7,7 +7,7 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.PhysicsWorld;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
+//тут нечего не работает класс создавался для показа хитбоксов на мобах во время игры пока что не доработан
 @Required(PhysicsComponent.class)
 public class DebugViewComponent extends Component {
 
