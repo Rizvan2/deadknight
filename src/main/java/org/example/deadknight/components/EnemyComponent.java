@@ -4,7 +4,6 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
 import javafx.animation.AnimationTimer;
-import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.image.Image;

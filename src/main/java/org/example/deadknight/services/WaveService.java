@@ -58,7 +58,7 @@ public class WaveService {
         Entity wave = entityBuilder()
                 .at(shooter.getCenter())
                 .viewWithBBox(waveTex)
-                .bbox(new HitBox("BODY", BoundingShape.box(width, height))) // хитбокс по направлению
+                .bbox(new HitBox("BODY", BoundingShape.box(5, 5))) // хитбокс по направлению
                 .with(new WaveComponent(vector))
                 .buildAndAttach();
 

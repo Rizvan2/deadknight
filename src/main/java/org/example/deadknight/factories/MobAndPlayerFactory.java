@@ -14,6 +14,7 @@ import com.almasb.fxgl.texture.Texture;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
@@ -54,7 +55,7 @@ public class MobAndPlayerFactory implements EntityFactory {
         Entity goblin = FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(goblinView)
-                .bbox(new HitBox("BODY", BoundingShape.box(50, 50)))
+                .bbox(new HitBox("BODY", new Point2D(30, 60), BoundingShape.box(10, 10)))
                 .with(new EnemyComponent())
                 .with(new HealthComponent(health))
                 .collidable()
