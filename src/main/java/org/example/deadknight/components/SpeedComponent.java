@@ -1,16 +1,17 @@
 package org.example.deadknight.components;
 
 import com.almasb.fxgl.entity.component.Component;
+import org.example.deadknight.services.HasSpeed;
 
-public class SpeedComponent extends Component {
+public class SpeedComponent extends Component implements HasSpeed {
 
-    private int speed;
+    private double speed;
 
     public SpeedComponent(int speed) {
         this.speed = speed;
     }
 
-    public int getSpeed() {
+    public double getSpeed() {
         return speed;
     }
 

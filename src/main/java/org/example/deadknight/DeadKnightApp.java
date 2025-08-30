@@ -4,12 +4,15 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import org.example.deadknight.components.SpeedComponent;
 import org.example.deadknight.controllers.MovementController;
 import org.example.deadknight.controllers.KnightController;
 import org.example.deadknight.controllers.PantherController;
+import org.example.deadknight.entities.KnightEntity;
 import org.example.deadknight.init.LoadingScreenSubScene;
 import org.example.deadknight.init.SettingsInitializer;
 import org.example.deadknight.services.GameInitializerService;
+import org.example.deadknight.services.HasSpeed;
 import org.example.deadknight.services.UIService;
 import org.example.deadknight.systems.CollisionSystem;
 import org.example.deadknight.ui.CharacterSelectScreen;
@@ -99,7 +102,9 @@ public class DeadKnightApp extends GameApplication {
 
                 ));
 
-        movementController = new MovementController(player);
+        HasSpeed playerData = (HasSpeed) player.getComponent(SpeedComponent.class); // SpeedComponent реализует HasSpeed
+        movementController = new MovementController(playerData, player);
+
         uiService.initUI(player);
 
         Supplier<Entity> entitySupplier = () -> player;

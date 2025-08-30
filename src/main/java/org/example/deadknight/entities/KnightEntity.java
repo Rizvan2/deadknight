@@ -1,9 +1,11 @@
 package org.example.deadknight.entities;
 
+import com.almasb.fxgl.entity.component.Component;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.components.SpeedComponent;
+import org.example.deadknight.services.HasSpeed;
 
 /**
  * Класс, представляющий рыцаря (игрока) в игре.
@@ -15,17 +17,18 @@ import org.example.deadknight.components.SpeedComponent;
  *     <li>Направление движения или взгляда</li>
  * </ul>
  */
-@Getter
 @Setter
-public class KnightEntity {
+public class KnightEntity implements HasSpeed {
 
     /** Компонент здоровья */
+    @Getter
     private final HealthComponent health;
 
     /** Компонент скорости */
     private final SpeedComponent speed;
 
     /** Текущие направление движения или взгляда ("left", "right", "up", "down") */
+    @Getter
     private String direction;
 
     /**
@@ -39,5 +42,16 @@ public class KnightEntity {
         this.health = new HealthComponent(hp);
         this.speed = new SpeedComponent(speedValue);
         this.direction = initialDirection;
+    }
+
+
+    // Реализация метода HasSpeed
+    @Override
+    public double getSpeed() {
+        return speed.getSpeed(); // возвращаем число, а не сам компонент
+    }
+
+    public SpeedComponent getSpeedComponent() {
+        return speed;
     }
 }

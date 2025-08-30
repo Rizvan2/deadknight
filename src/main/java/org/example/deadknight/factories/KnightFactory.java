@@ -30,7 +30,7 @@ public class KnightFactory {
                 .at(x, y)
                 .bbox(new HitBox("BODY", BoundingShape.box(44, 44)))
                 .with(knightData.getHealth())
-                .with(knightData.getSpeed())
+                .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
                 .build();

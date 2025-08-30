@@ -1,39 +1,29 @@
 package org.example.deadknight.controllers;
 
 import com.almasb.fxgl.entity.Entity;
-import lombok.Getter;
-import lombok.Setter;
+import javafx.geometry.Point2D;
+import org.example.deadknight.entities.KnightEntity;
+import org.example.deadknight.services.HasSpeed;
 
 /**
- * Контроллер, управляющий движением сущности игрока.
- * <p>
- * Делегирует обработку нажатий клавиш WASD через {@link WASDController}
- * и обновляет текущее время между кадрами (tpf).
+ * Контроллер движения игрока с постоянной скоростью в пикселях/сек.
  */
-@Getter
-@Setter
 public class MovementController {
 
-    /** Сущность, которой управляет контроллер */
     private final Entity entity;
+    private final double speed;
+    private Point2D direction = Point2D.ZERO;
 
-    /**
-     * Создаёт новый контроллер для указанной сущности.
-     *
-     * @param entity сущность для управления
-     */
-    public MovementController(Entity entity) {
+    public MovementController(HasSpeed character, Entity entity) {
         this.entity = entity;
+        this.speed = character.getSpeed();
     }
 
-    /**
-     * Обновляет состояние контроллера.
-     * <p>
-     * Вызывается каждый кадр и передаёт {@code tpf} в {@link WASDController}.
-     *
-     * @param tpf время между кадрами (time per frame)
-     */
+    public void setDirection(Point2D dir) {
+        direction = dir.magnitude() > 0 ? dir.normalize() : Point2D.ZERO;
+    }
+
     public void update(double tpf) {
-        WASDController.setCurrentTpf(tpf);
+        entity.translate(direction.multiply(speed * tpf));
     }
 }
