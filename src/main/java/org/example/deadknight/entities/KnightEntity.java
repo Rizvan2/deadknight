@@ -38,7 +38,7 @@ public class KnightEntity implements HasSpeed {
      * @param speedValue      значение скорости
      * @param initialDirection начальное направление движения/взгляда
      */
-    public KnightEntity(int hp, int speedValue, String initialDirection) {
+    public KnightEntity(int hp, double speedValue, String initialDirection) {
         this.health = new HealthComponent(hp);
         this.speed = new SpeedComponent(speedValue);
         this.direction = initialDirection;

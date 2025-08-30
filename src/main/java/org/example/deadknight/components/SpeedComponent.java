@@ -7,7 +7,7 @@ public class SpeedComponent extends Component implements HasSpeed {
 
     private double speed;
 
-    public SpeedComponent(int speed) {
+    public SpeedComponent(double speed) {
         this.speed = speed;
     }
 
