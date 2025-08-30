@@ -135,10 +135,13 @@ public class WaveComponent extends Component {
      * @return сила отталкивания, 0 если свойство отсутствует или некорректное
      */
     private double getPushStrength(Entity e) {
-        Object prop = e.getProperties().getValue("wavePushStrength");
-        if (prop instanceof Number) return ((Number) prop).doubleValue();
-        return 0;
+        return e.getProperties()
+                .getValueOptional("wavePushStrength")
+                .filter(v -> v instanceof Number)
+                .map(v -> ((Number) v).doubleValue())
+                .orElse(0.0);
     }
+
 
     /**
      * Удаляет волну из игрового мира.
