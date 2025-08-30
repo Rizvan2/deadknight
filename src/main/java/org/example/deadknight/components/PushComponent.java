@@ -3,21 +3,35 @@ package org.example.deadknight.components;
 import com.almasb.fxgl.entity.component.Component;
 import javafx.geometry.Point2D;
 
+/**
+ * Компонент для отталкивания сущности с плавным замедлением.
+ */
 public class PushComponent extends Component {
 
-    private Point2D pushVector = Point2D.ZERO;
+    /** Текущая скорость отталкивания */
+    private Point2D velocity = Point2D.ZERO;
 
-    public void addPush(Point2D vector) {
-        pushVector = pushVector.add(vector);
+    /** Коэффициент замедления (чем больше, тем быстрее тормозит) */
+    private final double damping = 3.0;
+
+    /**
+     * Добавить импульс для отталкивания.
+     * @param impulse Вектор силы (направление и величина)
+     */
+    public void addImpulse(Point2D impulse) {
+        this.velocity = this.velocity.add(impulse);
     }
 
     @Override
     public void onUpdate(double tpf) {
-        if (pushVector.magnitude() > 0.1) {
-            entity.translate(pushVector.multiply(tpf));
-            pushVector = pushVector.multiply(0.9); // затухание для плавного торможения
+        if (velocity.magnitude() > 0.1) {
+            // Двигаем сущность
+            entity.translate(velocity.multiply(tpf));
+
+            // Плавное замедление
+            velocity = velocity.subtract(velocity.multiply(damping * tpf));
         } else {
-            pushVector = Point2D.ZERO;
+            velocity = Point2D.ZERO;
         }
     }
 }

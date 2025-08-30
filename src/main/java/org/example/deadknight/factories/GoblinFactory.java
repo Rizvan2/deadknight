@@ -50,8 +50,7 @@ public class GoblinFactory implements EntityFactory {
 
         goblin.getProperties().setValue("canTakeDamage", true);
         goblin.getProperties().setValue("speed", 50.0);
-        goblin.getProperties().setValue("pushStrength", 2000); // сила отталкивания
-
+        goblin.getProperties().setValue("wavePushStrength", 300);
 
         return goblin;
     }
