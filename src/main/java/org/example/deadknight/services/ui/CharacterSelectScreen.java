@@ -1,12 +1,15 @@
 package org.example.deadknight.services.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
@@ -14,15 +17,23 @@ import java.util.function.Consumer;
  * <p>
  * Отображает кнопки для выбора рыцаря или пантеры
  * и уведомляет колбэк о выбранном персонаже.
+ * <p>
+ * В Java 21 можно использовать <b>виртуальные потоки</b> для асинхронной загрузки изображений,
+ * чтобы UI не блокировался при загрузке тяжёлой графики.
+ * Виртуальные потоки — это лёгкие потоки, которые JVM планирует на системные потоки,
+ * что позволяет запускать тысячи параллельных задач без перегрузки системы.
+ * <p>
+ * Применение в игровом проекте:
+ * <ul>
+ *     <li>Асинхронная загрузка спрайтов и текстур.</li>
+ *     <li>Сетевые запросы (мультиплеер, рейтинги, статистика).</li>
+ *     <li>Фоновая обработка данных и логирование.</li>
+ * </ul>
  */
 public class CharacterSelectScreen {
 
     /**
      * Отображает экран выбора персонажа.
-     * <p>
-     * Показывает две кнопки: "Рыцарь" и "Пантера".
-     * При нажатии на кнопку вызывается переданный колбэк с типом выбранного персонажа.
-     * Также у кнопки пантеры реализован hover-эффект, который меняет изображение при наведении.
      *
      * @param onCharacterSelected колбэк, вызываемый с типом выбранного персонажа ("knight" или "panther")
      */
@@ -39,13 +50,26 @@ public class CharacterSelectScreen {
         btnPanther.setPrefHeight(220);
         btnPanther.setStyle("-fx-background-color: black;");
 
-        var pantherImage = new ImageView(
-                new Image(CharacterSelectScreen.class.getResource("/assets/textures/bleckpanter.png").toExternalForm())
-        );
+        var pantherImage = new ImageView();
         pantherImage.setFitWidth(200);
         pantherImage.setFitHeight(200);
         pantherImage.setPreserveRatio(true);
         btnPanther.setGraphic(pantherImage);
+
+// Полностью виртуальный поток для загрузки
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            executor.submit(() -> {
+                // Загружаем картинку в виртуальном потоке, UI не блокируется
+                Image img = new Image(
+                        CharacterSelectScreen.class.getResource("/assets/textures/bleckpanter.png").toExternalForm()
+                );
+
+                // На UI-поток только один вызов, чтобы отобразить результат
+                Platform.runLater(() -> pantherImage.setImage(img));
+            });
+        }
+
+
 
         btnPanther.setOnAction(e -> onCharacterSelected.accept("panther"));
 
@@ -60,5 +84,4 @@ public class CharacterSelectScreen {
 
         FXGL.addUINode(background);
     }
-
 }

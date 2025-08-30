@@ -14,13 +14,22 @@ import org.example.deadknight.player.factories.PantherFactory;
 /**
  * Класс инициализации игры.
  * <p>
- * Создает игрового персонажа (рыцарь или пантера), добавляет его в мир,
- * расставляет препятствия и устанавливает фон сцены.
+ * Отвечает за создание игрового персонажа, расстановку препятствий, установку фона сцены
+ * и спавн врагов.
  */
 public class GameInitializer {
 
     /**
      * Инициализирует игрового персонажа и базовый игровой мир.
+     * <p>
+     * В зависимости от выбранного типа персонажа:
+     * <ul>
+     *     <li>Создает сущность {@link KnightEntity} или {@link IlyasPantherEntity}</li>
+     *     <li>Добавляет персонажа в игровой мир</li>
+     *     <li>Добавляет препятствия {@link Spikes}</li>
+     *     <li>Устанавливает фон сцены</li>
+     *     <li>Запускает таймер на спавн врагов через {@link FXGL#getGameTimer()}</li>
+     * </ul>
      *
      * @param characterType тип персонажа: "knight" или "panther"
      * @return созданная сущность персонажа {@link Entity}
@@ -54,20 +63,6 @@ public class GameInitializer {
         // Устанавливаем фон сцены
         FXGL.getGameScene().setBackgroundColor(Color.BLACK);
 
-        for (int i = 0; i < 10; i++) {
-            int x = 200 + i * 50;
-            int y = 200;
-
-            FXGL.getGameTimer().runOnceAfter(() -> {
-                FXGL.spawn("goblin", new SpawnData(x, y)
-
-                );
-            }, Duration.seconds(8 + i));
-        }
-
-
-
         return character;
     }
-
 }

@@ -5,51 +5,62 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import org.example.deadknight.player.components.SpeedComponent;
-import org.example.deadknight.player.controllers.MovementController;
 import org.example.deadknight.player.controllers.KnightController;
+import org.example.deadknight.player.controllers.MovementController;
 import org.example.deadknight.player.controllers.PantherController;
-import org.example.deadknight.services.init.LoadingScreenSubScene;
-import org.example.deadknight.services.init.SettingsInitializer;
-import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.player.services.HasSpeed;
+import org.example.deadknight.services.GameFlowService;
+import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.services.UIService;
 import org.example.deadknight.player.systems.CollisionSystem;
-import org.example.deadknight.services.ui.CharacterSelectScreen;
+import org.example.deadknight.services.init.SettingsInitializer;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 /**
  * Главный класс приложения DeadKnight.
  * <p>
- * Отвечает за:
+ * Отвечает за полный игровой цикл:
  * <ul>
- *     <li>Инициализацию настроек игры</li>
+ *     <li>Инициализация настроек игры</li>
  *     <li>Выбор персонажа и показ экрана загрузки</li>
- *     <li>Инициализацию игрока и врагов через {@link GameInitializerService}</li>
+ *     <li>Создание игрока и врагов через {@link GameInitializerService}</li>
+ *     <li>Настройку контроллеров и системы движения</li>
  *     <li>Инициализацию UI через {@link UIService}</li>
- *     <li>Обновление состояния игрока, UI и системы столкновений</li>
- *     <li>Обработку конца игры и перезапуск</li>
+ *     <li>Обновление состояния игрока, системы столкновений и UI каждый кадр</li>
+ *     <li>Обработку конца игры и возможность перезапуска</li>
  * </ul>
  */
 public class DeadKnightApp extends GameApplication {
 
-    /** Сущность игрока, которой управляет пользователь */
+    /**
+     * Сущность игрока, которой управляет пользователь
+     */
     private Entity player;
 
-    /** Контроллер движения игрока */
+    /**
+     * Контроллер движения игрока
+     */
     private MovementController movementController;
 
-    /** Система обработки столкновений и урона */
+    /**
+     * Система обработки столкновений и урона
+     */
     private CollisionSystem collisionSystem;
 
-    /** Сервис для управления интерфейсом игрока */
+    /**
+     * Сервис для управления интерфейсом игрока
+     */
     private UIService uiService;
 
-    /** Сервис инициализации игрока и врагов */
+    /**
+     * Сервис инициализации игрока и врагов
+     */
     private GameInitializerService gameInitService;
 
-    /** Тип текущего выбранного персонажа ("knight"/"panther") */
+    /**
+     * Тип текущего выбранного персонажа ("knight"/"panther")
+     */
     private String currentCharacterType;
 
     @Override
@@ -57,54 +68,61 @@ public class DeadKnightApp extends GameApplication {
         SettingsInitializer.initSettings(settings);
     }
 
+    /**
+     * Инициализация игры:
+     * <ul>
+     *     <li>Создание сервисов и систем</li>
+     *     <li>Показ экрана выбора персонажа через {@link GameFlowService}</li>
+     * </ul>
+     */
     @Override
     protected void initGame() {
         gameInitService = new GameInitializerService();
         uiService = new UIService();
         collisionSystem = new CollisionSystem();
+        GameFlowService gameFlowService = new GameFlowService();
 
-        CharacterSelectScreen.show(characterType -> {
+        // Показываем экран выбора персонажа
+        gameFlowService.startCharacterSelection(characterType -> {
             currentCharacterType = characterType;
-            FXGL.getGameScene().clearUINodes();
-
-            LoadingScreenSubScene loadingScreen = new LoadingScreenSubScene(
-                    FXGL.getAppWidth(),
-                    FXGL.getAppHeight()
-            );
-            FXGL.getGameScene().addUINode(loadingScreen);
-
-            loadingScreen.loadTextures(() -> {
-                FXGL.getGameScene().removeUINode(loadingScreen);
-                startGame(characterType);
-            });
+            startGame(characterType);
         });
     }
 
     /**
-     * Инициализирует игрока и врагов, настраивает контроллеры и ввод.
+     * Запускает игру после выбора персонажа:
+     * <ul>
+     *     <li>Очищает сцену и ввод</li>
+     *     <li>Создаёт игрока и настраивает контроллер движения</li>
+     *     <li>Инициализирует UI и спавнит врагов</li>
+     * </ul>
      *
-     * @param characterType выбранный тип персонажа
+     * @param characterType выбранный тип персонажа ("knight" или "panther")
      */
     private void startGame(String characterType) {
+        clearScene();
+        initPlayerAndController(characterType);
+        initUIAndEnemies(characterType);
+    }
+
+    /**
+     * Очищает игровую сцену от старых сущностей и UI, сбрасывает ввод.
+     */
+    private void clearScene() {
         FXGL.getGameWorld().removeEntities(FXGL.getGameWorld().getEntitiesCopy());
         FXGL.getGameScene().clearUINodes();
         FXGL.getInput().clearAll();
+    }
 
+    /**
+     * Создаёт игрока заданного типа и настраивает его контроллер движения.
+     *
+     * @param characterType выбранный тип персонажа ("knight" или "panther")
+     */
+    private void initPlayerAndController(String characterType) {
         player = gameInitService.initPlayer(characterType);
-        gameInitService.spawnEnemies(List.of(
-                new double[]{100, 100},
-                new double[]{200, 100},
-                new double[]{300, 100},
-                new double[]{250, 100},
-                new double[]{250, 100},
-                new double[]{350, 100}
-
-                ));
-
-        HasSpeed playerData = (HasSpeed) player.getComponent(SpeedComponent.class); // SpeedComponent реализует HasSpeed
+        HasSpeed playerData = (HasSpeed) player.getComponent(SpeedComponent.class);
         movementController = new MovementController(playerData, player);
-
-        uiService.initUI(player);
 
         Supplier<Entity> entitySupplier = () -> player;
         switch (characterType) {
@@ -113,6 +131,27 @@ public class DeadKnightApp extends GameApplication {
         }
     }
 
+    /**
+     * Инициализирует интерфейс игрока и спавнит врагов на сцене.
+     *
+     * @param characterType выбранный тип персонажа (для совместимости с будущими изменениями)
+     */
+    private void initUIAndEnemies(String characterType) {
+        uiService.initUI(player);
+        gameInitService.spawnEnemies(10);
+    }
+
+    /**
+     * Обновление состояния игры каждый кадр:
+     * <ul>
+     *     <li>Движение игрока</li>
+     *     <li>Система столкновений</li>
+     *     <li>Обновление UI</li>
+     *     <li>Проверка окончания игры и перезапуск</li>
+     * </ul>
+     *
+     * @param tpf время прошедшее с последнего кадра (time per frame)
+     */
     @Override
     protected void onUpdate(double tpf) {
         if (player == null) return;
@@ -120,7 +159,6 @@ public class DeadKnightApp extends GameApplication {
         movementController.update(tpf);
         collisionSystem.update(player, tpf);
         uiService.update();
-
         uiService.checkGameOver(player, () -> startGame(currentCharacterType));
     }
 
