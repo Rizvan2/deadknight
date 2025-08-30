@@ -20,21 +20,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Фабрика создания гоблинов для игры.
+ * Фабрика создания мобов типа "Гоблин".
  * <p>
- * Данный класс отвечает за генерацию враждебных мобов-гоблинов, с настройкой:
+ * Отвечает за генерацию врагов с преднастроенными компонентами:
  * <ul>
- *     <li>AI поведения через {@link EnemyComponent}</li>
- *     <li>Здоровья через {@link HealthComponent} с хитбаром</li>
- *     <li>Разделения для предотвращения наложения через {@link SeparationComponent}</li>
- *     <li>Физических коллизий через {@link HitBox}</li>
- *     <li>Визуализации через {@link ImageView} с анимацией</li>
+ *     <li>{@link EnemyComponent} — AI поведение.</li>
+ *     <li>{@link HealthComponent} — здоровье с визуальным хитбаром.</li>
+ *     <li>{@link SeparationComponent} — предотвращение наложения сущностей.</li>
+ *     <li>{@link PushComponent} — возможность отталкивания.</li>
+ *     <li>Коллизии через {@link HitBox}.</li>
+ *     <li>Визуализация через {@link ImageView} с анимацией ходьбы и атаки.</li>
  * </ul>
  * <p>
  * Использует аннотацию {@link Spawns} для регистрации типа "goblin" в FXGL.
  */
 public class GoblinFactory implements EntityFactory {
 
+    /**
+     * Создает нового гоблина с заданными параметрами.
+     *
+     * @param data данные для спавна сущности
+     * @return готовая сущность гоблина
+     */
     @Spawns("goblin")
     public Entity newGoblin(SpawnData data) {
         int health = getHealthFromData(data);
@@ -48,17 +55,24 @@ public class GoblinFactory implements EntityFactory {
 
         attachHealthBar(goblin);
 
+        // Свойства сущности
         goblin.getProperties().setValue("canTakeDamage", true);
         goblin.getProperties().setValue("speed", 50.0);
-        goblin.getProperties().setValue("wavePushStrength", 300);
+        goblin.getProperties().setValue("wavePushStrength", 300); // сила отталкивания от волны
 
         return goblin;
     }
 
+    /**
+     * Получает здоровье из данных спавна или возвращает дефолтное.
+     */
     private int getHealthFromData(SpawnData data) {
         return data.getData().containsKey("health") ? (int) data.get("health") : 50;
     }
 
+    /**
+     * Загружает кадры анимации ходьбы.
+     */
     private List<Image> loadWalkFrames() {
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 25; i++) {
@@ -67,6 +81,9 @@ public class GoblinFactory implements EntityFactory {
         return frames;
     }
 
+    /**
+     * Загружает кадры анимации атаки.
+     */
     private List<Image> loadAttackFrames() {
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 15; i++) {
@@ -75,6 +92,9 @@ public class GoblinFactory implements EntityFactory {
         return frames;
     }
 
+    /**
+     * Создает {@link ImageView} для визуализации гоблина.
+     */
     private ImageView createGoblinView(Image firstFrame) {
         ImageView view = new ImageView(firstFrame);
         view.setFitWidth(110);
@@ -83,6 +103,9 @@ public class GoblinFactory implements EntityFactory {
         return view;
     }
 
+    /**
+     * Строит сущность гоблина с необходимыми компонентами и коллизией.
+     */
     private Entity buildGoblinEntity(SpawnData data, GoblinEntity goblinData, ImageView view, int health) {
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
@@ -96,6 +119,11 @@ public class GoblinFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Добавляет хитбар для отображения здоровья сущности.
+     *
+     * @param goblin сущность гоблина
+     */
     private void attachHealthBar(Entity goblin) {
         Rectangle healthBar = new Rectangle(40, 5, Color.LIME);
         healthBar.setTranslateX(25);

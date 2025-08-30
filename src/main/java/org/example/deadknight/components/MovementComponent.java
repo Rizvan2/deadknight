@@ -1,7 +1,6 @@
 package org.example.deadknight.components;
 
 import com.almasb.fxgl.entity.component.Component;
-import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
 
 /**

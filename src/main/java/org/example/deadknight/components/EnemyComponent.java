@@ -9,7 +9,6 @@ import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
-import lombok.Setter;
 import org.example.deadknight.entities.GoblinEntity;
 
 import java.util.List;

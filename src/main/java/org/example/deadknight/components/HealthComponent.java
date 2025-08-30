@@ -3,10 +3,12 @@ package org.example.deadknight.components;
 import com.almasb.fxgl.entity.component.Component;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import lombok.Getter;
 
 public class HealthComponent extends Component {
 
     private final IntegerProperty value;
+    @Getter
     private final int maxValue;
 
     public HealthComponent(int value) {
@@ -28,10 +30,6 @@ public class HealthComponent extends Component {
 
     public int getValue() {
         return value.get();
-    }
-
-    public int getMaxValue() {
-        return maxValue;
     }
 
     public boolean isDead() {
