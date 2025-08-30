@@ -2,8 +2,8 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.factories.GoblinFactory;
-import org.example.deadknight.init.GameInitializer;
+import org.example.deadknight.mobs.factories.GoblinFactory;
+import org.example.deadknight.services.init.GameInitializer;
 
 import java.util.List;
 

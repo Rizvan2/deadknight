@@ -1,8 +1,8 @@
 package org.example.deadknight.services;
 
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.ui.GameOverUI;
-import org.example.deadknight.ui.UIController;
+import org.example.deadknight.services.ui.GameOverUI;
+import org.example.deadknight.services.ui.UIController;
 import org.example.deadknight.components.HealthComponent;
 
 /**
