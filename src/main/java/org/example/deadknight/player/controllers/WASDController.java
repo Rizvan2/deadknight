@@ -13,15 +13,24 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * Универсальный контроллер движения по WASD.
- * Работает как старая логика KnightController.
+ * Универсальный контроллер движения сущности по клавишам WASD (или любым другим клавишам).
+ * <p>
+ * Особенности:
+ * <ul>
+ *     <li>Поддержка нескольких одновременных нажатий клавиш.</li>
+ *     <li>Автоматическое обновление направления спрайта для LEFT/RIGHT.</li>
+ *     <li>Управление свойством {@code "moving"} сущности.</li>
+ * </ul>
  */
 public class WASDController {
 
+    /** Список текущих нажатых направлений */
     private static final Set<String> pressedKeys = new HashSet<>();
+
+    /** Зарегистрированные действия для клавиш, чтобы не добавлять их повторно */
     private static final Set<String> addedActions = new HashSet<>();
 
-
+    /** Текущее значение TPF (time per frame) для перемещения */
     @Setter
     private static double currentTpf = 0;
 
@@ -32,82 +41,112 @@ public class WASDController {
      * @param movementMap    карта клавиша → направление ("UP", "DOWN", "LEFT", "RIGHT")
      */
     public static void initInput(Supplier<Entity> entitySupplier, Map<KeyCode, String> movementMap) {
-        FXGL.getInput().clearAll(); // <-- очищаем все старые действия один раз
-
-        movementMap.forEach((key, direction) -> {
-            int dx = 0, dy = 0;
-            switch (direction) {
-                case "RIGHT" -> dx = 5;
-                case "LEFT"  -> dx = -5;
-                case "UP"    -> dy = -5;
-                case "DOWN"  -> dy = 5;
-            }
-            addKeyAction(entitySupplier, key, direction, dx, dy);
-        });
+        FXGL.getInput().clearAll(); // очищаем старые действия
+        movementMap.forEach((key, direction) -> addKeyAction(entitySupplier, key, direction));
     }
 
-    private static void addKeyAction(Supplier<Entity> entitySupplier,
-                                     KeyCode key,
-                                     String direction,
-                                     int dx,
-                                     int dy) {
-
+    /**
+     * Добавляет обработку одной клавиши движения.
+     *
+     * @param entitySupplier поставщик сущности
+     * @param key            клавиша управления
+     * @param direction      направление движения ("UP", "DOWN", "LEFT", "RIGHT")
+     */
+    private static void addKeyAction(Supplier<Entity> entitySupplier, KeyCode key, String direction) {
         String actionName = "Move " + direction;
 
-        if (!addedActions.contains(actionName)) {
-            addedActions.add(actionName);
+        if (addedActions.contains(actionName)) return;
+        addedActions.add(actionName);
 
-            final int finalDx = dx;
-            final int finalDy = dy;
+        // Получаем смещение по X и Y
+        int[] deltas = getDirectionDelta(direction);
+        int dx = deltas[0];
+        int dy = deltas[1];
 
-            FXGL.getInput().addAction(new UserAction(actionName) {
+        FXGL.getInput().addAction(new UserAction(actionName) {
+            @Override
+            protected void onActionBegin() { handleActionBegin(entitySupplier.get(), direction); }
 
-                @Override
-                protected void onActionBegin() {
-                    Entity e = entitySupplier.get();
-                    if (e == null || e.getWorld() == null) return;
+            @Override
+            protected void onAction() { handleAction(entitySupplier.get(), dx, dy); }
 
-                    pressedKeys.add(direction);
-                    e.getProperties().setValue("moving", true);
-                    e.getProperties().setValue("direction", direction);
+            @Override
+            protected void onActionEnd() { handleActionEnd(entitySupplier.get(), direction); }
+        }, key);
+    }
 
-                    if ("LEFT".equals(direction) || "RIGHT".equals(direction)) {
-                        e.getProperties().setValue("spriteDir", direction);
-                    }
-                }
+    /**
+     * Возвращает смещение по X и Y для направления движения.
+     *
+     * @param direction направление ("UP", "DOWN", "LEFT", "RIGHT")
+     * @return массив [dx, dy]
+     */
+    private static int[] getDirectionDelta(String direction) {
+        return switch (direction) {
+            case "RIGHT" -> new int[]{5, 0};
+            case "LEFT"  -> new int[]{-5, 0};
+            case "UP"    -> new int[]{0, -5};
+            case "DOWN"  -> new int[]{0, 5};
+            default -> new int[]{0, 0};
+        };
+    }
 
-                @Override
-                protected void onAction() {
-                    Entity e = entitySupplier.get();
-                    if (e == null || e.getWorld() == null) return;
-                    if (!e.hasComponent(SpeedComponent.class)) return;
+    /**
+     * Обрабатывает начало нажатия клавиши.
+     *
+     * @param e         сущность
+     * @param direction направление
+     */
+    private static void handleActionBegin(Entity e, String direction) {
+        if (e == null || e.getWorld() == null) return;
 
-                    double speed = e.getComponent(SpeedComponent.class).getSpeed();
-                    e.translateX(finalDx * speed * currentTpf);
-                    e.translateY(finalDy * speed * currentTpf);
-                }
+        pressedKeys.add(direction);
+        e.getProperties().setValue("moving", true);
+        e.getProperties().setValue("direction", direction);
 
-                @Override
-                protected void onActionEnd() {
-                    Entity e = entitySupplier.get();
-                    if (e != null) {
-                        pressedKeys.remove(direction);
+        if ("LEFT".equals(direction) || "RIGHT".equals(direction)) {
+            e.getProperties().setValue("spriteDir", direction);
+        }
+    }
 
-                        if (!pressedKeys.isEmpty()) {
-                            String nextDir = pressedKeys.iterator().next();
-                            e.getProperties().setValue("direction", nextDir);
+    /**
+     * Обрабатывает удержание клавиши.
+     *
+     * @param e  сущность
+     * @param dx смещение по X
+     * @param dy смещение по Y
+     */
+    private static void handleAction(Entity e, int dx, int dy) {
+        if (e == null || e.getWorld() == null) return;
+        if (!e.hasComponent(SpeedComponent.class)) return;
 
-                            if ("LEFT".equals(nextDir) || "RIGHT".equals(nextDir)) {
-                                e.getProperties().setValue("spriteDir", nextDir);
-                            }
+        double speed = e.getComponent(SpeedComponent.class).getSpeed();
+        e.translateX(dx * speed * currentTpf);
+        e.translateY(dy * speed * currentTpf);
+    }
 
-                            e.getProperties().setValue("moving", true);
-                        } else {
-                            e.getProperties().setValue("moving", false);
-                        }
-                    }
-                }
-            }, key);
+    /**
+     * Обрабатывает отпускание клавиши.
+     *
+     * @param e         сущность
+     * @param direction направление
+     */
+    private static void handleActionEnd(Entity e, String direction) {
+        if (e == null) return;
+
+        pressedKeys.remove(direction);
+
+        if (!pressedKeys.isEmpty()) {
+            String nextDir = pressedKeys.iterator().next();
+            e.getProperties().setValue("direction", nextDir);
+
+            if ("LEFT".equals(nextDir) || "RIGHT".equals(nextDir)) {
+                e.getProperties().setValue("spriteDir", nextDir);
+            }
+
+            e.getProperties().setValue("moving", true);
+        } else {
+            e.getProperties().setValue("moving", false);
         }
     }
 }
