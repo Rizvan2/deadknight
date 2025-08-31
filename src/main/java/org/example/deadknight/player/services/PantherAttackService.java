@@ -39,7 +39,7 @@ public class PantherAttackService {
                 (int) (10 * durationSeconds)
         );
 
-        // Возврат к idle спрайту после атаки
-        AnimationService.restoreIdleSprite(panther, "panter1.png", 64, 64, spriteDir, durationSeconds);
+        // Устанавливает задержку между атаками персонажа.
+        AnimationService.setAttackCooldown(panther, durationSeconds);
     }
 }

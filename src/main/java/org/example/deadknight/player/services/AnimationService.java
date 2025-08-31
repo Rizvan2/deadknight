@@ -130,11 +130,15 @@ public class AnimationService {
     }
 
     /**
-     * Выполняет анимацию атаки персонажа с возвращением к idle спрайту.
+     * Запускает анимацию атаки персонажа и устанавливает задержку между атаками.
+     * <p>
+     * Метод проверяет, атакует ли персонаж в данный момент, чтобы предотвратить повторные атаки.
+     * Меняет спрайт на указанный {@code attackImage}, запускает эффект атаки (например, волну),
+     * и после {@code durationSeconds} восстанавливает возможность следующей атаки.
      *
-     * @param entity          персонаж.
-     * @param attackImage     путь к изображению атаки.
-     * @param durationSeconds длительность анимации атаки в секундах.
+     * @param entity          персонаж, который выполняет атаку
+     * @param attackImage     путь к изображению спрайта атаки
+     * @param durationSeconds длительность "кулдауна" атаки в секундах
      */
     public static void playAttack(Entity entity, String attackImage, double durationSeconds) {
         if (Boolean.TRUE.equals(entity.getProperties().getBoolean("isAttacking"))) return;
@@ -148,7 +152,7 @@ public class AnimationService {
 
         WaveService.shoot(entity);
 
-        restoreIdleSprite(entity, "knight/knight_left-1.png", 64, 64, spriteDir, durationSeconds);
+        setAttackCooldown(entity, durationSeconds);
     }
 
     /**
@@ -189,25 +193,15 @@ public class AnimationService {
     }
 
     /**
-     * Восстанавливает idle спрайт персонажа после атаки.
+     * Устанавливает задержку между атаками персонажа.
      *
      * @param entity          персонаж.
-     * @param idleImage       путь к idle изображению.
-     * @param width           ширина спрайта.
-     * @param height          высота спрайта.
-     * @param spriteDir       направление (LEFT или RIGHT).
-     * @param durationSeconds задержка перед восстановлением в секундах.
+     * @param durationSeconds длительность задержки в секундах.
      */
-    public static void restoreIdleSprite(Entity entity, String idleImage, double width, double height, String spriteDir, double durationSeconds) {
+    public static void setAttackCooldown(Entity entity, double durationSeconds) {
         FXGL.runOnce(() -> {
             entity.getProperties().setValue("isAttacking", false);
-            ImageView defaultIv = new ImageView(FXGL.image(idleImage));
-            defaultIv.setFitWidth(width);
-            defaultIv.setFitHeight(height);
-            defaultIv.setPreserveRatio(true);
-            if ("RIGHT".equals(spriteDir)) defaultIv.setScaleX(-1);
-            entity.getViewComponent().clearChildren();
-            entity.getViewComponent().addChild(defaultIv);
         }, Duration.seconds(durationSeconds));
     }
+
 }
