@@ -3,108 +3,75 @@ package org.example.deadknight.mobs.components;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
-import javafx.animation.AnimationTimer;
 import javafx.geometry.Point2D;
-import javafx.scene.CacheHint;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import lombok.Getter;
 import org.example.deadknight.mobs.entities.GoblinEntity;
 
-import java.util.List;
-
 /**
- * Компонент, управляющий поведением врага (гоблина).
+ * Компонент, управляющий поведением врага (гоблина) в игре.
  * <p>
- * Отвечает за:
+ * Основные функции:
  * <ul>
- *     <li>Анимацию ходьбы и атаки</li>
- *     <li>Следование за игроком</li>
+ *     <li>Следование за игроком с постоянной скоростью</li>
+ *     <li>Переключение анимации ходьбы и атаки через {@link AnimationComponent}</li>
+ *     <li>Атаку игрока делегирует {@link AttackComponent}</li>
  * </ul>
- * <p>
- * Атаку теперь делегирует {@link AttackComponent}.
+ *
+ * <p>Используются внутренние флаги:
+ * <ul>
+ *     <li>{@code isWalking} — отслеживает, идет ли гоблин и запущена ли анимация ходьбы</li>
+ *     <li>{@code isAttacking} — отслеживает, атакует ли гоблин и запущена ли анимация атаки</li>
+ * </ul>
+ *
+ * <p>Игровая логика:
+ * <ul>
+ *     <li>Если игрок находится дальше 40 пикселей, гоблин движется к нему и проигрывается анимация ходьбы.</li>
+ *     <li>Если игрок близко (≤40 пикселей), запускается анимация атаки и вызывается метод {@link AttackComponent#tryAttack(Entity, double)}.</li>
+ * </ul>
  */
 public class EnemyComponent extends Component {
 
     @Getter
     private final GoblinEntity goblinData;
-    private ImageView goblinView;
-    private boolean attacking = false;
-    private int walkIndex = 0;
-    private int attackIndex = 0;
-    private double walkElapsed = 0;
-    private double attackElapsed = 0;
-    private double elapsed = 0;
-
-
     private AttackComponent attackComponent;
+    private AnimationComponent animationComponent;
+    private boolean isWalking = false;
+    private boolean isAttacking = false;
 
+
+    /**
+     * Создает компонент для управления конкретным гоблином.
+     *
+     * @param data данные гоблина (скорость, урон, кадры анимации)
+     */
     public EnemyComponent(GoblinEntity data) {
         this.goblinData = data;
     }
 
+    /**
+     * Вызывается при добавлении компонента к сущности.
+     * <p>Инициализирует компоненты атаки и анимации, привязывает их к сущности.</p>
+     */
     @Override
     public void onAdded() {
-        goblinView = (ImageView) entity.getViewComponent().getChildren().get(0);
-
-        goblinView.setSmooth(true);
-        goblinView.setCache(true);
-        goblinView.setCacheHint(CacheHint.SPEED);
-
-        // Инициализируем компонент атаки с нужным уроном и кулдауном
+        // Инициализируем компонент атаки
         attackComponent = new AttackComponent(goblinData.getDamage(), 1.0);
         entity.addComponent(attackComponent);
 
-        startAnimationTimer();
+        // Инициализируем компонент анимации с кадрами ходьбы и атаки
+        animationComponent = new AnimationComponent(
+                goblinData.getWalkFrames(),
+                goblinData.getAttackFrames()
+        );
+        entity.addComponent(animationComponent);
     }
 
-    private void startAnimationTimer() {
-        AnimationTimer animationTimer = new AnimationTimer() {
-            private long lastTime = 0;
-
-            @Override
-            public void handle(long now) {
-                if (lastTime == 0) {
-                    lastTime = now;
-                    return;
-                }
-
-                double tpf = (now - lastTime) / 1_000_000_000.0;
-                lastTime = now;
-
-                updateAnimation(tpf);
-            }
-        };
-        animationTimer.start();
-    }
-
-    private void updateAnimation(double tpf) {
-        List<Image> walkFrames = goblinData.getWalkFrames();
-        List<Image> attackFrames = goblinData.getAttackFrames();
-
-        if (attacking) {
-            attackElapsed += tpf;
-            double attackFrameTime = 0.04;
-            if (attackElapsed >= attackFrameTime && attackIndex < attackFrames.size()) {
-                goblinView.setImage(attackFrames.get(attackIndex));
-                attackIndex++;
-                attackElapsed = 0;
-            }
-            if (attackIndex >= attackFrames.size()) {
-                attacking = false;
-                attackIndex = 0;
-            }
-        } else {
-            walkElapsed += tpf;
-            double walkFrameTime = 0.1;
-            if (walkElapsed >= walkFrameTime) {
-                walkIndex = (walkIndex + 1) % walkFrames.size();
-                goblinView.setImage(walkFrames.get(walkIndex));
-                walkElapsed = 0;
-            }
-        }
-    }
-
+    /**
+     * Основной метод обновления каждый кадр.
+     * <p>Выбирает действие: движение к игроку или атака, переключает анимацию.</p>
+     *
+     * @param tpf время кадра (time per frame)
+     */
     @Override
     public void onUpdate(double tpf) {
         Entity player = FXGL.getGameWorld()
@@ -116,22 +83,53 @@ public class EnemyComponent extends Component {
 
         if (player == null) return;
 
-        elapsed += tpf;
-
-        double maxSpeed = goblinData.getSpeed();
-        double factor = Math.min(1, elapsed / 2);
-        double effectiveSpeed = maxSpeed * factor;
-
-        Point2D direction = player.getPosition().subtract(entity.getPosition());
-        double distance = direction.magnitude();
+        double distance = player.getPosition().subtract(entity.getPosition()).magnitude();
 
         if (distance > 40) {
-            Point2D move = direction.normalize().multiply(effectiveSpeed * tpf);
-            entity.translate(move);
-            goblinView.setScaleX(move.getX() >= 0 ? 1 : -1);
+            moveTowardsPlayer(player, tpf);
         } else {
-            attacking = true;
-            attackComponent.tryAttack(player, tpf);
+            handleAttack(player, tpf);
         }
+    }
+
+    /**
+     * Двигает гоблина к игроку и включает анимацию ходьбы.
+     *
+     * @param player цель для движения
+     * @param tpf время кадра
+     */
+    private void moveTowardsPlayer(Entity player, double tpf) {
+        double effectiveSpeed = goblinData.getSpeed();
+        Point2D direction = player.getPosition().subtract(entity.getPosition()).normalize();
+        Point2D move = direction.multiply(effectiveSpeed * tpf);
+        entity.translate(move);
+
+        animationComponent.setScaleX(move.getX() >= 0 ? 1 : -1);
+
+        if (!isWalking) {
+            animationComponent.playWalk();
+            isWalking = true;
+        }
+
+        // сбрасываем флаг атаки, если шли
+        if (isAttacking) {
+            isAttacking = false;
+        }
+    }
+
+
+    /**
+     * Обрабатывает атаку гоблина по игроку.
+     *
+     * @param player цель атаки
+     * @param tpf время кадра
+     */
+    private void handleAttack(Entity player, double tpf) {
+        if (!isAttacking) {
+            animationComponent.playAttack();
+            isAttacking = true;
+        }
+        attackComponent.tryAttack(player, tpf);
+        isWalking = false;
     }
 }

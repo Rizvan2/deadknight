@@ -8,7 +8,6 @@ import org.example.deadknight.player.controllers.KnightController;
 import org.example.deadknight.player.controllers.PantherController;
 import org.example.deadknight.services.init.GameInitializer;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**

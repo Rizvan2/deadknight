@@ -75,6 +75,13 @@ public class AnimationComponent extends Component {
         }
     }
 
+    /** Меняет горизонтальное направление спрайта */
+    public void setScaleX(double scaleX) {
+        if (view != null) {
+            view.setScaleX(scaleX);
+        }
+    }
+
     /** Запускает анимацию атаки */
     public void playAttack() {
         attacking = true;
