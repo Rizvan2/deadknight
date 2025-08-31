@@ -117,7 +117,7 @@ public class GoblinFactory implements EntityFactory {
                 .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
-//                .with(new AnimationComponent(goblinData))
+                .with(new AnimationComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
                 .collidable()

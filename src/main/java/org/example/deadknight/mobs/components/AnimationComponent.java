@@ -1,7 +1,6 @@
 package org.example.deadknight.mobs.components;
 
 import com.almasb.fxgl.entity.component.Component;
-import javafx.animation.AnimationTimer;
 import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,34 +31,19 @@ public class AnimationComponent extends Component {
     public AnimationComponent(GoblinEntity goblinData) {
         this.goblinData = goblinData;
     }
-
     @Override
     public void onAdded() {
-
-        goblinView = (ImageView) entity.getViewComponent().getChildren().get(0);
-        goblinView.setSmooth(true);
-        goblinView.setCache(true);
-        goblinView.setCacheHint(CacheHint.SPEED);
-
-        startAnimationTimer();
+        if (!entity.getViewComponent().getChildren().isEmpty()) {
+            goblinView = (ImageView) entity.getViewComponent().getChildren().get(0);
+            goblinView.setSmooth(true);
+            goblinView.setCache(true);
+            goblinView.setCacheHint(CacheHint.SPEED);
+        }
     }
 
-    private void startAnimationTimer() {
-        AnimationTimer timer = new AnimationTimer() {
-            private long lastTime = 0;
 
-            @Override
-            public void handle(long now) {
-                if (lastTime == 0) { lastTime = now; return; }
-                double tpf = (now - lastTime) / 1_000_000_000.0;
-                lastTime = now;
-                update(tpf);
-            }
-        };
-        timer.start();
-    }
-
-    public void update(double tpf) {
+    @Override
+    public void onUpdate(double tpf) {
         List<Image> walkFrames = goblinData.getWalkFrames();
         List<Image> attackFrames = goblinData.getAttackFrames();
 
@@ -71,7 +55,7 @@ public class AnimationComponent extends Component {
                 attackElapsed = 0;
             }
             if (attackIndex >= attackFrames.size()) {
-                playWalk(); // возвращаемся к ходьбе
+                playWalk();
             }
         } else {
             walkElapsed += tpf;
