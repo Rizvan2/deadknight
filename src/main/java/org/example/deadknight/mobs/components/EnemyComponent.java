@@ -7,70 +7,71 @@ import javafx.geometry.Point2D;
 import lombok.Getter;
 import org.example.deadknight.mobs.entities.GoblinEntity;
 
+
 /**
- * Компонент, управляющий поведением врага (гоблина) в игре.
+ * Компонент логики врага (гоблина).
  * <p>
- * Основные функции:
+ * Отвечает за:
  * <ul>
- *     <li>Следование за игроком с постоянной скоростью</li>
- *     <li>Переключение анимации ходьбы и атаки через {@link AnimationComponent}</li>
- *     <li>Атаку игрока делегирует {@link AttackComponent}</li>
+ *     <li>Движение гоблина в сторону игрока</li>
+ *     <li>Атаку игрока</li>
+ *     <li>Взаимодействие с компонентом анимации {@link AnimationComponent} и компонентом атаки {@link AttackComponent}</li>
  * </ul>
- *
- * <p>Используются внутренние флаги:
- * <ul>
- *     <li>{@code isWalking} — отслеживает, идет ли гоблин и запущена ли анимация ходьбы</li>
- *     <li>{@code isAttacking} — отслеживает, атакует ли гоблин и запущена ли анимация атаки</li>
- * </ul>
- *
- * <p>Игровая логика:
- * <ul>
- *     <li>Если игрок находится дальше 40 пикселей, гоблин движется к нему и проигрывается анимация ходьбы.</li>
- *     <li>Если игрок близко (≤40 пикселей), запускается анимация атаки и вызывается метод {@link AttackComponent#tryAttack(Entity, double)}.</li>
- * </ul>
+ * Анимацию полностью делегирует {@link AnimationComponent}.
  */
 public class EnemyComponent extends Component {
 
+    /**
+     * Данные гоблина (скорость, урон, кадры анимации и т.д.)
+     */
     @Getter
     private final GoblinEntity goblinData;
-    private AttackComponent attackComponent;
-    private AnimationComponent animationComponent;
-    private boolean isWalking = false;
-    private boolean isAttacking = false;
-
 
     /**
-     * Создает компонент для управления конкретным гоблином.
+     * Компонент анимации гоблина
+     */
+    private AnimationComponent animation;
+
+    /**
+     * Компонент атаки гоблина
+     */
+    private AttackComponent attackComponent;
+
+    /**
+     * Создает компонент логики врага с заданными данными.
      *
-     * @param data данные гоблина (скорость, урон, кадры анимации)
+     * @param data данные гоблина
      */
     public EnemyComponent(GoblinEntity data) {
         this.goblinData = data;
     }
 
     /**
-     * Вызывается при добавлении компонента к сущности.
-     * <p>Инициализирует компоненты атаки и анимации, привязывает их к сущности.</p>
+     * Вызывается после добавления компонента к сущности.
+     * <p>
+     * Инициализирует компоненты анимации и атаки и добавляет их к сущности.
      */
     @Override
     public void onAdded() {
-        // Инициализируем компонент атаки
+        // Компонент анимации (таймер внутри него управляет кадрами)
+        animation = new AnimationComponent(goblinData.getWalkFrames(), goblinData.getAttackFrames());
+        entity.addComponent(animation);
+
+        // Компонент атаки
         attackComponent = new AttackComponent(goblinData.getDamage(), 1.0);
         entity.addComponent(attackComponent);
-
-        // Инициализируем компонент анимации с кадрами ходьбы и атаки
-        animationComponent = new AnimationComponent(
-                goblinData.getWalkFrames(),
-                goblinData.getAttackFrames()
-        );
-        entity.addComponent(animationComponent);
     }
 
     /**
-     * Основной метод обновления каждый кадр.
-     * <p>Выбирает действие: движение к игроку или атака, переключает анимацию.</p>
+     * Обновление логики врага каждый кадр.
+     * <p>
+     * В зависимости от расстояния до игрока:
+     * <ul>
+     *     <li>Если игрок далеко — гоблин движется к нему</li>
+     *     <li>Если игрок близко — гоблин атакует</li>
+     * </ul>
      *
-     * @param tpf время кадра (time per frame)
+     * @param tpf время прошедшее с последнего кадра (time per frame)
      */
     @Override
     public void onUpdate(double tpf) {
@@ -83,53 +84,44 @@ public class EnemyComponent extends Component {
 
         if (player == null) return;
 
-        double distance = player.getPosition().subtract(entity.getPosition()).magnitude();
+        Point2D direction = player.getPosition().subtract(entity.getPosition());
+        double distance = direction.magnitude();
 
         if (distance > 40) {
-            moveTowardsPlayer(player, tpf);
+            moveTowardsPlayer(direction, tpf);
         } else {
-            handleAttack(player, tpf);
+            attackPlayer(player, tpf);
         }
     }
 
     /**
-     * Двигает гоблина к игроку и включает анимацию ходьбы.
+     * Двигает гоблина в сторону игрока и запускает анимацию ходьбы.
      *
-     * @param player цель для движения
-     * @param tpf время кадра
+     * @param direction вектор направления к игроку
+     * @param tpf время прошедшее с последнего кадра
      */
-    private void moveTowardsPlayer(Entity player, double tpf) {
-        double effectiveSpeed = goblinData.getSpeed();
-        Point2D direction = player.getPosition().subtract(entity.getPosition()).normalize();
-        Point2D move = direction.multiply(effectiveSpeed * tpf);
+    private void moveTowardsPlayer(Point2D direction, double tpf) {
+        Point2D move = direction.normalize().multiply(goblinData.getSpeed() * tpf);
         entity.translate(move);
 
-        animationComponent.setScaleX(move.getX() >= 0 ? 1 : -1);
+        animation.setScaleX(move.getX() >= 0 ? 1 : -1);
 
-        if (!isWalking) {
-            animationComponent.playWalk();
-            isWalking = true;
-        }
-
-        // сбрасываем флаг атаки, если шли
-        if (isAttacking) {
-            isAttacking = false;
+        if (!animation.isAttacking()) {
+            animation.playWalk();
         }
     }
-
 
     /**
-     * Обрабатывает атаку гоблина по игроку.
+     * Атакует игрока и запускает анимацию атаки.
      *
-     * @param player цель атаки
-     * @param tpf время кадра
+     * @param player сущность игрока
+     * @param tpf время прошедшее с последнего кадра
      */
-    private void handleAttack(Entity player, double tpf) {
-        if (!isAttacking) {
-            animationComponent.playAttack();
-            isAttacking = true;
+    private void attackPlayer(Entity player, double tpf) {
+        if (!animation.isAttacking()) {
+            animation.playAttack();
         }
         attackComponent.tryAttack(player, tpf);
-        isWalking = false;
     }
+
 }
