@@ -77,6 +77,7 @@ public class DeadKnightApp extends GameApplication {
      */
     @Override
     protected void initGame() {
+
         gameInitService = new GameInitializerService();
         uiService = new UIService();
         collisionSystem = new CollisionSystem();

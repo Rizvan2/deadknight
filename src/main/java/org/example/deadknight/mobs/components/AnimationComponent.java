@@ -5,72 +5,34 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
 /**
- * Компонент, управляющий покадровой анимацией моба.
- * <p>
- * Поддерживает:
- * <ul>
- *     <li>Анимацию ходьбы</li>
- *     <li>Анимацию атаки</li>
- *     <li>Изменение направления спрайта по горизонтали</li>
- * </ul>
- * <p>
- * Логика обновления кадров реализована через {@link AnimationTimer}.
+ * Управляет анимацией моба: ходьба и атака.
+ * Оптимизировано: дублирование кода обновления кадров убрано.
  */
-@Getter
-@Setter
 public class AnimationComponent extends Component {
 
-    /**
-     * Анимация ходьбы моба.
-     */
-    private final FrameAnimation walkAnim;
-
-    /**
-     * Анимация атаки моба.
-     */
-    private final FrameAnimation attackAnim;
-
-    /**
-     * ImageView, используемый для отображения текущего кадра спрайта.
-     */
+    private final List<Image> walkFrames;
+    private final List<Image> attackFrames;
     private ImageView view;
 
-    /**
-     * Флаг, указывающий, выполняется ли анимация атаки.
-     */
     private boolean attacking = false;
 
-    /**
-     * Накопитель времени для кадров ходьбы.
-     */
+    private int walkIndex = 0;
+    private int attackIndex = 0;
     private double walkElapsed = 0;
-
-    /**
-     * Накопитель времени для кадров атаки.
-     */
     private double attackElapsed = 0;
 
-    /**
-     * Создает компонент анимации для моба с указанными кадрами ходьбы и атаки.
-     *
-     * @param walkFrames   список кадров анимации ходьбы
-     * @param attackFrames список кадров анимации атаки
-     */
+    private static final double WALK_FRAME_TIME = 0.1;
+    private static final double ATTACK_FRAME_TIME = 0.04;
+
     public AnimationComponent(List<Image> walkFrames, List<Image> attackFrames) {
-        this.walkAnim = new FrameAnimation(walkFrames, 0.1);
-        this.attackAnim = new FrameAnimation(attackFrames, 0.04);
+        this.walkFrames = walkFrames;
+        this.attackFrames = attackFrames;
     }
 
-    /**
-     * Вызывается при добавлении компонента к сущности.
-     * <p>Инициализирует {@link ImageView} и запускает {@link AnimationTimer} для обновления кадров.</p>
-     */
     @Override
     public void onAdded() {
         view = (ImageView) entity.getViewComponent().getChildren().get(0);
@@ -78,79 +40,78 @@ public class AnimationComponent extends Component {
         view.setCache(true);
         view.setCacheHint(CacheHint.SPEED);
 
-        startTimer();
+        startAnimationTimer();
     }
 
-    /**
-     * Запускает таймер обновления кадров анимации.
-     */
-    private void startTimer() {
+    private void startAnimationTimer() {
         AnimationTimer timer = new AnimationTimer() {
             private long lastTime = 0;
 
             @Override
             public void handle(long now) {
-                if (lastTime == 0) {
-                    lastTime = now;
-                    return;
-                }
+                if (lastTime == 0) { lastTime = now; return; }
                 double tpf = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
-                updateAnimation(tpf);
+                update(tpf);
             }
         };
         timer.start();
     }
 
-    /**
-     * Обновляет текущий кадр анимации в зависимости от состояния {@link #attacking}.
-     *
-     * @param tpf время с последнего кадра (секунды)
-     */
-    private void updateAnimation(double tpf) {
+    public void update(double tpf) {
         if (attacking) {
-            attackElapsed += tpf;
-            if (attackElapsed >= 0.04) {
-                view.setImage(attackAnim.update(attackElapsed));
+            updateFrames(attackFrames, ATTACK_FRAME_TIME, true);
+        } else {
+            updateFrames(walkFrames, WALK_FRAME_TIME, false);
+        }
+    }
+
+    /**
+     * Универсальное обновление кадров.
+     * @param frames список кадров
+     * @param frameTime время одного кадра
+     * @param isAttack true для атаки, false для ходьбы
+     */
+    private void updateFrames(List<Image> frames, double frameTime, boolean isAttack) {
+        if (isAttack) {
+            attackElapsed += frameTime;
+            if (attackElapsed >= frameTime && attackIndex < frames.size()) {
+                view.setImage(frames.get(attackIndex));
+                attackIndex++;
                 attackElapsed = 0;
-                if (attackAnim.isFinished()) {
-                    attacking = false;
-                    attackAnim.reset();
-                }
+            }
+            if (attackIndex >= frames.size()) {
+                playWalk(); // после атаки возвращаемся к ходьбе
             }
         } else {
-            walkElapsed += tpf;
-            if (walkElapsed >= 0.1) {
-                view.setImage(walkAnim.update(walkElapsed));
+            walkElapsed += frameTime;
+            if (walkElapsed >= frameTime) {
+                walkIndex = (walkIndex + 1) % frames.size();
+                view.setImage(frames.get(walkIndex));
                 walkElapsed = 0;
             }
         }
     }
 
-    /**
-     * Запускает анимацию атаки.
-     * <p>Сбрасывает состояние {@link FrameAnimation} для атаки и устанавливает флаг {@link #attacking}.</p>
-     */
+    /** Запускает анимацию атаки */
     public void playAttack() {
         attacking = true;
-        attackAnim.reset();
+        attackIndex = 0;
+        attackElapsed = 0;
     }
 
-    /**
-     * Возвращает анимацию к ходьбе.
-     * <p>Сбрасывает состояние {@link FrameAnimation} для ходьбы и сбрасывает флаг {@link #attacking}.</p>
-     */
+    /** Возвращает анимацию к ходьбе */
     public void playWalk() {
         attacking = false;
-        walkAnim.reset();
+        walkIndex = 0;
+        walkElapsed = 0;
     }
 
-    /**
-     * Меняет горизонтальное направление спрайта.
-     *
-     * @param scaleX 1 для обычного направления, -1 для зеркального
-     */
     public void setScaleX(double scaleX) {
         if (view != null) view.setScaleX(scaleX);
+    }
+
+    public boolean isAttacking() {
+        return attacking;
     }
 }

@@ -3,76 +3,108 @@ package org.example.deadknight.mobs.components;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
+import javafx.animation.AnimationTimer;
 import javafx.geometry.Point2D;
+import javafx.scene.CacheHint;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import lombok.Getter;
 import org.example.deadknight.mobs.entities.GoblinEntity;
 
+import java.util.List;
 
 /**
- * Компонент логики врага (гоблина).
+ * Компонент, управляющий поведением врага (гоблина).
  * <p>
  * Отвечает за:
  * <ul>
- *     <li>Движение гоблина в сторону игрока</li>
- *     <li>Атаку игрока</li>
- *     <li>Взаимодействие с компонентом анимации {@link AnimationComponent} и компонентом атаки {@link AttackComponent}</li>
+ *     <li>Анимацию ходьбы и атаки</li>
+ *     <li>Следование за игроком</li>
  * </ul>
- * Анимацию полностью делегирует {@link AnimationComponent}.
+ * <p>
+ * Атаку теперь делегирует {@link AttackComponent}.
  */
 public class EnemyComponent extends Component {
 
-    /**
-     * Данные гоблина (скорость, урон, кадры анимации и т.д.)
-     */
     @Getter
     private final GoblinEntity goblinData;
+    private ImageView goblinView;
+    private boolean attacking = false;
+    private int walkIndex = 0;
+    private int attackIndex = 0;
+    private double walkElapsed = 0;
+    private double attackElapsed = 0;
+    private double elapsed = 0;
 
-    /**
-     * Компонент анимации гоблина
-     */
-    private AnimationComponent animation;
 
-    /**
-     * Компонент атаки гоблина
-     */
     private AttackComponent attackComponent;
 
-    /**
-     * Создает компонент логики врага с заданными данными.
-     *
-     * @param data данные гоблина
-     */
     public EnemyComponent(GoblinEntity data) {
         this.goblinData = data;
     }
 
-    /**
-     * Вызывается после добавления компонента к сущности.
-     * <p>
-     * Инициализирует компоненты анимации и атаки и добавляет их к сущности.
-     */
     @Override
     public void onAdded() {
-        // Компонент анимации (таймер внутри него управляет кадрами)
-        animation = new AnimationComponent(goblinData.getWalkFrames(), goblinData.getAttackFrames());
-        entity.addComponent(animation);
+        goblinView = (ImageView) entity.getViewComponent().getChildren().get(0);
 
-        // Компонент атаки
+        goblinView.setSmooth(true);
+        goblinView.setCache(true);
+        goblinView.setCacheHint(CacheHint.SPEED);
+
+        // Инициализируем компонент атаки с нужным уроном и кулдауном
         attackComponent = new AttackComponent(goblinData.getDamage(), 1.0);
         entity.addComponent(attackComponent);
+
+        startAnimationTimer();
     }
 
-    /**
-     * Обновление логики врага каждый кадр.
-     * <p>
-     * В зависимости от расстояния до игрока:
-     * <ul>
-     *     <li>Если игрок далеко — гоблин движется к нему</li>
-     *     <li>Если игрок близко — гоблин атакует</li>
-     * </ul>
-     *
-     * @param tpf время прошедшее с последнего кадра (time per frame)
-     */
+    private void startAnimationTimer() {
+        AnimationTimer animationTimer = new AnimationTimer() {
+            private long lastTime = 0;
+
+            @Override
+            public void handle(long now) {
+                if (lastTime == 0) {
+                    lastTime = now;
+                    return;
+                }
+
+                double tpf = (now - lastTime) / 1_000_000_000.0;
+                lastTime = now;
+
+                updateAnimation(tpf);
+            }
+        };
+        animationTimer.start();
+    }
+
+    private void updateAnimation(double tpf) {
+        List<Image> walkFrames = goblinData.getWalkFrames();
+        List<Image> attackFrames = goblinData.getAttackFrames();
+
+        if (attacking) {
+            attackElapsed += tpf;
+            double attackFrameTime = 0.04;
+            if (attackElapsed >= attackFrameTime && attackIndex < attackFrames.size()) {
+                goblinView.setImage(attackFrames.get(attackIndex));
+                attackIndex++;
+                attackElapsed = 0;
+            }
+            if (attackIndex >= attackFrames.size()) {
+                attacking = false;
+                attackIndex = 0;
+            }
+        } else {
+            walkElapsed += tpf;
+            double walkFrameTime = 0.1;
+            if (walkElapsed >= walkFrameTime) {
+                walkIndex = (walkIndex + 1) % walkFrames.size();
+                goblinView.setImage(walkFrames.get(walkIndex));
+                walkElapsed = 0;
+            }
+        }
+    }
+
     @Override
     public void onUpdate(double tpf) {
         Entity player = FXGL.getGameWorld()
@@ -84,44 +116,22 @@ public class EnemyComponent extends Component {
 
         if (player == null) return;
 
+        elapsed += tpf;
+
+        double maxSpeed = goblinData.getSpeed();
+        double factor = Math.min(1, elapsed / 2);
+        double effectiveSpeed = maxSpeed * factor;
+
         Point2D direction = player.getPosition().subtract(entity.getPosition());
         double distance = direction.magnitude();
 
         if (distance > 40) {
-            moveTowardsPlayer(direction, tpf);
+            Point2D move = direction.normalize().multiply(effectiveSpeed * tpf);
+            entity.translate(move);
+            goblinView.setScaleX(move.getX() >= 0 ? 1 : -1);
         } else {
-            attackPlayer(player, tpf);
+            attacking = true;
+            attackComponent.tryAttack(player, tpf);
         }
     }
-
-    /**
-     * Двигает гоблина в сторону игрока и запускает анимацию ходьбы.
-     *
-     * @param direction вектор направления к игроку
-     * @param tpf время прошедшее с последнего кадра
-     */
-    private void moveTowardsPlayer(Point2D direction, double tpf) {
-        Point2D move = direction.normalize().multiply(goblinData.getSpeed() * tpf);
-        entity.translate(move);
-
-        animation.setScaleX(move.getX() >= 0 ? 1 : -1);
-
-        if (!animation.isAttacking()) {
-            animation.playWalk();
-        }
-    }
-
-    /**
-     * Атакует игрока и запускает анимацию атаки.
-     *
-     * @param player сущность игрока
-     * @param tpf время прошедшее с последнего кадра
-     */
-    private void attackPlayer(Entity player, double tpf) {
-        if (!animation.isAttacking()) {
-            animation.playAttack();
-        }
-        attackComponent.tryAttack(player, tpf);
-    }
-
 }

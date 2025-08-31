@@ -2,9 +2,7 @@ package org.example.deadknight.services.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.entity.SpawnData;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 import org.example.deadknight.player.entities.KnightEntity;
 import org.example.deadknight.player.entities.IlyasPantherEntity;
 import org.example.deadknight.mobs.entities.Spikes;
