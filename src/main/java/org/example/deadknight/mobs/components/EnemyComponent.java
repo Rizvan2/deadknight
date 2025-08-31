@@ -29,14 +29,9 @@ public class EnemyComponent extends Component {
     @Getter
     private final GoblinEntity goblinData;
     private ImageView goblinView;
-    private boolean attacking = false;
-    private int walkIndex = 0;
-    private int attackIndex = 0;
-    private double walkElapsed = 0;
-    private double attackElapsed = 0;
     private double elapsed = 0;
 
-
+    private AnimationComponent animationComponent;
     private AttackComponent attackComponent;
 
     public EnemyComponent(GoblinEntity data) {
@@ -50,6 +45,10 @@ public class EnemyComponent extends Component {
         goblinView.setSmooth(true);
         goblinView.setCache(true);
         goblinView.setCacheHint(CacheHint.SPEED);
+
+        // Инициализируем анимацию
+        animationComponent = new AnimationComponent(goblinData);
+        entity.addComponent(animationComponent); // важно добавить в entity
 
         // Инициализируем компонент атаки с нужным уроном и кулдауном
         attackComponent = new AttackComponent(goblinData.getDamage(), 1.0);
@@ -72,38 +71,38 @@ public class EnemyComponent extends Component {
                 double tpf = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                updateAnimation(tpf);
+                animationComponent.update(tpf);
             }
         };
         animationTimer.start();
     }
 
-    private void updateAnimation(double tpf) {
-        List<Image> walkFrames = goblinData.getWalkFrames();
-        List<Image> attackFrames = goblinData.getAttackFrames();
-
-        if (attacking) {
-            attackElapsed += tpf;
-            double attackFrameTime = 0.04;
-            if (attackElapsed >= attackFrameTime && attackIndex < attackFrames.size()) {
-                goblinView.setImage(attackFrames.get(attackIndex));
-                attackIndex++;
-                attackElapsed = 0;
-            }
-            if (attackIndex >= attackFrames.size()) {
-                attacking = false;
-                attackIndex = 0;
-            }
-        } else {
-            walkElapsed += tpf;
-            double walkFrameTime = 0.1;
-            if (walkElapsed >= walkFrameTime) {
-                walkIndex = (walkIndex + 1) % walkFrames.size();
-                goblinView.setImage(walkFrames.get(walkIndex));
-                walkElapsed = 0;
-            }
-        }
-    }
+//    private void updateAnimation(double tpf) {
+//        List<Image> walkFrames = goblinData.getWalkFrames();
+//        List<Image> attackFrames = goblinData.getAttackFrames();
+//
+//        if (attacking) {
+//            attackElapsed += tpf;
+//            double attackFrameTime = 0.04;
+//            if (attackElapsed >= attackFrameTime && attackIndex < attackFrames.size()) {
+//                goblinView.setImage(attackFrames.get(attackIndex));
+//                attackIndex++;
+//                attackElapsed = 0;
+//            }
+//            if (attackIndex >= attackFrames.size()) {
+//                attacking = false;
+//                attackIndex = 0;
+//            }
+//        } else {
+//            walkElapsed += tpf;
+//            double walkFrameTime = 0.1;
+//            if (walkElapsed >= walkFrameTime) {
+//                walkIndex = (walkIndex + 1) % walkFrames.size();
+//                goblinView.setImage(walkFrames.get(walkIndex));
+//                walkElapsed = 0;
+//            }
+//        }
+//    }
 
     @Override
     public void onUpdate(double tpf) {
@@ -130,7 +129,6 @@ public class EnemyComponent extends Component {
             entity.translate(move);
             goblinView.setScaleX(move.getX() >= 0 ? 1 : -1);
         } else {
-            attacking = true;
             attackComponent.tryAttack(player, tpf);
         }
     }

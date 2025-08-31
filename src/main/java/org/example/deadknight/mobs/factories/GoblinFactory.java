@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.example.deadknight.components.*;
+import org.example.deadknight.mobs.components.AnimationComponent;
 import org.example.deadknight.mobs.components.EnemyComponent;
 import org.example.deadknight.mobs.components.PushComponent;
 import org.example.deadknight.mobs.components.SeparationComponent;
@@ -116,6 +117,7 @@ public class GoblinFactory implements EntityFactory {
                 .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
+//                .with(new AnimationComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
                 .collidable()
