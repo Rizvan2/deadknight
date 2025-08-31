@@ -13,15 +13,11 @@ version '1.0.0'
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
-
 }
 
 ext {
     junitVersion = '5.10.2'
 }
-
-sourceCompatibility = '17'
-targetCompatibility = '17'
 
 java {
     toolchain {
@@ -35,24 +31,22 @@ tasks.withType(JavaCompile) {
     targetCompatibility = "21"
 }
 
-
 application {
     mainModule = 'org.example.deadknight'
-    mainClass = 'org.example.deadknight.DeadKnightApp' // класс FXGL
+    mainClass = 'org.example.deadknight.DeadKnightApp'
 }
 
 javafx {
-    version = '17.0.6'
-    modules = ['javafx.controls', 'javafx.fxml', 'javafx.media']
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.media', 'javafx.graphics', 'javafx.swing'] // по необходимости
 }
 
 dependencies {
-    implementation('com.github.almasb:fxgl:17.3') {
+    implementation('com.github.almasb:fxgl:21.1') {
         exclude(group: 'org.openjfx')
     }
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
 
-    // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
@@ -60,12 +54,10 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 }
 
-
 test {
     useJUnitPlatform()
 }
 
-// ShadowJar
 shadowJar {
     archiveBaseName.set('deadknight')
     archiveVersion.set(project.version)
@@ -73,11 +65,10 @@ shadowJar {
     mergeServiceFiles()
 
     from('src/main/resources') {
-        into('/') // копируем ресурсы в корень fat JAR
+        into('/')
     }
 }
 
-// JLink + JPackage
 jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
 
@@ -92,10 +83,11 @@ jlink {
                 '--win-menu', '--win-shortcut',
                 '--icon', 'C:/Users/W-11/IdeaProjects/deadknight/icon/deadknight.ico'
         ]
-        resourceDir = file('src/main/resources/assets/textures') // FXML и текстуры
+        resourceDir = file('src/main/resources/assets/textures')
     }
 }
-// гарантируем правильный порядок: сначала создаём jar / shadowJar, затем скрипты
+
+// порядок зависимостей
 tasks.named('startShadowScripts') {
     dependsOn tasks.named('jar')
     dependsOn tasks.named('shadowJar')
@@ -104,12 +96,6 @@ tasks.named('startShadowScripts') {
 tasks.named('distZip') { dependsOn shadowJar }
 tasks.named('distTar') { dependsOn shadowJar }
 tasks.named('startScripts') { dependsOn shadowJar }
-
-// явные зависимости
 tasks.named('jlink') { dependsOn shadowJar }
 tasks.named('jpackage') { dependsOn shadowJar }
 tasks.named('prepareMergedJarsDir') { dependsOn shadowJar }
-
-
-
-
