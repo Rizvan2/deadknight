@@ -60,17 +60,17 @@ public class KnightFactory {
 
         // Подключаем анимацию ходьбы
         String[] frames = {
-                "knight_left-1.png",
-                "knight_left-2.png",
-                "knight_left-3.png",
-                "knight_left-4.png",
-                "knight_left-5.png"
+                "knight/knight_left-1.png",
+                "knight/knight_left-2.png",
+                "knight/knight_left-3.png",
+                "knight/knight_left-4.png",
+                "knight/knight_left-5.png"
         };
         AnimationService.attach(knight, frames);
 
         // Метод атаки: запускается через Runnable
         knight.getProperties().setValue("playAttack", (Runnable) () ->
-                AnimationService.playAttack(knight, "knight_attack.png", 0.25)
+                AnimationService.playAttack(knight, "knight/knight_attack.png", 0.25)
         );
     }
 }

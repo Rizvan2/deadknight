@@ -148,7 +148,7 @@ public class AnimationService {
 
         WaveService.shoot(entity);
 
-        restoreIdleSprite(entity, "knight_left-1.png", 64, 64, spriteDir, durationSeconds);
+        restoreIdleSprite(entity, "knight/knight_left-1.png", 64, 64, spriteDir, durationSeconds);
     }
 
     /**

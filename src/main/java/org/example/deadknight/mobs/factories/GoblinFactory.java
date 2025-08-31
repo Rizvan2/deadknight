@@ -79,7 +79,7 @@ public class GoblinFactory implements EntityFactory {
     private List<Image> loadWalkFrames() {
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 25; i++) {
-            frames.add(FXGL.image("goblin-" + i + ".png"));
+            frames.add(FXGL.image("goblin/goblin-" + i + ".png"));
         }
         return frames;
     }
@@ -90,7 +90,7 @@ public class GoblinFactory implements EntityFactory {
     private List<Image> loadAttackFrames() {
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 15; i++) {
-            frames.add(FXGL.image("goblin_attack-" + i + ".png"));
+            frames.add(FXGL.image("goblin/goblin_attack-" + i + ".png"));
         }
         return frames;
     }
