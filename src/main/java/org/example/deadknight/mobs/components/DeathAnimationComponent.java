@@ -31,9 +31,10 @@ public class DeathAnimationComponent extends Component {
         entity.removeFromWorld();
         // Создаём Entity для анимации на позиции старого моба
         var deathAnim = FXGL.entityBuilder()
-                .at(pos)
+                .at(pos.getX(), pos.getY() + 15) // сдвиг вниз на 10 пикселей
                 .zIndex(100)
                 .buildAndAttach();
+
 
         deathAnim.addComponent(new AnimationRunner(framesCopy));
     }
@@ -54,7 +55,7 @@ public class DeathAnimationComponent extends Component {
         public void onAdded() {
             if (!frames.isEmpty()) {
                 view = new ImageView(frames.get(0));
-                double size = 64;
+                double size = 70;
                 view.setFitWidth(size);
                 view.setFitHeight(size);
                 entity.getViewComponent().addChild(view);
