@@ -129,4 +129,10 @@ public class AnimationComponent extends Component {
     public void setScaleX(double scaleX) {
         if (goblinView != null) goblinView.setScaleX(scaleX);
     }
+
+    public double getScaleX() {
+        if (goblinView != null)
+            return goblinView.getScaleX(); // возвращаем значение
+        return 1.0; // стандартное значение, если view нет
+    }
 }

@@ -12,6 +12,8 @@ import lombok.Getter;
 import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.mobs.entities.GoblinEntity;
 
+import java.util.List;
+
 
 /**
  * Компонент, управляющий поведением врага (гоблина).
@@ -115,11 +117,14 @@ public class EnemyComponent extends Component {
         var frames = goblinData.getDeathFrames();
         if (frames == null || frames.isEmpty()) return;
 
+        boolean facingRight = animationComponent.getScaleX() > 0;
+
         FXGL.entityBuilder()
                 .at(entity.getX(), entity.getY())
-                .view(new ImageView(frames.get(0))) // новый ImageView
-                .with(new DeathAnimationComponent(frames))
-                .buildAndAttach();
+                .zIndex(100)
+                .buildAndAttach()
+                .addComponent(new DeathAnimationComponent(frames, facingRight));
+
 
         entity.removeFromWorld(); // гоблин удаляется сразу, но анимация привязана к новой сущности
     }

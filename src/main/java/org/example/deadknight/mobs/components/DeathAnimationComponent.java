@@ -10,11 +10,14 @@ import java.util.List;
 public class DeathAnimationComponent extends Component {
 
     private final List<Image> deathFrames;
+
     private static ImageView view;
     private static final double FRAME_TIME = 0.3; // 0.3 секунды на кадр
+    private boolean facingRight;
 
-    public DeathAnimationComponent(List<Image> deathFrames) {
+    public DeathAnimationComponent(List<Image> deathFrames, boolean facingRight) {
         this.deathFrames = deathFrames;
+        this.facingRight = facingRight;
     }
 
     @Override
@@ -22,33 +25,39 @@ public class DeathAnimationComponent extends Component {
         if (deathFrames == null || deathFrames.isEmpty())
             return;
 
-        // Сохраняем позицию и кадры до удаления
         Point2D pos = entity.getPosition();
-        List<Image> framesCopy = List.copyOf(deathFrames); // чтобы точно сохранить
+        List<Image> framesCopy = List.copyOf(deathFrames);
+
+        // Не трогаем facingRight, оно уже передано через конструктор
+        System.out.println("Death animation facingRight = " + facingRight);
 
         // Удаляем оригинального моба
         entity.getViewComponent().clearChildren();
         entity.removeFromWorld();
-        // Создаём Entity для анимации на позиции старого моба
+
         var deathAnim = FXGL.entityBuilder()
-                .at(pos.getX(), pos.getY() + 15) // сдвиг вниз на 10 пикселей
+                .at(pos.getX(), pos.getY() + 15)
                 .zIndex(100)
                 .buildAndAttach();
 
-
-        deathAnim.addComponent(new AnimationRunner(framesCopy));
+        deathAnim.addComponent(new AnimationRunner(framesCopy, facingRight));
     }
+
+
 
 
     private static class AnimationRunner extends Component {
         private final List<Image> frames;
-        private ImageView view;  // Ссылка на ImageView для анимации
+        private final boolean facingRight; // <- добавили
+        private ImageView view;
         private int frame = 0;
         private double time = 0;
         private static final double FRAME_TIME = 0.3;
 
-        public AnimationRunner(List<Image> frames) {
+        // Конструктор теперь принимает направление
+        public AnimationRunner(List<Image> frames, boolean facingRight) {
             this.frames = frames;
+            this.facingRight = facingRight;
         }
 
         @Override
@@ -58,13 +67,15 @@ public class DeathAnimationComponent extends Component {
                 double size = 70;
                 view.setFitWidth(size);
                 view.setFitHeight(size);
+                view.setScaleX(facingRight ? 1 : -1); // используем направление
                 entity.getViewComponent().addChild(view);
+                System.out.println("Animation view added, scaleX = " + view.getScaleX());
             }
         }
 
         @Override
         public void onUpdate(double tpf) {
-            if (view == null) return; // на всякий случай
+            if (view == null) return;
             time += tpf;
             if (time >= FRAME_TIME && frame < frames.size()) {
                 view.setImage(frames.get(frame));
@@ -76,6 +87,8 @@ public class DeathAnimationComponent extends Component {
             }
         }
     }
+
+
 
 
 }
