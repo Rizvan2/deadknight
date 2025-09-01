@@ -51,8 +51,9 @@ public class GoblinFactory implements EntityFactory {
         int health = getHealthFromData(data);
         List<Image> walkFrames = loadWalkFrames();
         List<Image> attackFrames = loadAttackFrames();
+        List<Image> deathFrames = loadDeathFrames();
 
-        GoblinEntity goblinData = new GoblinEntity(100, 10, walkFrames, attackFrames);
+        GoblinEntity goblinData = new GoblinEntity(100, 10, walkFrames, attackFrames, deathFrames);
         ImageView goblinView = createGoblinView(walkFrames.get(0));
 
         Entity goblin = buildGoblinEntity(data, goblinData, goblinView, health);
@@ -92,6 +93,17 @@ public class GoblinFactory implements EntityFactory {
         List<Image> frames = new ArrayList<>();
         for (int i = 1; i <= 15; i++) {
             frames.add(FXGL.image("goblin/goblin_attack-" + i + ".png"));
+        }
+        return frames;
+    }
+
+    /**
+     * Загружает кадры анимации смерти.
+     */
+    private List<Image> loadDeathFrames() {
+        List<Image> frames = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            frames.add(FXGL.image("goblin/goblin_death-" + i + ".png"));
         }
         return frames;
     }

@@ -33,6 +33,10 @@ public class GoblinEntity {
     /** Список кадров для анимации атаки */
     private final List<Image> attackFrames;
 
+    /** Список кадров для анимации смерти */
+    private List<Image> deathFrames;
+
+
     /**
      * Конструктор для создания нового моба-гоблина.
      *
@@ -41,10 +45,11 @@ public class GoblinEntity {
      * @param walkFrames  кадры анимации ходьбы
      * @param attackFrames кадры анимации атаки
      */
-    public GoblinEntity(double speed, int damage, List<Image> walkFrames, List<Image> attackFrames) {
+    public GoblinEntity(double speed, int damage, List<Image> walkFrames, List<Image> attackFrames, List<Image> deathFrames) {
         this.speed = speed;
         this.damage = damage;
         this.walkFrames = walkFrames;
         this.attackFrames = attackFrames;
+        this.deathFrames = deathFrames;
     }
 }

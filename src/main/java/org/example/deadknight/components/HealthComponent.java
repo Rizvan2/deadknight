@@ -44,10 +44,6 @@ public class HealthComponent extends Component {
      */
     public void takeDamage(int dmg) {
         value.set(value.get() - dmg);
-
-        if (value.get() <= 0 && entity != null) {
-            entity.removeFromWorld(); // удаляем сущность
-        }
     }
 
     /**

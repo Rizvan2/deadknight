@@ -139,7 +139,7 @@ public class DeadKnightApp extends GameApplication {
      */
     private void initUIAndEnemies(String characterType) {
         uiService.initUI(player);
-        gameInitService.spawnEnemies(10);
+        gameInitService.spawnEnemies(4);
     }
 
     /**

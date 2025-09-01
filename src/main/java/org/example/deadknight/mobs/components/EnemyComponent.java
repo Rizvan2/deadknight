@@ -9,6 +9,7 @@ import javafx.scene.CacheHint;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
+import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.mobs.entities.GoblinEntity;
 
 
@@ -26,7 +27,7 @@ import org.example.deadknight.mobs.entities.GoblinEntity;
 public class EnemyComponent extends Component {
     @Getter
     private final GoblinEntity goblinData;
-    private double elapsed = 0;
+    private boolean deathPlayed = false;
 
     private AnimationComponent animationComponent;
     private AttackComponent attackComponent;
@@ -58,6 +59,13 @@ public class EnemyComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
+        if (isDead() && !deathPlayed) {
+            playDeathAnimation();
+            deathPlayed = true; // анимация один раз
+            return; // дальше движение/атака не выполняется
+        }
+        if (deathPlayed) return;
+
         Entity player = FXGL.getGameWorld()
                 .getEntities()
                 .stream()
@@ -67,10 +75,8 @@ public class EnemyComponent extends Component {
 
         if (player == null) return;
 
-        elapsed += tpf;
-        double maxSpeed = goblinData.getSpeed();
-        double factor = Math.min(1, elapsed / 2);
-        double effectiveSpeed = maxSpeed * factor;
+
+        double effectiveSpeed = goblinData.getSpeed();
 
         Point2D direction = player.getPosition().subtract(entity.getPosition());
         double distance = direction.magnitude();
@@ -99,4 +105,24 @@ public class EnemyComponent extends Component {
             attackComponent.tryAttack(player, tpf);
         }
     }
+
+    public boolean isDead() {
+        HealthComponent health = entity.getComponent(HealthComponent.class);
+        return health.isDead();
+    }
+
+    public void playDeathAnimation() {
+        var frames = goblinData.getDeathFrames();
+        if (frames == null || frames.isEmpty()) return;
+
+        FXGL.entityBuilder()
+                .at(entity.getX(), entity.getY())
+                .view(new ImageView(frames.get(0))) // новый ImageView
+                .with(new DeathAnimationComponent(frames))
+                .buildAndAttach();
+
+        entity.removeFromWorld(); // гоблин удаляется сразу, но анимация привязана к новой сущности
+    }
+
+
 }

@@ -10,27 +10,55 @@ import org.example.deadknight.mobs.entities.GoblinEntity;
 import java.util.List;
 
 /**
- * Управляет анимацией моба: ходьба и атака.
- * Оптимизировано: дублирование кода обновления кадров убрано.
+ * Компонент для управления анимацией гоблина.
+ * <p>
+ * Поддерживает анимации ходьбы и атаки.
+ * Отслеживает время между кадрами и переключает спрайты
+ * с заданным временным интервалом.
  */
 public class AnimationComponent extends Component {
 
+    /** Данные о гоблине: текстуры, характеристики. */
     @Getter
     private final GoblinEntity goblinData;
+
+    /** Визуальный элемент, на котором отображается текущий кадр. */
     private ImageView goblinView;
+
+    /** Флаг, указывающий, выполняется ли сейчас анимация атаки. */
     private boolean attacking = false;
 
+    /** Индекс текущего кадра анимации ходьбы. */
     private int walkIndex = 0;
+
+    /** Индекс текущего кадра анимации атаки. */
     private int attackIndex = 0;
+
+    /** Время, прошедшее с момента последнего кадра ходьбы. */
     private double walkElapsed = 0;
+
+    /** Время, прошедшее с момента последнего кадра атаки. */
     private double attackElapsed = 0;
 
+    /** Время отображения одного кадра ходьбы. */
     private static final double WALK_FRAME_TIME = 0.1;
+
+    /** Время отображения одного кадра атаки. */
     private static final double ATTACK_FRAME_TIME = 0.04;
 
+    /**
+     * Создаёт компонент анимации для конкретного гоблина.
+     *
+     * @param goblinData данные о гоблине (спрайты и характеристики)
+     */
     public AnimationComponent(GoblinEntity goblinData) {
         this.goblinData = goblinData;
     }
+
+    /**
+     * Вызывается при добавлении компонента к сущности.
+     * Инициализирует {@link #goblinView} и настраивает кеширование для ускорения отрисовки.
+     */
     @Override
     public void onAdded() {
         if (!entity.getViewComponent().getChildren().isEmpty()) {
@@ -41,7 +69,13 @@ public class AnimationComponent extends Component {
         }
     }
 
-
+    /**
+     * Обновляет кадры анимации каждый кадр игры.
+     * Выбирает нужный список кадров (ходьба или атака) и переключает их
+     * с учётом прошедшего времени {@code tpf}.
+     *
+     * @param tpf время, прошедшее с прошлого кадра (в секундах)
+     */
     @Override
     public void onUpdate(double tpf) {
         List<Image> walkFrames = goblinData.getWalkFrames();
@@ -67,6 +101,10 @@ public class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Запускает анимацию атаки с начала.
+     * Если атака уже выполняется — повторно не запускается.
+     */
     public void playAttack() {
         if (attacking) return;
         attacking = true;
@@ -74,17 +112,21 @@ public class AnimationComponent extends Component {
         attackElapsed = 0;
     }
 
+    /**
+     * Переключает анимацию обратно на ходьбу, начиная с первого кадра.
+     */
     public void playWalk() {
         attacking = false;
         walkIndex = 0;
         walkElapsed = 0;
     }
 
+    /**
+     * Отражает спрайт по горизонтали.
+     *
+     * @param scaleX масштаб по оси X (1 — нормальный, -1 — зеркальный)
+     */
     public void setScaleX(double scaleX) {
         if (goblinView != null) goblinView.setScaleX(scaleX);
-    }
-
-    public boolean isAttacking() {
-        return attacking;
     }
 }
