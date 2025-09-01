@@ -26,6 +26,7 @@ public class AnimationComponent extends Component {
     private ImageView goblinView;
 
     /** Флаг, указывающий, выполняется ли сейчас анимация атаки. */
+    @Getter
     private boolean attacking = false;
 
     /** Индекс текущего кадра анимации ходьбы. */
@@ -70,34 +71,54 @@ public class AnimationComponent extends Component {
     }
 
     /**
-     * Обновляет кадры анимации каждый кадр игры.
-     * Выбирает нужный список кадров (ходьба или атака) и переключает их
-     * с учётом прошедшего времени {@code tpf}.
+     * Вызывается каждый кадр игры для обновления состояния анимации сущности.
+     * <p>
+     * Если выполняется анимация атаки, делегирует обновление в {@link #updateAttackAnimation(double)}.
+     * В противном случае обновляет анимацию ходьбы через {@link #updateWalkAnimation(double)}.
      *
-     * @param tpf время, прошедшее с прошлого кадра (в секундах)
+     * @param tpf время кадра (time per frame), используется для расчёта прогресса анимации
      */
     @Override
     public void onUpdate(double tpf) {
-        List<Image> walkFrames = goblinData.getWalkFrames();
-        List<Image> attackFrames = goblinData.getAttackFrames();
-
         if (attacking) {
-            attackElapsed += tpf;
-            if (attackElapsed >= ATTACK_FRAME_TIME && attackIndex < attackFrames.size()) {
-                goblinView.setImage(attackFrames.get(attackIndex));
+            updateAttackAnimation(tpf);
+        } else {
+            updateWalkAnimation(tpf);
+        }
+    }
+
+    /**
+     * Обновляет кадры анимации атаки.
+     *
+     * @param tpf время кадра (time per frame)
+     */
+    private void updateAttackAnimation(double tpf) {
+        attackElapsed += tpf;
+        if (attackElapsed >= ATTACK_FRAME_TIME) {
+            if (attackIndex < goblinData.getAttackFrames().size()) {
+                goblinView.setImage(goblinData.getAttackFrames().get(attackIndex));
                 attackIndex++;
                 attackElapsed = 0;
-            }
-            if (attackIndex >= attackFrames.size()) {
-                playWalk();
-            }
-        } else {
-            walkElapsed += tpf;
-            if (walkElapsed >= WALK_FRAME_TIME) {
-                walkIndex = (walkIndex + 1) % walkFrames.size();
-                goblinView.setImage(walkFrames.get(walkIndex));
+            } else {
+                // Атака завершена — переключаемся на ходьбу
+                attacking = false;
+                walkIndex = 0;
                 walkElapsed = 0;
             }
+        }
+    }
+
+    /**
+     * Обновляет кадры анимации ходьбы.
+     *
+     * @param tpf время кадра (time per frame)
+     */
+    private void updateWalkAnimation(double tpf) {
+        walkElapsed += tpf;
+        if (walkElapsed >= WALK_FRAME_TIME) {
+            walkIndex = (walkIndex + 1) % goblinData.getWalkFrames().size();
+            goblinView.setImage(goblinData.getWalkFrames().get(walkIndex));
+            walkElapsed = 0;
         }
     }
 
@@ -110,15 +131,6 @@ public class AnimationComponent extends Component {
         attacking = true;
         attackIndex = 0;
         attackElapsed = 0;
-    }
-
-    /**
-     * Переключает анимацию обратно на ходьбу, начиная с первого кадра.
-     */
-    public void playWalk() {
-        attacking = false;
-        walkIndex = 0;
-        walkElapsed = 0;
     }
 
     /**

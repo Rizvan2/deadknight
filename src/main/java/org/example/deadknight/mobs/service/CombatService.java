@@ -15,18 +15,9 @@ import org.example.deadknight.mobs.components.AnimationComponent;
  */
 public class CombatService {
 
-    /** Компонент атаки, реализующий логику удара. */
     private final AttackComponent attack;
-
-    /** Компонент анимации для проигрывания атакующих анимаций. */
     private final AnimationComponent animation;
 
-    /**
-     * Конструктор.
-     *
-     * @param attack компонент атаки
-     * @param animation компонент анимации
-     */
     public CombatService(AttackComponent attack, AnimationComponent animation) {
         this.attack = attack;
         this.animation = animation;
@@ -35,23 +26,26 @@ public class CombatService {
     /**
      * Попытка атаки по указанной цели.
      * <p>
-     * Сначала проигрывается анимация атаки, затем выполняется логика удара.
+     * Если анимация атаки ещё не выполняется, она запускается.
+     * Логика удара вызывается каждый кадр через {@link AttackComponent#tryAttack(Entity, double)}.
      *
      * @param target цель атаки
      * @param tpf время кадра (time per frame)
      */
     public void tryAttack(Entity target, double tpf) {
-        animation.playAttack();
+        if (!animation.isAttacking()) {
+            animation.playAttack();
+        }
         attack.tryAttack(target, tpf);
     }
 
     /**
-     * Проверяет, находится ли цель в пределах радиуса атаки.
+     * Проверяет, находится ли цель в радиусе атаки.
      *
      * @param attacker сущность, выполняющая атаку
      * @param target цель атаки
      * @param range радиус атаки
-     * @return true, если цель находится в пределах радиуса
+     * @return true, если цель в пределах радиуса
      */
     public boolean isInRange(Entity attacker, Entity target, double range) {
         return attacker.getPosition().distance(target.getPosition()) <= range;

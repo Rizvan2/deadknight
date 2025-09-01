@@ -41,17 +41,17 @@ public class MovementService {
     /**
      * Перемещает сущность в указанном направлении.
      * <p>
-     * Метод нормализует направление, умножает на скорость и время кадра (tpf),
-     * обновляет позицию сущности и корректирует направление взгляда.
+     * Метод нормализует вектор направления, умножает его на скорость и время кадра (tpf),
+     * затем обновляет позицию сущности. Также корректирует направление взгляда сущности
+     * по оси X в зависимости от движения (смотрит влево или вправо).
      *
      * @param direction вектор направления движения
      * @param tpf время кадра (time per frame)
      */
     public void moveTowards(Point2D direction, double tpf) {
-        animation.playWalk();
-
         Point2D move = direction.normalize().multiply(speed * tpf);
         entity.translate(move);
         animation.setScaleX(move.getX() >= 0 ? 1 : -1);
     }
+
 }
