@@ -102,11 +102,14 @@ public class GoblinFactory implements EntityFactory {
      */
     private List<Image> loadDeathFrames() {
         List<Image> frames = new ArrayList<>();
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 4; i++) {
             frames.add(FXGL.image("goblin/goblin_death-" + i + ".png"));
         }
+        // повтор последнего кадра
+        frames.add(frames.get(frames.size() - 1)); //Так FXGL будет считать, что есть 5 кадров, и WARN не будет.  а так если в цикле указать 4 кадра то он не использует четвертый кадр
         return frames;
     }
+
 
     /**
      * Создает {@link ImageView} для визуализации гоблина.

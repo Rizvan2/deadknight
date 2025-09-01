@@ -60,11 +60,11 @@ public class LoadingScreenSubScene extends SubScene {
      */
     public void loadTextures(Runnable onComplete) {
         String[] textures = {
-                "knight_left_1.png",
-                "knight_left_2.png",
-                "knight_left_3.png",
-                "knight_left_4.png",
-                "knight_left_5.png"
+                "knight/knight_left-1.png",
+                "knight/knight_left-2.png",
+                "knight/knight_left-3.png",
+                "knight/knight_left-4.png",
+                "knight/knight_left-5.png"
         };
 
         new Thread(() -> {
