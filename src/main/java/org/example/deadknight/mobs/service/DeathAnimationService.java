@@ -10,19 +10,41 @@ import java.util.List;
 
 /**
  * Сервис для проигрывания анимации смерти сущности.
+ * <p>
+ * Отвечает за создание новой сущности с анимацией смерти и удаление оригинальной сущности.
+ * Использует {@link GoblinEntity} для получения кадров анимации и {@link AnimationComponent}
+ * для определения направления взгляда (вправо или влево).
  */
 public class DeathAnimationService {
 
+    /** Сущность, для которой проигрывается анимация смерти. */
     private final Entity entity;
+
+    /** Данные гоблина, содержащие кадры анимации смерти. */
     private final GoblinEntity goblinData;
+
+    /** Компонент анимации для определения направления взгляда сущности. */
     private final AnimationComponent animationComponent;
 
+    /**
+     * Конструктор сервиса.
+     *
+     * @param entity сущность, для которой будет проигрываться анимация смерти
+     * @param goblinData данные гоблина, содержащие кадры анимации
+     * @param animationComponent компонент анимации для определения направления взгляда
+     */
     public DeathAnimationService(Entity entity, GoblinEntity goblinData, AnimationComponent animationComponent) {
         this.entity = entity;
         this.goblinData = goblinData;
         this.animationComponent = animationComponent;
     }
 
+    /**
+     * Проигрывает анимацию смерти для сущности.
+     * <p>
+     * Создаёт новую сущность с компонентом {@link org.example.deadknight.mobs.components.DeathAnimationComponent},
+     * устанавливает её позицию и направление взгляда, а затем удаляет оригинальную сущность из мира.
+     */
     public void playDeathAnimation() {
         List<Image> frames = goblinData.getDeathFrames();
         if (frames == null || frames.isEmpty()) return;
