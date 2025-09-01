@@ -8,6 +8,7 @@ import javafx.scene.image.Image;
 import lombok.Getter;
 import org.example.deadknight.components.HealthComponent;
 import org.example.deadknight.mobs.entities.GoblinEntity;
+import org.example.deadknight.mobs.service.DeathAnimationService;
 
 import java.util.List;
 
@@ -40,6 +41,9 @@ public class EnemyComponent extends Component {
     /** Флаг состояния ходьбы, чтобы не вызывать анимацию каждый кадр. */
     private boolean wasWalking = true;
 
+    private DeathAnimationService deathAnimationService;
+
+
     /**
      * Конструктор.
      *
@@ -49,15 +53,13 @@ public class EnemyComponent extends Component {
         this.goblinData = data;
     }
 
-    /**
-     * Инициализация компонентов при добавлении сущности.
-     * <p>
-     * Создаёт или получает компоненты анимации и атаки.
-     */
     @Override
     public void onAdded() {
         initAnimationComponent();
         initAttackComponent();
+
+        // создаём сервис после того, как есть animationComponent
+        deathAnimationService = new DeathAnimationService(entity, goblinData, animationComponent);
     }
 
     /**
@@ -112,14 +114,9 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /**
-     * Проверяет смерть сущности и запускает анимацию смерти.
-     *
-     * @return true, если сущность умерла и анимация проигрывается
-     */
     private boolean handleDeath() {
         if (isDead() && !deathPlayed) {
-            playDeathAnimation();
+            deathAnimationService.playDeathAnimation(); // вызываем сервис
             deathPlayed = true;
             return true;
         }
@@ -190,63 +187,5 @@ public class EnemyComponent extends Component {
     public boolean isDead() {
         HealthComponent health = entity.getComponent(HealthComponent.class);
         return health.isDead();
-    }
-
-    /**
-     * Запускает анимацию смерти гоблина.
-     * <p>
-     * Создаёт новую сущность с компонентом {@link DeathAnimationComponent} и удаляет
-     * текущую сущность из мира.
-     */
-    public void playDeathAnimation() {
-        List<Image> frames = goblinData.getDeathFrames();
-        if (frames == null || frames.isEmpty()) return;
-
-        boolean facingRight = getFacingDirection();
-
-        Entity deathAnim = createDeathAnimationEntity();
-
-        attachDeathAnimationComponent(deathAnim, frames, facingRight);
-
-        removeOriginalEntity();
-    }
-
-    /**
-     * Определяет направление взгляда гоблина.
-     *
-     * @return true, если гоблин смотрит вправо; false — влево
-     */
-    private boolean getFacingDirection() {
-        return animationComponent.getScaleX() > 0;
-    }
-
-    /**
-     * Создаёт сущность для проигрывания анимации смерти.
-     *
-     * @return новая сущность для анимации
-     */
-    private Entity createDeathAnimationEntity() {
-        return FXGL.entityBuilder()
-                .at(entity.getX(), entity.getY())
-                .zIndex(100)
-                .buildAndAttach();
-    }
-
-    /**
-     * Добавляет компонент анимации смерти к сущности.
-     *
-     * @param deathAnim   сущность анимации
-     * @param frames      кадры анимации
-     * @param facingRight направление взгляда
-     */
-    private void attachDeathAnimationComponent(Entity deathAnim, List<Image> frames, boolean facingRight) {
-        deathAnim.addComponent(new DeathAnimationComponent(frames, facingRight));
-    }
-
-    /**
-     * Удаляет оригинального гоблина из мира.
-     */
-    private void removeOriginalEntity() {
-        entity.removeFromWorld();
     }
 }
