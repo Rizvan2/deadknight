@@ -8,6 +8,9 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import org.example.deadknight.exceptions.MapSaveException;
 import org.example.deadknight.maps.BattlefieldBackgroundGenerator;
 import org.example.deadknight.player.entities.KnightEntity;
 import org.example.deadknight.player.entities.IlyasPantherEntity;
@@ -17,6 +20,8 @@ import org.example.deadknight.player.factories.PantherFactory;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+
+import static org.example.deadknight.maps.BattlefieldBackgroundGenerator.tileSize;
 
 /**
  * Класс инициализации игры.
@@ -38,6 +43,10 @@ public class GameInitializer {
      * @throws IllegalArgumentException если передан неизвестный тип персонажа
      */
     public static Entity initGame(String characterType) {
+
+        // ===== Генерация или загрузка карты =====
+        generateBattlefieldLayers("bolshayashnaga42", 10, 10);
+
         Entity character;
 
         switch (characterType) {
@@ -62,34 +71,79 @@ public class GameInitializer {
         FXGL.getGameWorld().addEntity(Spikes.create(200, 300));
         FXGL.getGameWorld().addEntity(Spikes.create(400, 300));
 
-        generateOrLoadBattlefield("bolshayashnaga42",42,42); // а тут циферки это типа размер карты друг на друга перемножаются и столько кубиков будет карта
         return character;
     }
 
-    /**
-     * Генерирует карту, если файл отсутствует, или загружает существующую.
-     *
-     * @param name   имя файла карты без расширения
-     * @param tilesX количество тайлов по горизонтали
-     * @param tilesY количество тайлов по вертикали
-     */
-    private static void generateOrLoadBattlefield(String name, int tilesX, int tilesY) {
-        System.out.println("=== Работаем с картой: " + name + " (" + tilesX + "x" + tilesY + ") ===");
-
+    private static void generateBattlefieldLayers(String mapName, int tilesX, int tilesY) {
         File dir = new File("generated");
         createDirectoryIfNotExists(dir);
 
-        File out = new File(dir, name + ".png");
+        File groundFile = new File(dir, mapName + "_ground.png");
+        File treesFile = new File(dir, mapName + "_trees.png");
 
-        if (!out.exists()) {
-            System.out.println("Файл не найден. Генерируем новую карту...");
-            generateBattlefield(out, tilesX, tilesY);
+        BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(tilesX, tilesY, System.currentTimeMillis());
+
+        generateGroundLayer(generator, groundFile);
+
+// ===== Генерация деревьев =====
+        if (!treesFile.exists()) {
+            FXGL.getGameScene().clearGameViews(); // очищаем сцену от пола перед деревьями
+            Pane tempRoot = new Pane();
+            generator.generateTreesTiles(tempRoot);
+
+            SnapshotParameters params = new SnapshotParameters();
+            params.setFill(Color.TRANSPARENT);
+            WritableImage treesSnapshot = tempRoot.snapshot(params, null); // <- вот здесь tempRoot
+            saveImage(treesSnapshot, treesFile);
+            System.out.println("Слой деревьев создан: " + treesFile.getAbsolutePath());
+
         } else {
-            System.out.println("Файл уже существует: " + out.getAbsolutePath());
+            System.out.println("Слой деревьев найден, загружаем: " + treesFile.getAbsolutePath());
         }
 
-        loadBattlefieldImage(out, tilesX, tilesY, 20); // короче tileSize последний параметр метода это размер сжатия каждого кубика текстуры карты пон?
+// ===== Подгрузка слоев в игру =====
+        loadLayerImage(groundFile, tilesX, tilesY, -100); // пол
+        loadLayerImage(treesFile, tilesX, tilesY, 1000);  // деревья сверху
     }
+
+    private static void loadLayerImage(File file, int tilesX, int tilesY, int zIndex) {
+        Image image = new Image(file.toURI().toString());
+        ImageView iv = new ImageView(image);
+        iv.setFitWidth(tilesX * tileSize);
+        iv.setFitHeight(tilesY * tileSize);
+        iv.setSmooth(true);
+        iv.setCache(false);
+
+        FXGL.entityBuilder()
+                .at(0, 0)
+                .view(iv)
+                .zIndex(zIndex)
+                .buildAndAttach();
+    }
+
+    private static void generateGroundLayer(BattlefieldBackgroundGenerator generator, File groundFile) {
+        if (!groundFile.exists()) {
+            Pane tempPane = new Pane();
+            generator.generateGroundTiles(tempPane); // передаём Pane для отрисовки
+            WritableImage snapshot = tempPane.snapshot(new SnapshotParameters(), null); // snapshot с Pane
+            saveImage(snapshot, groundFile);
+            System.out.println("Слой пола создан: " + groundFile.getAbsolutePath());
+        } else {
+            System.out.println("Слой пола уже существует: " + groundFile.getAbsolutePath());
+        }
+    }
+
+
+
+    private static void saveImage(WritableImage image, File file) {
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+            System.out.println("Файл создан: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось сохранить изображение: " + file.getName(), e);
+        }
+    }
+
 
     /**
      * Создает папку, если она еще не существует.
@@ -107,13 +161,14 @@ public class GameInitializer {
      * Генерирует игровое поле и сохраняет его в PNG.
      *
      * @param out    файл, куда будет сохранена карта
-     * @param tilesX количество тайлов по горизонтали
-     * @param tilesY количество тайлов по вертикали
+     * @param tilesX количество тайлов по горизонтали (ширина карты в тайлах)
+     * @param tilesY количество тайлов по вертикали (высота карты в тайлах)
+     *
+     * Тайл (tile) — это просто маленький квадратный кусочек карты, из которых строится весь фон или уровень игры.
      */
     private static void generateBattlefield(File out, int tilesX, int tilesY) {
         // Генерация карты
         BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(tilesX, tilesY, System.currentTimeMillis());
-        generator.generateGrassOnly();
 
         // Снимок сцены
         WritableImage snapshot = FXGL.getGameScene().getRoot().snapshot(new SnapshotParameters(), null);
@@ -121,7 +176,7 @@ public class GameInitializer {
             ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), "png", out);
             System.out.println("Файл создан: " + out.getAbsolutePath());
         } catch (IOException e) {
-            throw new RuntimeException("Не удалось сохранить " + out.getName(), e);
+            throw new MapSaveException("Не удалось сохранить карту ¯\\_(ツ)_/¯ :" + out.getName(), e);
         }
     }
 

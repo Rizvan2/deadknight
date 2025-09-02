@@ -36,6 +36,7 @@ public class Spikes {
 
         Entity spikes = FXGL.entityBuilder()
                 .at(x, y)
+                .zIndex(10000) // выставляем поверх всех тайлов
                 .view(texture)
                 .bbox(new HitBox("BODY", BoundingShape.box(64, 64)))
                 .type(EntityType.SPIKES)

@@ -5,6 +5,7 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.scene.CacheHint;
 import javafx.scene.image.ImageView;
 import javafx.geometry.Point2D;
+import javafx.scene.layout.Pane;
 
 import java.util.*;
 
@@ -14,7 +15,7 @@ import java.util.*;
  */
 public class BattlefieldBackgroundGenerator {
 
-    private final int tileSize = 20;
+    public static volatile int tileSize = 128;
     private final int tilesX; // например 256
     private final int tilesY;
     private final Random rnd;
@@ -24,19 +25,35 @@ public class BattlefieldBackgroundGenerator {
 // FXGL будет подгружать эти файлы, чтобы мы могли случайно выбирать
 // разный вариант травы и сделать фон разнообразным, а не одинаковым.
     private final String[] grassVariants = {
-            "ground/grass-1.png", // вариант травы №1
-            "ground/grass-2.png", // вариант травы №2
-            "ground/grass-3.png", // вариант травы №3
-            "ground/grass-4.png"  // вариант травы №4
+            "map/stone/stone-1.png", // вариант камня №1
+            "map/stone/stone-2.png" // вариант камня №2
     };
-    public void generateGrassOnly() {
-        for (int x = 0; x < tilesX; x++) {
-            for (int y = 0; y < tilesY; y++) {
-                String asset = grassVariants[(int) (Math.random() * grassVariants.length)];
-                placeTile(asset, x * tileSize, y * tileSize, 1);
-            }
-        }
-    }
+
+    private final String[] treeVariants = {
+            "map/tree/tree-1.png"
+    };
+
+//    public void generateMapWithTrees() {
+//        // 1. Генерация травы
+//        for (int x = 0; x < tilesX; x++) {
+//            for (int y = 0; y < tilesY; y++) {
+//                String ground = grassVariants[(int) (Math.random() * grassVariants.length)];
+//                placeTile(ground, x * tileSize, y * tileSize, 0, 1.0); // z-index 0 — самый низ
+//            }
+//        }
+//
+//        // 2. Генерация деревьев поверх травы
+//        for (int x = 0; x < tilesX; x++) {
+//            for (int y = 0; y < tilesY; y++) {
+//                if (Math.random() < 0.3) { // вероятность появления дерева
+//                    String tree = treeVariants[(int) (Math.random() * treeVariants.length)];
+//                    placeTile(tree, x * tileSize, y * tileSize, 1000, 3); // z-index 1000 — сверху
+//                }
+//            }
+//        }
+//    }
+
+
     private final String[] mudVariants = {"ground/mud-1.png","ground/mud-2.png"};
     private final String[] rockVariants = {"debris/rock-1.png","debris/rock-2.png"};
     private final String[] bodyVariants = {"bodies/knight-dead-1.png","bodies/knight-dead-2.png","bodies/goblin-dead-1.png"};
@@ -50,78 +67,62 @@ public class BattlefieldBackgroundGenerator {
         this.rnd = new Random(seed);
     }
 
-    public void generate() {
-        generateSkyLayer();
-        generateGroundBase();
-        generateMudPatches(0.005); // плотность
-        scatterDebris(tilesX * tilesY / 120); // мелкий мусор
-        scatterBodies(60); // количество кластеров тел
-        scatterFlags(10);
-        scatterBlood(tilesX * tilesY / 500);
-        generateFrontFog();
-        // После генерации можно сделать snapshot всех слоёв в одно изображение для оптимизации
-    }
 
-    private void generateSkyLayer() {
-        // Загружаем текстуру фона
-        var img = FXGL.texture("bg/hills-1.png");
-
-        // Создаём сущность в игровом мире с низким zIndex, чтобы быть под всеми объектами
-        var bgEntity = FXGL.entityBuilder()
-                .at(0, 0)
-                .view(img)
-                .zIndex(-100) // фон под всем остальным
-                .buildAndAttach();
-
-        // Настраиваем размеры и кеширование
-        ImageView iv = (ImageView) bgEntity.getViewComponent().getChildren().get(0);
-        iv.setFitWidth(tilesX * tileSize);
-        iv.setPreserveRatio(true);
-        iv.setCache(true);
-        iv.setCacheHint(CacheHint.SPEED);
-
-        // Убираем использование UI-слоя — больше не нужно
-        // FXGL.getGameScene().addUINode(iv);
-    }
-
-
-
-    private void generateGroundBase() {
+    /** Генерация пола */
+    public void generateGroundTiles(Pane root) {
         for (int y = 0; y < tilesY; y++) {
             for (int x = 0; x < tilesX; x++) {
-                String t = pick(grassVariants, 0.85); // чаще трава
-                placeTile(t, x * tileSize, y * tileSize, 1);
+                String t = pick(grassVariants, 0.85); // чаще камень/трава
+                placeTileForSnapshot(t, x * tileSize, y * tileSize, 1.0, root); // масштаб 1x
             }
         }
     }
 
-    private void generateMudPatches(double probPerTile) {
+    /** Генерация деревьев поверх пола как тайлы */
+    public void generateTreesTiles(Pane root) {
         for (int y = 0; y < tilesY; y++) {
             for (int x = 0; x < tilesX; x++) {
-                if (rnd.nextDouble() < probPerTile) {
-                    // создаём пятно радиус r
-                    int r = 2 + rnd.nextInt(5);
-                    int cx = x + rnd.nextInt(3) - 1;
-                    int cy = y + rnd.nextInt(3) - 1;
-                    paintBlob(cx, cy, r, mudVariants, 2);
+                if (Math.random() < 0.1) { // шанс появления дерева
+                    String treePath = treeVariants[(int)(Math.random() * treeVariants.length)];
+                    placeTileForSnapshot(treePath, x * tileSize, y * tileSize, 3.0, root); // масштаб 1x
                 }
             }
         }
     }
 
-    private void paintBlob(int cx, int cy, int r, String[] variants, int zIndex) {
-        for (int yy = cy - r; yy <= cy + r; yy++) {
-            for (int xx = cx - r; xx <= cx + r; xx++) {
-                if (xx < 0 || yy < 0 || xx >= tilesX || yy >= tilesY) continue;
-                Point2D p1 = new Point2D(cx, cy);
-                Point2D p2 = new Point2D(xx, yy);
-                double d = p1.distance(p2);
-                if (d <= r + rnd.nextDouble() * 0.6) {
-                    placeTile(pick(variants), xx * tileSize, yy * tileSize, zIndex);
-                }
-            }
-        }
-    }
+
+
+
+
+
+//    private void generateMudPatches(double probPerTile) {
+//        for (int y = 0; y < tilesY; y++) {
+//            for (int x = 0; x < tilesX; x++) {
+//                if (rnd.nextDouble() < probPerTile) {
+//                    // создаём пятно радиус r
+//                    int r = 2 + rnd.nextInt(5);
+//                    int cx = x + rnd.nextInt(3) - 1;
+//                    int cy = y + rnd.nextInt(3) - 1;
+//                    paintBlob(cx, cy, r, mudVariants, 2, 1.0);
+//                }
+//            }
+//        }
+//    }
+//
+//    private void paintBlob(int cx, int cy, int r, String[] variants, int zIndex, double scale) {
+//        for (int yy = cy - r; yy <= cy + r; yy++) {
+//            for (int xx = cx - r; xx <= cx + r; xx++) {
+//                if (xx < 0 || yy < 0 || xx >= tilesX || yy >= tilesY) continue;
+//                Point2D p1 = new Point2D(cx, cy);
+//                Point2D p2 = new Point2D(xx, yy);
+//                double d = p1.distance(p2);
+//                if (d <= r + rnd.nextDouble() * 0.6) {
+//                    placeTileForSnapshot(pick(variants), xx * tileSize, yy * tileSize, zIndex, scale);
+//                }
+//            }
+//        }
+//    }
+
 
     private void scatterDebris(int count) {
         for (int i = 0; i < count; i++) {
@@ -190,19 +191,20 @@ public class BattlefieldBackgroundGenerator {
         }
     }
 
-    private void placeTile(String asset, int px, int py, int z) {
+    private void placeTileForSnapshot(String asset, int px, int py, double scale, Pane root) {
         var tex = FXGL.texture(asset);
         var iv = new ImageView(tex.getImage());
-        iv.setFitWidth(tileSize);
-        iv.setFitHeight(tileSize);
+        iv.setFitWidth(tileSize * scale);
+        iv.setFitHeight(tileSize * scale);
+        iv.setSmooth(true);
         iv.setCache(true);
-        iv.setCacheHint(CacheHint.SPEED);
-        FXGL.entityBuilder()
-                .at(px, py)
-                .view(iv)
-                .zIndex(-50) // фон под всеми
-                .buildAndAttach();
+        iv.setTranslateX(px);
+        iv.setTranslateY(py);
+        root.getChildren().add(iv);
     }
+
+
+
 
 
     private void placeSprite(String asset, int px, int py, int z, double scale) {
@@ -229,4 +231,46 @@ public class BattlefieldBackgroundGenerator {
         if (rnd.nextDouble() < biasKeep) return arr[0];
         return pick(arr);
     }
+
+    //    public void generate() {
+//        generateSkyLayer();
+//        generateGroundBase();
+//        generateMudPatches(0.005); // плотность
+//        scatterDebris(tilesX * tilesY / 120); // мелкий мусор
+//        scatterBodies(60); // количество кластеров тел
+//        scatterFlags(10);
+//        scatterBlood(tilesX * tilesY / 500);
+//        generateFrontFog();
+//        // После генерации можно сделать snapshot всех слоёв в одно изображение для оптимизации
+//    }
+
+//    private void generateSkyLayer() {
+//        // Загружаем текстуру фона
+//        var img = FXGL.texture("bg/hills-1.png");
+//
+//        // Создаём сущность в игровом мире с низким zIndex, чтобы быть под всеми объектами
+//        var bgEntity = FXGL.entityBuilder()
+//                .at(0, 0)
+//                .view(img)
+//                .zIndex(-100) // фон под всем остальным
+//                .buildAndAttach();
+//
+//        // Настраиваем размеры и кеширование
+//        ImageView iv = (ImageView) bgEntity.getViewComponent().getChildren().get(0);
+//        iv.setFitWidth(tilesX * tileSize);
+//        iv.setPreserveRatio(true);
+//        iv.setCache(true);
+//        iv.setCacheHint(CacheHint.SPEED);
+//
+//        // Убираем использование UI-слоя — больше не нужно
+//        // FXGL.getGameScene().addUINode(iv);
+//    }
+
+
+
+//    private void generateGroundBase() {
+//        generateGroundTiles();
+//        generateTrees();
+//    }
+
 }
