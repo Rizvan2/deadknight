@@ -2,26 +2,11 @@ package org.example.deadknight.services.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.CacheHint;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import org.example.deadknight.exceptions.MapSaveException;
-import org.example.deadknight.maps.BattlefieldBackgroundGenerator;
 import org.example.deadknight.player.entities.KnightEntity;
 import org.example.deadknight.player.entities.IlyasPantherEntity;
 import org.example.deadknight.mobs.entities.Spikes;
 import org.example.deadknight.player.factories.KnightFactory;
 import org.example.deadknight.player.factories.PantherFactory;
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
-
-import static org.example.deadknight.maps.BattlefieldBackgroundGenerator.tileSize;
 import static org.example.deadknight.services.MapService.generateBattlefieldLayers;
 
 /**
@@ -77,13 +62,4 @@ public class GameInitializer {
 
         return character;
     }
-
-
-
-
-
-
-
-
-
 }
