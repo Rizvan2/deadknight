@@ -7,6 +7,7 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -138,6 +139,17 @@ public class GoblinFactory implements EntityFactory {
                 .collidable()
                 .build();
     }
+
+    public void preloadGoblinTextures(Runnable onComplete) {
+        Thread.startVirtualThread(() -> {
+            loadWalkFrames();
+            loadAttackFrames();
+            loadDeathFrames();
+
+            Platform.runLater(onComplete);
+        });
+    }
+
 
     /**
      * Добавляет хитбар для отображения здоровья сущности.

@@ -10,6 +10,7 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import org.example.deadknight.mobs.factories.GoblinFactory;
 
 /**
  * Подсцена загрузочного экрана с прогресс-баром.
@@ -51,33 +52,28 @@ public class LoadingScreenSubScene extends SubScene {
         StackPane.setMargin(progressBar, new Insets(0, 0, 50, 0));
     }
 
-    /**
-     * Асинхронно загружает текстуры с прогрессом.
-     * <p>
-     * Для каждой текстуры прогресс-бар обновляется, а после окончания вызывается {@code onComplete}.
-     *
-     * @param onComplete Runnable, который будет вызван после загрузки всех текстур
-     */
     public void loadTextures(Runnable onComplete) {
-        String[] textures = {
-                "knight/knight_left-1.png",
-                "knight/knight_left-2.png",
-                "knight/knight_left-3.png",
-                "knight/knight_left-4.png",
-                "knight/knight_left-5.png"
-        };
+        GoblinFactory gf = new GoblinFactory();
+        gf.preloadGoblinTextures(() -> {
+            Thread.startVirtualThread(() -> {
+                String[] textures = {
+                        "knight/knight_left-1.png",
+                        "knight/knight_left-2.png",
+                        "knight/knight_left-3.png",
+                        "knight/knight_left-4.png",
+                        "knight/knight_left-5.png"
+                };
 
-        new Thread(() -> {
-            for (int i = 0; i < textures.length; i++) {
-                FXGL.texture(textures[i]);
-                final int index = i;
+                for (int i = 0; i < textures.length; i++) {
+                    FXGL.texture(textures[i]);
+                    final int index = i;
+                    Platform.runLater(() -> progressBar.setProgress((index + 1) / (double) textures.length));
 
-                Platform.runLater(() -> progressBar.setProgress((index + 1) / (double) textures.length));
+                    try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+                }
 
-                try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-            }
-
-            Platform.runLater(onComplete);
-        }).start();
+                Platform.runLater(onComplete);
+            });
+        });
     }
 }

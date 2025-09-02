@@ -15,8 +15,12 @@ public class SettingsInitializer {
      * @param settings объект {@link GameSettings}, который необходимо настроить
      */
     public static void initSettings(GameSettings settings) {
-        settings.setWidth(800);
-        settings.setHeight(600);
+        // увеличиваем рабочее поле
+        settings.setWidth(1920);
+        settings.setHeight(1080);
+        
+        settings.setFullScreenAllowed(true);      // разрешаем fullscreen
+        settings.setFullScreenFromStart(true);    // включаем fullscreen при старте
         settings.setTitle("Dead KnightFactory");
     }
 }

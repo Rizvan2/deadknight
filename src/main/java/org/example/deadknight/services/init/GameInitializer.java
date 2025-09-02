@@ -34,7 +34,7 @@ public class GameInitializer {
     public static Entity initGame(String characterType) {
 
         // ===== Генерация или загрузка карты =====
-        generateBattlefieldLayers("bolshayashnaga42", 10, 10);
+        generateBattlefieldLayers("sdfsdfksdf", 15, 10);
 
         Entity character;
 
