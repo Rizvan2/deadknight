@@ -61,7 +61,7 @@ public class BattlefieldBackgroundGenerator {
             for (int x = 0; x < tilesX; x++) {
                 if (Math.random() < 0.1) { // шанс появления дерева
                     String treePath = treeVariants[(int)(Math.random() * treeVariants.length)];
-                    placeTileForSnapshot(treePath, x * tileSize, y * tileSize, 4.0, root); // масштаб 1x
+                    placeTileForSnapshot(treePath, x * tileSize, y * tileSize, 6.0, root); // масштаб 1x
                 }
             }
         }
