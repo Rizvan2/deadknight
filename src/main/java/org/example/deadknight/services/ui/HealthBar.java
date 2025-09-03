@@ -10,7 +10,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
-import org.example.deadknight.components.HealthComponent;
+import org.example.deadknight.gameplay.components.HealthComponent;
 import com.almasb.fxgl.entity.Entity;
 
 /**

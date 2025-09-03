@@ -2,12 +2,12 @@ package org.example.deadknight.services.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.player.entities.KnightEntity;
-import org.example.deadknight.player.entities.IlyasPantherEntity;
-import org.example.deadknight.mobs.entities.Spikes;
-import org.example.deadknight.player.factories.KnightFactory;
-import org.example.deadknight.player.factories.PantherFactory;
-import static org.example.deadknight.services.MapService.generateBattlefieldLayers;
+import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
+import org.example.deadknight.gameplay.actors.player.entities.IlyasPantherEntity;
+import org.example.deadknight.gameplay.actors.mobs.entities.Spikes;
+import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
+import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
+import static org.example.deadknight.infrastructure.services.MapService.generateBattlefieldLayers;
 
 /**
  * Класс инициализации игрового мира.
@@ -34,7 +34,7 @@ public class GameInitializer {
     public static Entity initGame(String characterType) {
 
         // ===== Генерация или загрузка карты =====
-        generateBattlefieldLayers("sdfs2342dfksdf", 15, 10);
+        generateBattlefieldLayers("выаыва", 15, 10);
 
         Entity character;
 

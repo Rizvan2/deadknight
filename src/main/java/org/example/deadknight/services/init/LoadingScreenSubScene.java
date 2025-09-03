@@ -10,7 +10,7 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import org.example.deadknight.mobs.factories.GoblinFactory;
+import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
 
 /**
  * Подсцена загрузочного экрана с прогресс-баром.

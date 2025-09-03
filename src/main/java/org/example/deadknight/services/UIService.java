@@ -3,7 +3,7 @@ package org.example.deadknight.services;
 import com.almasb.fxgl.entity.Entity;
 import org.example.deadknight.services.ui.GameOverUI;
 import org.example.deadknight.services.ui.UIController;
-import org.example.deadknight.components.HealthComponent;
+import org.example.deadknight.gameplay.components.HealthComponent;
 
 /**
  * Сервис для управления пользовательским интерфейсом (UI) и проверки конца игры.

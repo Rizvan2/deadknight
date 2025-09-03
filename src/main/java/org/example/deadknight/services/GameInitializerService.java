@@ -3,9 +3,9 @@ package org.example.deadknight.services;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
-import org.example.deadknight.mobs.factories.GoblinFactory;
-import org.example.deadknight.player.controllers.KnightController;
-import org.example.deadknight.player.controllers.PantherController;
+import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
+import org.example.deadknight.gameplay.actors.player.controllers.KnightController;
+import org.example.deadknight.gameplay.actors.player.controllers.PantherController;
 import org.example.deadknight.services.init.GameInitializer;
 
 import java.util.function.Supplier;
