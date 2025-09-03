@@ -10,17 +10,15 @@ import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
 import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
 
 /**
- * Класс инициализации игрового мира.
+ * Класс для инициализации игрового мира и персонажей.
  * <p>
- * Отвечает за:
+ * Основные функции:
  * <ul>
  *     <li>Создание игрового персонажа (рыцарь или пантера)</li>
- *     <li>Расстановку препятствий (шипы)</li>
- *     <li>Генерацию и загрузку карты (пол и деревья)</li>
+ *     <li>Привязка камеры к персонажу</li>
+ *     <li>Генерация карты</li>
+ *     <li>Добавление препятствий на карту</li>
  * </ul>
- * <p>
- * Генерация карты создаёт PNG-файлы в папке <code>generated</code>, если они ещё не существуют.
- * Затем PNG загружается в игру как фоновые слои.
  */
 public class GameInitializer {
 
@@ -32,29 +30,63 @@ public class GameInitializer {
      * @throws IllegalArgumentException если передан неизвестный тип персонажа
      */
     public static Entity initGame(String characterType) {
-        Point2D mapSize = MapInitializer.generateMediumWorld("средний4");
+        Point2D mapSize = generateMap();
 
-        Entity character;
+        Entity character = createCharacter(characterType);
 
-        switch (characterType) {
-            case "knight":
+        addCharacterToWorld(character);
+        bindCameraToCharacter(character, mapSize);
+        addObstacles();
+
+        return character;
+    }
+
+    /**
+     * Генерирует карту среднего размера.
+     *
+     * @return объект {@link Point2D} с размерами карты (ширина, высота)
+     */
+    private static Point2D generateMap() {
+        return MapInitializer.generateMediumWorld("средний4");
+    }
+
+    /**
+     * Создаёт сущность персонажа в зависимости от типа.
+     *
+     * @param characterType "knight" или "panther"
+     * @return объект {@link Entity} персонажа
+     * @throws IllegalArgumentException если передан неизвестный тип персонажа
+     */
+    private static Entity createCharacter(String characterType) {
+        return switch (characterType) {
+            case "knight" -> {
                 KnightEntity knightData = new KnightEntity(100, 0.6, "RIGHT");
-                character = KnightFactory.create(knightData, 100, 300);
-                break;
-
-            case "panther":
+                yield KnightFactory.create(knightData, 100, 300);
+            }
+            case "panther" -> {
                 IlyasPantherEntity pantherData = new IlyasPantherEntity(120, 60, "RIGHT");
-                character = PantherFactory.create(pantherData, 100, 300);
-                break;
+                yield PantherFactory.create(pantherData, 100, 300);
+            }
+            default -> throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
+        };
+    }
 
-            default:
-                throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
-        }
-
-// Добавляем персонажа в мир
+    /**
+     * Добавляет персонажа в игровой мир.
+     *
+     * @param character сущность персонажа {@link Entity}
+     */
+    private static void addCharacterToWorld(Entity character) {
         FXGL.getGameWorld().addEntity(character);
+    }
 
-// Привязываем камеру к персонажу, чтобы он был в центре экрана
+    /**
+     * Привязывает камеру к персонажу и задаёт границы карты.
+     *
+     * @param character сущность персонажа {@link Entity}
+     * @param mapSize   размеры карты {@link Point2D}
+     */
+    private static void bindCameraToCharacter(Entity character, Point2D mapSize) {
         FXGL.getGameScene().getViewport().bindToEntity(
                 character,
                 FXGL.getAppWidth() / 2.0,
@@ -63,13 +95,15 @@ public class GameInitializer {
 
         int mapWidth = (int) mapSize.getX();
         int mapHeight = (int) mapSize.getY();
-// Ограничиваем камеру границами карты (если карта 15x10 тайлов, tileSize = 64)
-        FXGL.getGameScene().getViewport().setBounds(0, 0, mapWidth, mapHeight);
 
-// Добавляем препятствия
+        FXGL.getGameScene().getViewport().setBounds(0, 0, mapWidth, mapHeight);
+    }
+
+    /**
+     * Добавляет препятствия (шипы) на карту.
+     */
+    private static void addObstacles() {
         FXGL.getGameWorld().addEntity(Spikes.create(200, 300));
         FXGL.getGameWorld().addEntity(Spikes.create(400, 300));
-
-        return character;
     }
 }
