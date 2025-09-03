@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 import javafx.geometry.Point2D;
 
 import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -44,9 +45,19 @@ public class DeathAnimationComponent extends Component {
         }
 
         Point2D pos = getEntityPosition();
+        // Шанс спавна сферы здоровья
+        trySpawnHealthEssence(pos);
         removeOriginalEntity();
         var deathAnim = createDeathAnimationEntity(pos);
         attachAnimationComponent(deathAnim);
+    }
+
+    public void trySpawnHealthEssence(Point2D pos) {
+        double chance = 0.5; // 50% шанс
+        if (new Random().nextDouble() < chance) {
+            FXGL.spawn("healthEssence", pos.getX(), pos.getY());
+            System.out.println("[Goblin] Health essence spawned at " + pos);
+        }
     }
 
     /**
@@ -160,5 +171,7 @@ public class DeathAnimationComponent extends Component {
                 entity.removeFromWorld();
             }
         }
+
+
     }
 }

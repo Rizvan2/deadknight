@@ -4,6 +4,12 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.physics.CollisionHandler;
+import org.example.deadknight.components.HealthComponent;
+import org.example.deadknight.player.entities.types.EntityType;
+import org.example.deadknight.types.EntityTypeEssences;
+
+import org.example.deadknight.mobs.factories.EssenceFactory;
 import org.example.deadknight.player.components.SpeedComponent;
 import org.example.deadknight.player.controllers.KnightController;
 import org.example.deadknight.player.controllers.MovementController;
@@ -16,6 +22,8 @@ import org.example.deadknight.player.systems.CollisionSystem;
 import org.example.deadknight.services.init.SettingsInitializer;
 
 import java.util.function.Supplier;
+
+import static com.almasb.fxgl.dsl.FXGLForKtKt.getPhysicsWorld;
 
 /**
  * Главный класс приложения DeadKnight.
@@ -77,6 +85,7 @@ public class DeadKnightApp extends GameApplication {
      */
     @Override
     protected void initGame() {
+        FXGL.getGameWorld().addEntityFactory(new EssenceFactory()); // <--- регистрация фабрики
 
         gameInitService = new GameInitializerService();
         uiService = new UIService();
@@ -89,6 +98,32 @@ public class DeadKnightApp extends GameApplication {
             startGame(characterType);
         });
     }
+
+    @Override
+    protected void initPhysics() {
+        getPhysicsWorld().addCollisionHandler(
+                new CollisionHandler(EntityType.KNIGHT, EntityTypeEssences.HEALTH_ESSENCE) {
+                    @Override
+                    protected void onCollisionBegin(Entity player, Entity essence) {
+                        HealthComponent health = player.getComponent(HealthComponent.class);
+                        int healAmount = essence.getInt("healAmount");
+
+                        int oldHealth = health.getValue();
+                        int newHealth = Math.min(oldHealth + healAmount, health.getMaxValue());
+                        health.valueProperty().set(newHealth);
+
+                        essence.removeFromWorld();
+
+                        System.out.println("[DeadKnight] Player healed: +" + (newHealth - oldHealth) +
+                                " (Current: " + newHealth + "/" + health.getMaxValue() + ")");
+                    }
+                }
+        );
+    }
+
+
+
+
 
     /**
      * Запускает игру после выбора персонажа:

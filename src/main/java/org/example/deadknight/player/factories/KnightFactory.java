@@ -33,6 +33,7 @@ public class KnightFactory {
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
+                .collidable()   // Дает возможность подбирать сферы здоровья
                 .build();
 
         initProperties(knight, knightData);

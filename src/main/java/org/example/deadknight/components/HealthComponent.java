@@ -72,4 +72,13 @@ public class HealthComponent extends Component {
     public boolean isDead() {
         return value.get() <= 0;
     }
+
+    public void heal(int amount) {
+        int newValue = value.get() + amount;
+        if (newValue > maxValue) {
+            newValue = maxValue;
+        }
+        value.set(newValue);
+    }
+
 }
