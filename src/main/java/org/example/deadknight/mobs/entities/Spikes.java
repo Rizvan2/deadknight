@@ -31,12 +31,12 @@ public class Spikes {
      */
     public static Entity create(double x, double y) {
         ImageView texture = FXGL.texture("spikes.png");
-        texture.setFitWidth(64);
-        texture.setFitHeight(64);
+        texture.setFitWidth(95);
+        texture.setFitHeight(95);
 
         Entity spikes = FXGL.entityBuilder()
                 .at(x, y)
-                .zIndex(10000) // выставляем поверх всех тайлов
+                .zIndex(0) // выставляем поверх всех тайлов
                 .view(texture)
                 .bbox(new HitBox("BODY", BoundingShape.box(64, 64)))
                 .type(EntityType.SPIKES)
