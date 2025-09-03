@@ -63,7 +63,6 @@ public class GoblinFactory implements EntityFactory {
 
         // Свойства сущности
         goblin.getProperties().setValue("canTakeDamage", true);
-        goblin.getProperties().setValue("speed", 50.0);
         goblin.getProperties().setValue("wavePushStrength", 300); // сила отталкивания от волны
 
         return goblin;
@@ -132,6 +131,7 @@ public class GoblinFactory implements EntityFactory {
                 .view(view)
                 .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
                 .with(new EnemyComponent(goblinData))
+                .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))
                 .with(new AnimationComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
@@ -140,6 +140,16 @@ public class GoblinFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Предзагружает текстуры анимаций гоблина в отдельном потоке.
+     * <p>
+     * Метод загружает кадры анимации ходьбы, атаки и смерти, чтобы при
+     * спавне гоблина не происходили задержки из-за подгрузки изображений.
+     * После завершения загрузки вызывается переданный {@link Runnable} в
+     * JavaFX-потоке через {@link Platform#runLater(Runnable)}.
+     *
+     * @param onComplete действие, которое будет выполнено после завершения предзагрузки
+     */
     public void preloadGoblinTextures(Runnable onComplete) {
         Thread.startVirtualThread(() -> {
             loadWalkFrames();

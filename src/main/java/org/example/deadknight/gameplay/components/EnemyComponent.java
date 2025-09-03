@@ -63,7 +63,13 @@ public class EnemyComponent extends Component {
         initAnimationComponent();
         initAttackComponent();
 
-        movementService = new MovementService(entity, animationComponent, goblinData.getSpeed());
+        if (!entity.hasComponent(SpeedComponent.class)) {
+            entity.addComponent(new SpeedComponent(goblinData.getSpeed()));
+        }
+
+        double actualSpeed = entity.getComponent(SpeedComponent.class).getSpeed();
+
+        movementService = new MovementService(entity, animationComponent, actualSpeed);
         combatService = new CombatService(attackComponent, animationComponent);
 
         deathAnimationService = new DeathAnimationService(entity, goblinData, animationComponent);
@@ -99,7 +105,8 @@ public class EnemyComponent extends Component {
         Point2D direction = player.getPosition().subtract(entity.getPosition());
 
         if (!combatService.isInRange(entity, player, 20)) {
-            movementService.moveTowards(direction, tpf);
+            movementService.setDirection(direction); // обновляем направление
+            movementService.update(tpf);             // перемещаемся с этим направлением
         } else {
             combatService.tryAttack(player, tpf);
         }
