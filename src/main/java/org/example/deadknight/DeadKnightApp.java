@@ -174,7 +174,7 @@ public class DeadKnightApp extends GameApplication {
      */
     private void initUIAndEnemies(String characterType) {
         uiService.initUI(player);
-        gameInitService.spawnEnemies(4);
+        gameInitService.spawnEnemiesAfterMapLoaded(4);
     }
 
     /**

@@ -3,6 +3,7 @@ package org.example.deadknight.services;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import javafx.util.Duration;
 import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
 import org.example.deadknight.gameplay.actors.player.controllers.KnightController;
 import org.example.deadknight.gameplay.actors.player.controllers.PantherController;
@@ -56,15 +57,20 @@ public class GameInitializerService {
     }
 
     /**
-     * Спавнит указанное количество врагов с равным шагом по X.
+     * Спавнит указанное количество гоблинов после небольшой задержки, чтобы дождаться полной загрузки карты.
+     * <p>
+     * Каждый гоблин создаётся с равным шагом по координате X.
      *
-     * @param count количество врагов для спавна
+     * @param count количество гоблинов для спавна
      */
-    public void spawnEnemies(int count) {
-        for (int i = 0; i < count; i++) {
-            int xPos = 200 + i * 50;
-            int yPos = 200;
-            FXGL.spawn("goblin", new SpawnData(xPos, yPos));
-        }
+    public void spawnEnemiesAfterMapLoaded(int count) {
+        FXGL.runOnce(() -> {
+            for (int i = 0; i < count; i++) {
+                int xPos = 200 + i * 50;
+                int yPos = 200;
+                FXGL.spawn("goblin", new SpawnData(xPos, yPos));
+            }
+        }, Duration.seconds(7)); // ждём полсекунды после загрузки карты
     }
+
 }
