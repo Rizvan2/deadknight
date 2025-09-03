@@ -117,8 +117,8 @@ public class GoblinFactory implements EntityFactory {
      */
     private ImageView createGoblinView(Image firstFrame) {
         ImageView view = new ImageView(firstFrame);
-        view.setFitWidth(110);
-        view.setFitHeight(110);
+        view.setFitWidth(150);
+        view.setFitHeight(150);
         view.setPreserveRatio(true);
         return view;
     }

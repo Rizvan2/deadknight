@@ -144,8 +144,8 @@ public class DeathAnimationComponent extends Component {
             if (frames.isEmpty()) return;
 
             view = new ImageView(frames.get(0));
-            view.setFitWidth(70);
-            view.setFitHeight(70);
+            view.setFitWidth(100);
+            view.setFitHeight(100);
             view.setScaleX(facingRight ? 1 : -1);
             entity.getViewComponent().addChild(view);
         }
