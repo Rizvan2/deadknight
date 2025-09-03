@@ -1,6 +1,7 @@
 package org.example.deadknight.infrastructure.generation;
 
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 
@@ -156,6 +157,41 @@ public class BattlefieldBackgroundGenerator {
         iv.setTranslateY(py);
         root.getChildren().add(iv);
     }
+
+    /**
+     * Возвращает массив тайлов для рендеринга (нижний слой пола).
+     */
+    public Image[][] getGroundTileArray() {
+        Image[][] tiles = new Image[tilesX][tilesY];
+
+        for (int y = 0; y < tilesY; y++) {
+            for (int x = 0; x < tilesX; x++) {
+                String path = pick(grassVariants, 0.85);
+                tiles[x][y] = new Image(path);
+            }
+        }
+
+        return tiles;
+    }
+
+    public Image[][] getTreeTileArray() {
+        Image[][] tiles = new Image[tilesX][tilesY];
+
+        for (int y = 0; y < tilesY; y++) {
+            for (int x = 0; x < tilesX; x++) {
+                if (Math.random() < 0.1) {
+                    String path = treeVariants[rnd.nextInt(treeVariants.length)];
+                    tiles[x][y] = new Image(path);
+                } else {
+                    tiles[x][y] = null; // прозрачный тайл
+                }
+            }
+        }
+
+        return tiles;
+    }
+
+
 
 //    public void generateMapWithTrees() {
 //        // 1. Генерация травы

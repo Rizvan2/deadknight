@@ -2,12 +2,12 @@ package org.example.deadknight.services.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import javafx.geometry.Point2D;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.entities.IlyasPantherEntity;
 import org.example.deadknight.gameplay.actors.mobs.entities.Spikes;
 import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
 import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
-import static org.example.deadknight.infrastructure.services.MapService.generateBattlefieldLayers;
 
 /**
  * Класс инициализации игрового мира.
@@ -32,9 +32,7 @@ public class GameInitializer {
      * @throws IllegalArgumentException если передан неизвестный тип персонажа
      */
     public static Entity initGame(String characterType) {
-
-        // ===== Генерация или загрузка карты =====
-        generateBattlefieldLayers("выаыва", 15, 10);
+        Point2D mapSize = MapInitializer.generateMediumWorld("средний4");
 
         Entity character;
 
@@ -53,10 +51,22 @@ public class GameInitializer {
                 throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
         }
 
-        // Добавляем персонажа в мир
+// Добавляем персонажа в мир
         FXGL.getGameWorld().addEntity(character);
 
-        // Добавляем препятствия
+// Привязываем камеру к персонажу, чтобы он был в центре экрана
+        FXGL.getGameScene().getViewport().bindToEntity(
+                character,
+                FXGL.getAppWidth() / 2.0,
+                FXGL.getAppHeight() / 2.0
+        );
+
+        int mapWidth = (int) mapSize.getX();
+        int mapHeight = (int) mapSize.getY();
+// Ограничиваем камеру границами карты (если карта 15x10 тайлов, tileSize = 64)
+        FXGL.getGameScene().getViewport().setBounds(0, 0, mapWidth, mapHeight);
+
+// Добавляем препятствия
         FXGL.getGameWorld().addEntity(Spikes.create(200, 300));
         FXGL.getGameWorld().addEntity(Spikes.create(400, 300));
 

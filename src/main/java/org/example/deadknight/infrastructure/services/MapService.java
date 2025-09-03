@@ -2,6 +2,7 @@ package org.example.deadknight.infrastructure.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Point2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -28,7 +29,7 @@ public class MapService {
      * @param tilesX  количество тайлов по горизонтали
      * @param tilesY  количество тайлов по вертикали
      */
-    public static void generateBattlefieldLayers(String mapName, int tilesX, int tilesY) {
+    public static Point2D generateBattlefieldLayers(String mapName, int tilesX, int tilesY) {
         File dir = new File("generated");
         createDirectoryIfNotExists(dir);
 
@@ -47,6 +48,9 @@ public class MapService {
 // ===== Подгрузка слоев в игру =====
         loadLayerImage(groundFile, tilesX, tilesY, -100); // пол
         loadLayerImage(treesFile, tilesX, tilesY, 1000);  // деревья сверху
+
+        // Возвращаем реальные размеры карты в пикселях
+        return new Point2D(tilesX * tileSize, tilesY * tileSize);
     }
 
     /**
