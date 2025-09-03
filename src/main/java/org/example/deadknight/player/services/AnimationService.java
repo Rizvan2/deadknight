@@ -15,7 +15,7 @@ import javafx.util.Duration;
  */
 public class AnimationService {
 
-    private static final double FRAME_SIZE = 64;
+    private static final double FRAME_SIZE = 85; // размер рыцаря
 
     private final Entity entity;
     private final ImageView[] rightFrames;
