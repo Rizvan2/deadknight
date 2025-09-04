@@ -5,6 +5,8 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
+import javafx.scene.input.KeyCode;
+import org.example.deadknight.config.GameConfig;
 import org.example.deadknight.gameplay.components.HealthComponent;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.types.EntityTypeEssences;
@@ -19,11 +21,13 @@ import org.example.deadknight.services.GameFlowService;
 import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.services.UIService;
 import org.example.deadknight.gameplay.actors.player.systems.CollisionSystem;
+import org.example.deadknight.services.debug.DebugOverlayService;
 import org.example.deadknight.services.init.SettingsInitializer;
 
 import java.util.function.Supplier;
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.getPhysicsWorld;
+
 
 /**
  * Главный класс приложения DeadKnight.
@@ -85,7 +89,12 @@ public class DeadKnightApp extends GameApplication {
      */
     @Override
     protected void initGame() {
-        FXGL.getGameWorld().addEntityFactory(new EssenceFactory()); // <--- регистрация фабрики
+        DebugOverlayService debugService = new DebugOverlayService();
+        debugService.init(); // теперь Canvas создаётся и добавляется уже безопасно
+        setupDebugKeys(debugService);
+
+        // остальная инициализация
+        FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
         gameInitService = new GameInitializerService();
         uiService = new UIService();
@@ -96,6 +105,17 @@ public class DeadKnightApp extends GameApplication {
         gameFlowService.startCharacterSelection(characterType -> {
             currentCharacterType = characterType;
             startGame(characterType);
+        });
+    }
+
+
+    /** Настройка клавиш для отладки */
+    private void setupDebugKeys(DebugOverlayService debugService) {
+        FXGL.onKeyDown(KeyCode.F3, () -> {
+            GameConfig.DEBUG_HITBOXES = !GameConfig.DEBUG_HITBOXES;
+            if (!GameConfig.DEBUG_HITBOXES) {
+                debugService.clear();
+            }
         });
     }
 

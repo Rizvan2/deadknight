@@ -30,7 +30,7 @@ public class GameInitializer {
      * @return созданная сущность персонажа {@link Entity}
      * @throws IllegalArgumentException если передан неизвестный тип персонажа
      */
-    public static Entity initGame(String characterType) {
+    public static Entity createGameWorld(String characterType) {
         Point2D mapSize = generateMap();
         Point2D spawnPoint = getCenterOfMap(mapSize); // центр карты
 
