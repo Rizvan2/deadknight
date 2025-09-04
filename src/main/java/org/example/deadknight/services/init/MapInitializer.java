@@ -43,7 +43,7 @@ public class MapInitializer {
      * вот этот вот большой мир нам рано еще создавать у нас нет рендеринга и вся карта одновременна отображается
      * мы добавим прогрузку чанков чтобы грузилась карта только в зоне нашей видемости
      */
-    public static Point2D generateLargeWorld(String mapName) {
-        return MapService.generateBattlefieldLayers(mapName, LARGE_WORLD_WIDTH, LARGE_WORLD_HEIGHT);
-    }
+//    public static Point2D generateLargeWorld(String mapName) {
+//        return MapService.generateBattlefieldLayers(mapName, LARGE_WORLD_WIDTH, LARGE_WORLD_HEIGHT);
+//    }
 }

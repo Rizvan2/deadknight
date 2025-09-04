@@ -8,6 +8,7 @@ import org.example.deadknight.gameplay.actors.player.entities.IlyasPantherEntity
 import org.example.deadknight.gameplay.actors.mobs.entities.Spikes;
 import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
 import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
+import org.example.deadknight.services.GameInitializerService;
 
 /**
  * Класс для инициализации игрового мира и персонажей.
@@ -31,12 +32,16 @@ public class GameInitializer {
      */
     public static Entity initGame(String characterType) {
         Point2D mapSize = generateMap();
+        Point2D spawnPoint = getCenterOfMap(mapSize); // центр карты
 
-        Entity character = createCharacter(characterType);
-
+        Entity character = createCharacterAt(characterType, spawnPoint);
         addCharacterToWorld(character);
         bindCameraToCharacter(character, mapSize);
         addObstacles();
+
+        // Спавним врагов с краёв карты
+        GameInitializerService.spawnEnemiesFromAllSidesWithDelay(10, mapSize); // 100 мобов с каждой стороны
+
 
         return character;
     }
@@ -49,26 +54,41 @@ public class GameInitializer {
     private static Point2D generateMap() {
         return MapInitializer.generateMediumWorld("средний4");
     }
-
     /**
-     * Создаёт сущность персонажа в зависимости от типа.
+     * Создаёт сущность персонажа в зависимости от типа и позиции.
      *
      * @param characterType "knight" или "panther"
+     * @param spawnPoint координаты спавна персонажа {@link Point2D}
      * @return объект {@link Entity} персонажа
      * @throws IllegalArgumentException если передан неизвестный тип персонажа
      */
-    private static Entity createCharacter(String characterType) {
+    private static Entity createCharacterAt(String characterType, Point2D spawnPoint) {
+        double x = spawnPoint.getX();
+        double y = spawnPoint.getY();
+
         return switch (characterType) {
             case "knight" -> {
                 KnightEntity knightData = new KnightEntity(100, 0.6, "RIGHT");
-                yield KnightFactory.create(knightData, 100, 300);
+                yield KnightFactory.create(knightData, x, y);
             }
             case "panther" -> {
                 IlyasPantherEntity pantherData = new IlyasPantherEntity(120, 60, "RIGHT");
-                yield PantherFactory.create(pantherData, 100, 300);
+                yield PantherFactory.create(pantherData, x, y);
             }
             default -> throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
         };
+    }
+
+    /**
+     * Вычисляет координаты центра карты.
+     *
+     * @param mapSize размеры карты в пикселях
+     * @return координаты центра карты {@link Point2D}
+     */
+    private static Point2D getCenterOfMap(Point2D mapSize) {
+        double centerX = mapSize.getX() / 2.0;
+        double centerY = mapSize.getY() / 2.0;
+        return new Point2D(centerX, centerY);
     }
 
     /**

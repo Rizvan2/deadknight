@@ -174,6 +174,9 @@ public class BattlefieldBackgroundGenerator {
         return tiles;
     }
 
+    /**
+     * Возвращает массив тайлов для рендеринга (верхний слой деревья).
+     */
     public Image[][] getTreeTileArray() {
         Image[][] tiles = new Image[tilesX][tilesY];
 

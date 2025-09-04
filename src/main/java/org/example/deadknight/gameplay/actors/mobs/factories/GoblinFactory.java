@@ -129,7 +129,7 @@ public class GoblinFactory implements EntityFactory {
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
-                .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(20, 30)))
+                .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(10, 20)))
                 .with(new EnemyComponent(goblinData))
                 .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))
@@ -139,7 +139,6 @@ public class GoblinFactory implements EntityFactory {
                 .collidable()
                 .build();
     }
-
     /**
      * Предзагружает текстуры анимаций гоблина в отдельном потоке.
      * <p>

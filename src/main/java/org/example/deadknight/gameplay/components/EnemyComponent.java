@@ -104,9 +104,8 @@ public class EnemyComponent extends Component {
 
         Point2D direction = player.getPosition().subtract(entity.getPosition());
 
-        if (!combatService.isInRange(entity, player, 20)) {
-            movementService.setDirection(direction); // обновляем направление
-            movementService.update(tpf);             // перемещаемся с этим направлением
+        if (!combatService.isInRange(entity, player, 90)) {
+            movementService.moveToTarget(player, tpf);
         } else {
             combatService.tryAttack(player, tpf);
         }

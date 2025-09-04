@@ -3,6 +3,7 @@ package org.example.deadknight.services;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import javafx.geometry.Point2D;
 import javafx.util.Duration;
 import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
 import org.example.deadknight.gameplay.actors.player.controllers.KnightController;
@@ -72,5 +73,36 @@ public class GameInitializerService {
             }
         }, Duration.seconds(7)); // ждём полсекунды после загрузки карты
     }
+
+    public static void spawnEnemiesFromAllSidesWithDelay(int countPerSide, Point2D mapSize) {
+        double width = mapSize.getX();
+        double height = mapSize.getY();
+
+        double stepX = width / (countPerSide + 1);
+        double stepY = height / (countPerSide + 1);
+
+        for (int i = 0; i < countPerSide; i++) {
+            double xOffset = stepX * (i + 1);
+            double yOffset = stepY * (i + 1);
+
+            int index = i;
+
+            FXGL.runOnce(() -> {
+                // Верхняя сторона
+                FXGL.spawn("goblin", new SpawnData(xOffset, 0));
+
+                // Нижняя сторона
+                FXGL.spawn("goblin", new SpawnData(xOffset, height));
+
+                // Левая сторона
+                FXGL.spawn("goblin", new SpawnData(0, yOffset));
+
+                // Правая сторона
+                FXGL.spawn("goblin", new SpawnData(width, yOffset));
+            }, Duration.seconds(index));
+        }
+    }
+
+
 
 }

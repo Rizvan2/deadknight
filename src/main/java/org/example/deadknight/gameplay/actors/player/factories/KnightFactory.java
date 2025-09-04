@@ -4,9 +4,11 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
+import javafx.geometry.Point2D;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
+import org.example.deadknight.gameplay.components.SeparationComponent;
 
 /**
  * Фабрика для создания сущностей рыцаря.
@@ -25,12 +27,12 @@ public class KnightFactory {
      * @return созданная сущность {@link Entity} рыцаря
      */
     public static Entity create(KnightEntity knightData, double x, double y) {
-
         Entity knight = FXGL.entityBuilder()
                 .at(x, y)
-                .bbox(new HitBox("BODY", BoundingShape.box(44, 44)))
+                .bbox(new HitBox("BODY", new Point2D(40, 40), BoundingShape.box(20, 20)))
                 .with(knightData.getHealth())
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
+                .with(new SeparationComponent(50, 2))
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
                 .collidable()   // Дает возможность подбирать сферы здоровья

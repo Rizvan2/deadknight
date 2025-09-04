@@ -7,15 +7,8 @@ import org.example.deadknight.gameplay.components.AnimationComponent;
 /**
  * Сервис для управления перемещением сущности в игровом мире.
  * <p>
- * Отвечает за:
- * <ul>
- *     <li>Перемещение сущности в направлении цели с учётом текущей скорости и времени кадра (tpf).</li>
- *     <li>Обновление анимации ходьбы через {@link AnimationComponent}.</li>
- *     <li>Изменение направления взгляда сущности в зависимости от движения (scaleX).</li>
- * </ul>
- * <p>
- * Используется как для врагов (например, гоблинов), так и для любых других сущностей,
- * которым нужна плавная и корректная навигация в игровом мире.
+ * Позволяет перемещать сущность к цели с учётом скорости и времени кадра (tpf),
+ * анимации ходьбы и направления взгляда.
  */
 public class MovementService {
     private final Entity entity;
@@ -46,7 +39,7 @@ public class MovementService {
      * Следует вызывать каждый кадр с переданным {@code tpf} (time per frame),
      * чтобы движение было независимым от частоты кадров.
      *
-     * @param tpf время прошедшее с последнего кадра (секунды)
+     * @param tpf время кадра (seconds per frame)
      */
     public void update(double tpf) {
         if (direction.magnitude() == 0) return;
@@ -54,5 +47,18 @@ public class MovementService {
         entity.translate(direction.multiply(speed * tpf));
         animation.setScaleX(direction.getX() >= 0 ? 1 : -1);
     }
-}
 
+    /**
+     * Автоматически вычисляет направление к цели (с учётом центра хитбокса)
+     * и перемещает сущность на один кадр.
+     *
+     * @param target цель, к которой движется сущность
+     * @param tpf    время кадра
+     */
+    public void moveToTarget(Entity target, double tpf) {
+        // вычисляем вектор к центру цели
+        Point2D dir = target.getCenter().subtract(entity.getCenter());
+        setDirection(dir);        // нормализуем и сохраняем направление
+        update(tpf);              // перемещаем на основе направления и скорости
+    }
+}

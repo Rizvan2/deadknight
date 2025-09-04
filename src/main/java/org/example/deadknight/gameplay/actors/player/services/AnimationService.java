@@ -4,6 +4,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
+import lombok.Getter;
 
 
 /**
@@ -15,6 +16,7 @@ import javafx.util.Duration;
  */
 public class AnimationService {
 
+    @Getter
     private static final double FRAME_SIZE = 85; // размер рыцаря
 
     private final Entity entity;

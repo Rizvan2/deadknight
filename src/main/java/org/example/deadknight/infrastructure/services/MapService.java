@@ -18,40 +18,76 @@ import java.util.function.Consumer;
 
 import static org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator.tileSize;
 
+/**
+ * Сервис для генерации, загрузки и отображения слоёв карты.
+ * <p>
+ * Основные возможности:
+ * <ul>
+ *     <li>Генерация PNG-файлов слоёв карты (пол, деревья), если они отсутствуют</li>
+ *     <li>Подгрузка слоёв в игру и создание соответствующих сущностей</li>
+ *     <li>Управление Z-индексами слоёв для корректного рендеринга</li>
+ *     <li>Создание необходимых директорий для хранения сгенерированных слоёв</li>
+ * </ul>
+ * <p>
+ * Используется вместе с {@link BattlefieldBackgroundGenerator} для генерации тайлов.
+ */
 public class MapService {
+
     /**
-     * Генерирует или загружает слои карты.
+     * Генерирует или загружает слои карты (пол и деревья).
      * <p>
-     * Если PNG-файлы пола или деревьев отсутствуют, они будут сгенерированы.
-     * Затем слои подгружаются в игру с указанными Z-индексами.
+     * Если PNG-файлы отсутствуют, они будут сгенерированы. После этого слои подгружаются в игру.
      *
      * @param mapName имя карты
      * @param tilesX  количество тайлов по горизонтали
      * @param tilesY  количество тайлов по вертикали
+     * @return размеры карты в пикселях {@link Point2D}
      */
     public static Point2D generateBattlefieldLayers(String mapName, int tilesX, int tilesY) {
-        File dir = new File("generated");
-        createDirectoryIfNotExists(dir);
+        createGeneratedDirectory();
 
-        File groundFile = new File(dir, mapName + "_ground.png");
-        File treesFile = new File(dir, mapName + "_trees.png");
+        File groundFile = new File("generated", mapName + "_ground.png");
+        File treesFile = new File("generated", mapName + "_trees.png");
 
         BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(tilesX, tilesY, System.currentTimeMillis());
 
-// Генерация пола
-        createLayerIfMissing(groundFile, generator::generateGroundTiles, "пол");
+        generateGroundLayerIfMissing(groundFile, generator);
+        generateTreesLayerIfMissing(treesFile, generator);
 
-// Генерация деревьев
-        createLayerIfMissing(treesFile, generator::generateTreesTiles, "деревья");
+        loadLayerImage(groundFile, tilesX, tilesY, -100);
+        loadLayerImage(treesFile, tilesX, tilesY, 1000);
 
-
-// ===== Подгрузка слоев в игру =====
-        loadLayerImage(groundFile, tilesX, tilesY, -100); // пол
-        loadLayerImage(treesFile, tilesX, tilesY, 1000);  // деревья сверху
-
-        // Возвращаем реальные размеры карты в пикселях
         return new Point2D(tilesX * tileSize, tilesY * tileSize);
     }
+
+    /**
+     * Создаёт папку <code>generated</code>, если она отсутствует.
+     */
+    private static void createGeneratedDirectory() {
+        File dir = new File("generated");
+        createDirectoryIfNotExists(dir);
+    }
+
+    /**
+     * Генерирует слой пола, если PNG-файл отсутствует.
+     *
+     * @param groundFile файл слоя пола
+     * @param generator  генератор слоев {@link BattlefieldBackgroundGenerator}
+     */
+    private static void generateGroundLayerIfMissing(File groundFile, BattlefieldBackgroundGenerator generator) {
+        createLayerIfMissing(groundFile, generator::generateGroundTiles, "пол");
+    }
+
+    /**
+     * Генерирует слой деревьев, если PNG-файл отсутствует.
+     *
+     * @param treesFile файл слоя деревьев
+     * @param generator генератор слоев {@link BattlefieldBackgroundGenerator}
+     */
+    private static void generateTreesLayerIfMissing(File treesFile, BattlefieldBackgroundGenerator generator) {
+        createLayerIfMissing(treesFile, generator::generateTreesTiles, "деревья");
+    }
+
 
     /**
      * Создаёт PNG-файл слоя, если он отсутствует.
@@ -76,24 +112,6 @@ public class MapService {
             System.out.println("Слой " + layerName + " создан: " + outputFile.getAbsolutePath());
         } else {
             System.out.println("Слой " + layerName + " найден, загружаем: " + outputFile.getAbsolutePath());
-        }
-    }
-
-    /**
-     * Генерирует слой пола карты, если он ещё не существует.
-     *
-     * @param generator экземпляр {@link BattlefieldBackgroundGenerator}
-     * @param groundFile файл PNG для пола
-     */
-    private static void generateGroundLayer(BattlefieldBackgroundGenerator generator, File groundFile) {
-        if (!groundFile.exists()) {
-            Pane tempPane = new Pane();
-            generator.generateGroundTiles(tempPane); // передаём Pane для отрисовки
-            WritableImage snapshot = tempPane.snapshot(new SnapshotParameters(), null); // snapshot с Pane
-            saveImage(snapshot, groundFile);
-            System.out.println("Слой пола создан: " + groundFile.getAbsolutePath());
-        } else {
-            System.out.println("Слой пола уже существует: " + groundFile.getAbsolutePath());
         }
     }
 
