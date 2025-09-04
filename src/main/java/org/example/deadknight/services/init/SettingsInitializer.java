@@ -16,8 +16,8 @@ public class SettingsInitializer {
      */
     public static void initSettings(GameSettings settings) {
         // увеличиваем рабочее поле
-        settings.setWidth(1920);
-        settings.setHeight(1080);
+        settings.setWidth(1520);
+        settings.setHeight(780);
         
         settings.setFullScreenAllowed(true);      // разрешаем fullscreen
         settings.setFullScreenFromStart(true);    // включаем fullscreen при старте

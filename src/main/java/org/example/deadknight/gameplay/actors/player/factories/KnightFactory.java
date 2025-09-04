@@ -9,6 +9,7 @@ import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.SeparationComponent;
+import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
 
 /**
  * Фабрика для создания сущностей рыцаря.
@@ -30,6 +31,7 @@ public class KnightFactory {
         Entity knight = FXGL.entityBuilder()
                 .at(x, y)
                 .bbox(new HitBox("BODY", new Point2D(40, 40), BoundingShape.box(20, 20)))
+                .with(new DebugHitBoxComponent())
                 .with(knightData.getHealth())
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .with(new SeparationComponent(50, 2))

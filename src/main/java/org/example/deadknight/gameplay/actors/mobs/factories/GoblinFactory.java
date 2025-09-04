@@ -20,6 +20,7 @@ import org.example.deadknight.gameplay.components.PushComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.entities.types.EntityType;
+import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,6 +137,7 @@ public class GoblinFactory implements EntityFactory {
                 .with(new AnimationComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
+                .with(new DebugHitBoxComponent())
                 .collidable()
                 .build();
     }

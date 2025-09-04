@@ -7,6 +7,7 @@ import com.almasb.fxgl.texture.Texture;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
 import org.example.deadknight.gameplay.components.WaveComponent;
+import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -29,6 +30,7 @@ public class WaveService {
                         new Point2D(offsets[0], offsets[1]),
                         BoundingShape.box(size[0], size[1])))
                 .with(new WaveComponent(vector))
+                .with(new DebugHitBoxComponent())
                 .buildAndAttach();
 
         runOnce(() -> {
