@@ -81,18 +81,13 @@ public class DeadKnightApp extends GameApplication {
     }
 
     /**
-     * Инициализация игры:
-     * <ul>
-     *     <li>Создание сервисов и систем</li>
-     *     <li>Показ экрана выбора персонажа через {@link GameFlowService}</li>
-     * </ul>
+     * Инициализация игры.
+     * <p>
+     * Создаёт все основные сервисы и системы, регистрирует фабрики сущностей
+     * и показывает экран выбора персонажа через {@link GameFlowService}.
      */
     @Override
     protected void initGame() {
-        DebugOverlayService debugService = new DebugOverlayService();
-        debugService.init(); // теперь Canvas создаётся и добавляется уже безопасно
-        setupDebugKeys(debugService);
-
         // остальная инициализация
         FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
@@ -106,10 +101,19 @@ public class DeadKnightApp extends GameApplication {
             currentCharacterType = characterType;
             startGame(characterType);
         });
+        DebugOverlayService debugService = new DebugOverlayService();
+        setupDebugKeys(debugService);
+        debugService.init(); // теперь Canvas создаётся и добавляется уже безопасно
     }
 
 
-    /** Настройка клавиш для отладки */
+    /**
+     * Настройка клавиш для отладки.
+     * <p>
+     * F3 переключает видимость хитбоксов через {@link GameConfig#DEBUG_HITBOXES}.
+     *
+     * @param debugService сервис для отрисовки хитбоксов
+     */
     private void setupDebugKeys(DebugOverlayService debugService) {
         FXGL.onKeyDown(KeyCode.F3, () -> {
             GameConfig.DEBUG_HITBOXES = !GameConfig.DEBUG_HITBOXES;
@@ -119,6 +123,13 @@ public class DeadKnightApp extends GameApplication {
         });
     }
 
+    /**
+     * Инициализация физического мира и обработчиков коллизий.
+     * <p>
+     * В данном случае добавляется обработчик столкновения рыцаря с сущностью
+     * здоровья ({@link EntityTypeEssences#HEALTH_ESSENCE}) и автоматическое
+     * восстановление здоровья игрока.
+     */
     @Override
     protected void initPhysics() {
         getPhysicsWorld().addCollisionHandler(
@@ -140,10 +151,6 @@ public class DeadKnightApp extends GameApplication {
                 }
         );
     }
-
-
-
-
 
     /**
      * Запускает игру после выбора персонажа:

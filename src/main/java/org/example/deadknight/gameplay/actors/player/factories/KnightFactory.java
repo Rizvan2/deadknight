@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
+import org.example.deadknight.gameplay.components.KnightDebugHitBoxComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
 
@@ -30,8 +31,8 @@ public class KnightFactory {
     public static Entity create(KnightEntity knightData, double x, double y) {
         Entity knight = FXGL.entityBuilder()
                 .at(x, y)
-                .bbox(new HitBox("BODY", new Point2D(40, 40), BoundingShape.box(20, 20)))
-                .with(new DebugHitBoxComponent())
+                .bbox(new HitBox("BODY", new Point2D(40, 40), BoundingShape.box(120, 210)))
+                .with(new KnightDebugHitBoxComponent())
                 .with(knightData.getHealth())
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .with(new SeparationComponent(50, 2))
