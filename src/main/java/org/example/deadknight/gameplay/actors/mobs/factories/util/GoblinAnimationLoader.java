@@ -6,22 +6,28 @@ import javafx.scene.image.ImageView;
 import java.util.Arrays;
 
 /**
- * Утилитарный класс для загрузки анимаций гоблина.
+ * Утилитарный класс для загрузки и подготовки анимационных кадров гоблина.
  * <p>
- * Предоставляет методы для получения кадров анимации ходьбы,
- * атаки и смерти, а также для создания зеркальных версий кадров
- * для движения влево.
+ * Класс предоставляет методы для получения массивов {@link ImageView},
+ * которые содержат последовательности кадров для различных анимаций:
+ * <ul>
+ *     <li>Ходьба вправо и влево</li>
+ *     <li>Атака вправо и влево</li>
+ *     <li>Смерть</li>
+ * </ul>
+ * Для анимаций влево кадры автоматически зеркалируются с помощью {@code setScaleX(-1)}.
+ * <p>
+ * Размер кадров задаётся при создании экземпляра класса.
  */
 public class GoblinAnimationLoader {
 
+    /** Размер (ширина и высота) кадра гоблина в пикселях. */
     private final int goblinSize;
 
     /**
-     * Утилитарный класс для загрузки анимаций гоблина.
-     * <p>
-     * Предоставляет методы для получения кадров анимации ходьбы,
-     * атаки и смерти, а также для создания зеркальных версий кадров
-     * для движения влево.
+     * Создаёт загрузчик анимаций для гоблина.
+     *
+     * @param goblinSize требуемый размер кадров (ширина и высота) в пикселях
      */
     public GoblinAnimationLoader(int goblinSize) {
         this.goblinSize = goblinSize;
@@ -30,50 +36,49 @@ public class GoblinAnimationLoader {
     /**
      * Загружает кадры анимации ходьбы вправо.
      *
-     * @return массив ImageView с кадрами анимации ходьбы вправо
+     * @return массив кадров ходьбы вправо
      */
     public ImageView[] loadWalkRight() {
-        return loadFrames("goblin/goblin-", 25);
+        return loadFrames("goblin/goblin-", 25, false);
     }
 
     /**
-     * Создает зеркальные кадры анимации ходьбы для движения влево.
+     * Загружает кадры анимации ходьбы влево (зеркальные).
      *
-     * @return массив ImageView с кадрами анимации ходьбы влево
+     * @return массив кадров ходьбы влево
      */
     public ImageView[] loadWalkLeft() {
-        return createMirrored(loadWalkRight());
+        return loadFrames("goblin/goblin-", 25, true);
     }
 
     /**
      * Загружает кадры анимации атаки вправо.
      *
-     * @return массив ImageView с кадрами анимации атаки вправо
+     * @return массив кадров атаки вправо
      */
     public ImageView[] loadAttackRight() {
-        return loadFrames("goblin/goblin_attack-", 15);
+        return loadFrames("goblin/goblin_attack-", 15, false);
     }
 
     /**
-     * Создает зеркальные кадры анимации атаки для движения влево.
+     * Загружает кадры анимации атаки влево (зеркальные).
      *
-     * @return массив ImageView с кадрами анимации атаки влево
+     * @return массив кадров атаки влево
      */
     public ImageView[] loadAttackLeft() {
-        return createMirrored(loadAttackRight());
+        return loadFrames("goblin/goblin_attack-", 15, true);
     }
 
     /**
-     * Загружает кадры анимации смерти гоблина.
+     * Загружает кадры анимации смерти.
      * <p>
-     * Последний кадр дублируется, чтобы визуально "заставить"
-     * гоблина оставаться мертвым на экране.
+     * Последний кадр дублируется, чтобы зафиксировать гоблина
+     * в позе смерти.
      *
-     * @return массив ImageView с кадрами анимации смерти
+     * @return массив кадров смерти
      */
     public ImageView[] loadDeathFrames() {
-        ImageView[] frames = loadFrames("goblin/goblin_death-", 4);
-        // повторяем последний кадр
+        ImageView[] frames = loadFrames("goblin/goblin_death-", 4, false);
         ImageView last = frames[frames.length - 1];
         ImageView[] extended = Arrays.copyOf(frames, frames.length + 1);
         extended[frames.length] = new ImageView(last.getImage());
@@ -81,38 +86,25 @@ public class GoblinAnimationLoader {
     }
 
     /**
-     * Загружает последовательность кадров из ресурсов.
+     * Загружает указанное количество кадров по заданному префиксу
+     * и, при необходимости, зеркалирует их.
      *
-     * @param prefix префикс имени файла (например, "goblin/goblin-")
-     * @param count  количество кадров
-     * @return массив ImageView с загруженными кадрами
+     * @param prefix   путь и префикс имени файлов (например, {@code "goblin/goblin-"})
+     * @param count    количество кадров
+     * @param mirrored если {@code true}, кадры зеркалируются по оси X
+     * @return массив кадров анимации
      */
-    private ImageView[] loadFrames(String prefix, int count) {
+    private ImageView[] loadFrames(String prefix, int count, boolean mirrored) {
         ImageView[] frames = new ImageView[count];
         for (int i = 1; i <= count; i++) {
             ImageView iv = new ImageView(FXGL.image(prefix + i + ".png"));
             iv.setFitWidth(goblinSize);
             iv.setFitHeight(goblinSize);
+            if (mirrored) {
+                iv.setScaleX(-1);
+            }
             frames[i - 1] = iv;
         }
         return frames;
-    }
-
-    /**
-     * Создает зеркальные копии кадров для движения влево.
-     *
-     * @param original массив исходных кадров
-     * @return массив ImageView с зеркальными кадрами
-     */
-    private ImageView[] createMirrored(ImageView[] original) {
-        ImageView[] mirrored = new ImageView[original.length];
-        for (int i = 0; i < original.length; i++) {
-            ImageView iv = new ImageView(original[i].getImage());
-            iv.setFitWidth(goblinSize);
-            iv.setFitHeight(goblinSize);
-            iv.setScaleX(-1);
-            mirrored[i] = iv;
-        }
-        return mirrored;
     }
 }

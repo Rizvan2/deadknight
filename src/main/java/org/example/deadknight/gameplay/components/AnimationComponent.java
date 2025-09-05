@@ -2,65 +2,116 @@ package org.example.deadknight.gameplay.components;
 
 import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.CacheHint;
-import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 
+/**
+ * Компонент анимации для сущности гоблина.
+ * <p>
+ * Отвечает за воспроизведение анимаций ходьбы и атаки,
+ * а также за смену направления взгляда сущности.
+ */
 public class AnimationComponent extends Component {
 
+    /** Данные гоблина, содержащие его анимации */
     @Getter
     private final GoblinEntity goblinData;
 
-    private ImageView goblinView;
-
+    /** Флаг, указывающий, что гоблин сейчас атакует */
     @Getter
     private boolean attacking = false;
 
+    /** Индекс текущего кадра ходьбы */
     private int walkIndex = 0;
+
+    /** Индекс текущего кадра атаки */
     private int attackIndex = 0;
 
+    /** Прошедшее время для анимации ходьбы */
     private double walkElapsed = 0;
+
+    /** Прошедшее время для анимации атаки */
     private double attackElapsed = 0;
 
+    /** Время между кадрами ходьбы */
     private static final double WALK_FRAME_TIME = 0.1;
+
+    /** Время между кадрами атаки */
     private static final double ATTACK_FRAME_TIME = 0.04;
 
+    /** Направление взгляда гоблина (true — вправо, false — влево) */
     private boolean facingRight = true;
 
+    /** Массив кадров анимации ходьбы вправо */
     private final ImageView[] walkRight;
+
+    /** Массив кадров анимации ходьбы влево */
     private final ImageView[] walkLeft;
+
+    /** Массив кадров анимации атаки вправо */
     private final ImageView[] attackRight;
+
+    /** Массив кадров анимации атаки влево */
     private final ImageView[] attackLeft;
 
+    /** Текущий отображаемый кадр */
+    private ImageView currentSprite;
+
+    /**
+     * Создаёт компонент анимации для гоблина.
+     *
+     * @param goblinData объект сущности гоблина с его анимациями
+     */
     public AnimationComponent(GoblinEntity goblinData) {
         this.goblinData = goblinData;
 
         this.walkRight = goblinData.getWalkRight();
         this.attackRight = goblinData.getAttackRight();
 
-        // Левые кадры создаются зеркально
-        this.walkLeft = createLeftFrames(goblinData.getWalkRight());
-        this.attackLeft = createLeftFrames(goblinData.getAttackRight());
+        this.walkLeft = goblinData.getWalkLeft();
+        this.attackLeft = goblinData.getAttackLeft();
     }
 
+    /**
+     * Инициализация компонента после добавления к сущности.
+     * Создаётся ImageView для отображения текущего кадра анимации.
+     */
     @Override
     public void onAdded() {
-        // Инициализируем текущий спрайт сразу
-        currentSprite = walkRight[0];
+        currentSprite = new ImageView(walkRight[0].getImage());
+        currentSprite.setFitWidth(goblinData.getWalkRight()[0].getFitWidth());
+        currentSprite.setFitHeight(goblinData.getWalkRight()[0].getFitHeight());
+        currentSprite.setSmooth(true);
+        currentSprite.setCache(true);
+        currentSprite.setCacheHint(CacheHint.SPEED);
+
         entity.getViewComponent().clearChildren();
         entity.getViewComponent().addChild(currentSprite);
-        ((ImageView) currentSprite).setSmooth(true);
-        ((ImageView) currentSprite).setCache(true);
-        ((ImageView) currentSprite).setCacheHint(CacheHint.SPEED);
-
     }
 
+    /**
+     * Устанавливает текущий кадр анимации.
+     *
+     * @param frame кадр, который нужно отобразить
+     */
+    private void setFrame(ImageView frame) {
+        currentSprite.setImage(frame.getImage());
+        currentSprite.setFitWidth(frame.getFitWidth());
+        currentSprite.setFitHeight(frame.getFitHeight());
+        currentSprite.setScaleX(frame.getScaleX());
+    }
+
+    /**
+     * Меняет направление взгляда гоблина.
+     *
+     * @param facingRight true, если гоблин смотрит вправо; false — влево
+     */
     public void setFacingRight(boolean facingRight) {
         if (this.facingRight != facingRight) {
             this.facingRight = facingRight;
 
-            // Убираем текущий кадр и ставим первый кадр нового направления
+            // Смена направления сбрасывает индексы и время анимаций
             entity.getViewComponent().removeChild(currentSprite);
             currentSprite = facingRight ? walkRight[0] : walkLeft[0];
             entity.getViewComponent().addChild(currentSprite);
@@ -72,7 +123,11 @@ public class AnimationComponent extends Component {
         }
     }
 
-
+    /**
+     * Обновление анимации каждый кадр.
+     *
+     * @param tpf время с последнего обновления (time per frame)
+     */
     @Override
     public void onUpdate(double tpf) {
         if (attacking) {
@@ -82,71 +137,49 @@ public class AnimationComponent extends Component {
         }
     }
 
-    private void updateAttackAnimation(double tpf) {
-        attackElapsed += tpf;
-        if (attackElapsed >= ATTACK_FRAME_TIME) {
-            ImageView[] frames = facingRight ? attackRight : attackLeft;
-
-            // Убираем предыдущий кадр атаки
-            if (currentSprite != null) {
-                entity.getViewComponent().removeChild(currentSprite);
-            }
-
-            if (attackIndex < frames.length) {
-                currentSprite = frames[attackIndex];
-                entity.getViewComponent().addChild(currentSprite);
-                attackIndex++;
-                attackElapsed = 0;
-            } else {
-                // Анимация атаки закончена — возвращаемся к ходьбе
-                attacking = false;
-                attackIndex = 0;
-                walkElapsed = 0;
-
-                // Сразу ставим кадр ходьбы
-                currentSprite = facingRight ? walkRight[walkIndex] : walkLeft[walkIndex];
-                entity.getViewComponent().addChild(currentSprite);
-            }
-        }
-    }
-
-
-
-    private Node currentSprite;
-
+    /**
+     * Обновляет анимацию ходьбы.
+     *
+     * @param tpf время с последнего обновления
+     */
     private void updateWalkAnimation(double tpf) {
         walkElapsed += tpf;
         if (walkElapsed >= WALK_FRAME_TIME) {
             ImageView[] frames = facingRight ? walkRight : walkLeft;
-
-            if (currentSprite != null) {
-                entity.getViewComponent().removeChild(currentSprite);
-            }
-
-            currentSprite = frames[walkIndex];
-            entity.getViewComponent().addChild(currentSprite);
-
+            setFrame(frames[walkIndex]);
             walkIndex = (walkIndex + 1) % frames.length;
             walkElapsed = 0;
         }
     }
 
+    /**
+     * Обновляет анимацию атаки.
+     *
+     * @param tpf время с последнего обновления
+     */
+    private void updateAttackAnimation(double tpf) {
+        attackElapsed += tpf;
+        if (attackElapsed >= ATTACK_FRAME_TIME) {
+            ImageView[] frames = facingRight ? attackRight : attackLeft;
 
+            if (attackIndex < frames.length) {
+                setFrame(frames[attackIndex]);
+                attackIndex++;
+                attackElapsed = 0;
+            } else {
+                attacking = false;
+                attackIndex = 0;
+                walkElapsed = 0;
 
-
-
-    private ImageView[] createLeftFrames(ImageView[] rightFrames) {
-        ImageView[] left = new ImageView[rightFrames.length];
-        for (int i = 0; i < rightFrames.length; i++) {
-            ImageView iv = new ImageView(rightFrames[i].getImage());
-            iv.setFitWidth(rightFrames[i].getFitWidth());
-            iv.setFitHeight(rightFrames[i].getFitHeight());
-            iv.setScaleX(-1); // зеркалирование
-            left[i] = iv;
+                setFrame(facingRight ? walkRight[walkIndex] : walkLeft[walkIndex]);
+            }
         }
-        return left;
     }
 
+    /**
+     * Запускает анимацию атаки.
+     * Если гоблин уже атакует, вызов игнорируется.
+     */
     public void playAttack() {
         if (attacking) return;
         attacking = true;
@@ -154,12 +187,12 @@ public class AnimationComponent extends Component {
         attackElapsed = 0;
     }
 
+    /**
+     * Проверяет направление взгляда гоблина.
+     *
+     * @return true, если гоблин смотрит вправо; false — влево
+     */
     public boolean isFacingRight() {
         return facingRight;
     }
-
-
-
-
-
 }
