@@ -11,8 +11,22 @@ import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+/**
+ * Сервис для стрельбы "волнами" игрока в 2D-игре.
+ * <p>
+ * Обеспечивает создание визуальной сущности волны, её хитбокса и направления движения.
+ * Поддерживает четыре направления: UP, DOWN, LEFT, RIGHT.
+ */
 public class WaveService {
 
+    /**
+     * Создает и выпускает волну от указанного стрелка.
+     * <p>
+     * В зависимости от направления волны выбирается соответствующий спрайт,
+     * размер хитбокса и вектор движения.
+     *
+     * @param shooter сущность, от которой выпускается волна
+     */
     public static void shoot(Entity shooter) {
         if (shooter == null) return;
 
@@ -21,7 +35,7 @@ public class WaveService {
         double[] size = getWaveSize(dir);
         Texture waveTex = prepareTexture(dir);
 
-        double[] offsets = getOffsets(dir, size[0], size[1]);
+        double[] offsets = getOffsets(size[0], size[1]);
 
         Entity wave = entityBuilder()
                 .at(shooter.getCenter().getX() - 32, shooter.getCenter().getY() - 32)
@@ -38,6 +52,12 @@ public class WaveService {
         }, Duration.seconds(1));
     }
 
+    /**
+     * Возвращает вектор направления движения волны в зависимости от строки направления.
+     *
+     * @param dir направление: "UP", "DOWN", "LEFT", "RIGHT"
+     * @return вектор движения волны
+     */
     private static Point2D getDirectionVector(String dir) {
         return switch (dir) {
             case "UP" -> new Point2D(0, -1);
@@ -47,6 +67,12 @@ public class WaveService {
         };
     }
 
+    /**
+     * Возвращает размеры волны в зависимости от направления.
+     *
+     * @param dir направление: "UP", "DOWN", "LEFT", "RIGHT"
+     * @return массив [width, height]
+     */
     private static double[] getWaveSize(String dir) {
         return switch (dir) {
             case "UP", "DOWN" -> new double[]{64, 2};
@@ -55,6 +81,13 @@ public class WaveService {
         };
     }
 
+    /**
+     * Подготавливает текстуру волны с нужным поворотом и зеркалированием
+     * в зависимости от направления движения.
+     *
+     * @param dir направление: "UP", "DOWN", "LEFT", "RIGHT"
+     * @return объект {@link Texture} для визуализации волны
+     */
     private static Texture prepareTexture(String dir) {
         Texture waveTex = texture("wave.png");
         waveTex.setFitWidth(64);
@@ -72,10 +105,17 @@ public class WaveService {
         return waveTex;
     }
 
-    private static double[] getOffsets(String dir, double width, double height) {
+    /**
+     * Рассчитывает смещение хитбокса волны относительно текстуры,
+     * чтобы центрировать его внутри спрайта.
+     *
+     * @param width  ширина хитбокса
+     * @param height высота хитбокса
+     * @return массив [offsetX, offsetY] для положения хитбокса
+     */
+    private static double[] getOffsets(double width, double height) {
         double offsetX = (64 - width) / 2;
         double offsetY = (64 - height) / 2;
         return new double[]{offsetX, offsetY};
     }
-
 }

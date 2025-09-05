@@ -111,7 +111,6 @@ public class GoblinFactory implements EntityFactory {
         return frames;
     }
 
-
     /**
      * Создает {@link ImageView} для визуализации гоблина.
      */
@@ -161,7 +160,6 @@ public class GoblinFactory implements EntityFactory {
             Platform.runLater(onComplete);
         });
     }
-
 
     /**
      * Добавляет хитбар для отображения здоровья сущности.

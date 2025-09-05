@@ -40,11 +40,21 @@ public class CombatService {
         attack.tryAttack(target, tpf);
     }
 
-
+    /**
+     * Проверяет, находится ли цель в радиусе атаки относительно атакующего.
+     * <p>
+     * Радиус вычисляется как расстояние между центрами сущностей (attacker и target)
+     * и сравнивается с указанным диапазоном {@code range}.
+     * Если расстояние меньше или равно {@code range}, метод возвращает {@code true}.
+     *
+     * @param attacker сущность, выполняющая атаку
+     * @param target цель атаки
+     * @param range радиус атаки в пикселях
+     * @return {@code true}, если центр цели находится на расстоянии {@code range} или ближе, иначе {@code false}
+     */
     public boolean isInRange(Entity attacker, Entity target, double range) {
         Point2D attackerCenter = attacker.getCenter();
         Point2D targetCenter = target.getCenter();
         return attackerCenter.distance(targetCenter) <= range;
     }
-
 }
