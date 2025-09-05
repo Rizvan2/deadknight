@@ -12,6 +12,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.example.deadknight.gameplay.actors.mobs.factories.util.GoblinAnimationLoader;
 import org.example.deadknight.gameplay.components.*;
 import org.example.deadknight.gameplay.components.AnimationComponent;
 import org.example.deadknight.gameplay.components.EnemyComponent;
@@ -20,9 +21,6 @@ import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Фабрика создания мобов типа "Гоблин".
@@ -41,39 +39,21 @@ import java.util.List;
  */
 public class GoblinFactory implements EntityFactory {
 
+    /** Размер гоблина (ширина и высота спрайта) */
     private final int goblinSize = 140;
 
     /**
-     * Создает нового гоблина с заданными параметрами.
+     * Создает нового гоблина с заданными параметрами спавна.
      *
      * @param data данные для спавна сущности
-     * @return готовая сущность гоблина
+     * @return готовая сущность гоблина с анимацией, коллизией и компонентами
      */
     @Spawns("goblin")
     public Entity newGoblin(SpawnData data) {
-        int health = getHealthFromData(data);
-        // Загружаем кадры через loader
-        GoblinAnimationLoader loader = new GoblinAnimationLoader(goblinSize);
-        ImageView[] walkRight = loader.loadWalkRight();
-        ImageView[] walkLeft  = loader.loadWalkLeft();
-        ImageView[] attackRight = loader.loadAttackRight();
-        ImageView[] attackLeft  = loader.loadAttackLeft();
-        ImageView[] deathFrames  = loader.loadDeathFrames();
 
-        // Создаем GoblinEntity с готовыми кадрами
-        GoblinEntity goblinData = new GoblinEntity(
-                100,  // скорость
-                10,   // урон
-                walkRight,
-                walkLeft,
-                attackRight,
-                attackLeft,
-                deathFrames
-        );
-
-        ImageView goblinView = createGoblinView(walkRight[0]);
-
-        Entity goblin = buildGoblinEntity(data, goblinData, goblinView, health);
+        GoblinEntity goblinData = createGoblinData();
+        ImageView goblinView = createGoblinView(goblinData.getWalkRight()[0]);
+        Entity goblin = buildGoblinEntity(data, goblinData, goblinView, goblinData.getHealth());
 
         attachHealthBar(goblin);
 
@@ -85,25 +65,38 @@ public class GoblinFactory implements EntityFactory {
     }
 
     /**
-     * Получает здоровье из данных спавна или возвращает дефолтное.
+     * Создает объект {@link GoblinEntity} с заранее загруженными кадрами анимации.
+     *
+     * @return объект {@link GoblinEntity} с анимацией ходьбы, атаки и смерти
      */
-    private int getHealthFromData(SpawnData data) {
-        return data.getData().containsKey("health") ? (int) data.get("health") : 50;
-    }
+    private GoblinEntity createGoblinData() {
+        GoblinAnimationLoader loader = new GoblinAnimationLoader(goblinSize);
+        ImageView[] walkRight = loader.loadWalkRight();
+        ImageView[] walkLeft  = loader.loadWalkLeft();
+        ImageView[] attackRight = loader.loadAttackRight();
+        ImageView[] attackLeft  = loader.loadAttackLeft();
+        ImageView[] deathFrames  = loader.loadDeathFrames();
 
-    /**
-     * Создает {@link ImageView} для визуализации гоблина.
-     */
-    private ImageView createGoblinView(ImageView firstFrame) {
-        ImageView view = new ImageView(firstFrame.getImage());
-        view.setFitWidth(firstFrame.getFitWidth());
-        view.setFitHeight(firstFrame.getFitHeight());
-        view.setSmooth(true);
-        return view;
+        return new GoblinEntity(
+                100,  // скорость
+                10,   // урон
+                50,
+                walkRight,
+                walkLeft,
+                attackRight,
+                attackLeft,
+                deathFrames
+        );
     }
 
     /**
      * Строит сущность гоблина с необходимыми компонентами и коллизией.
+     *
+     * @param data данные спавна
+     * @param goblinData данные гоблина (скорость, кадры анимации и т.д.)
+     * @param view первый кадр спрайта гоблина
+     * @param health количество здоровья гоблина
+     * @return готовая сущность {@link Entity} с компонентами
      */
     private Entity buildGoblinEntity(SpawnData data, GoblinEntity goblinData, ImageView view, int health) {
 
@@ -122,6 +115,13 @@ public class GoblinFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Предзагружает текстуры анимаций гоблина в отдельном потоке.
+     * <p>
+     * После завершения загрузки вызывается {@code onComplete} в потоке JavaFX.
+     *
+     * @param onComplete действие, выполняемое после предзагрузки
+     */
     public void preloadGoblinTextures(Runnable onComplete) {
         Thread.startVirtualThread(() -> {
             GoblinAnimationLoader loader = new GoblinAnimationLoader(goblinSize);
@@ -137,15 +137,25 @@ public class GoblinFactory implements EntityFactory {
     }
 
     /**
+     * Создает {@link ImageView} для визуализации гоблина.
+     */
+    private ImageView createGoblinView(ImageView firstFrame) {
+        ImageView view = new ImageView(firstFrame.getImage());
+        view.setFitWidth(firstFrame.getFitWidth());
+        view.setFitHeight(firstFrame.getFitHeight());
+        view.setSmooth(true);
+        return view;
+    }
+
+    /**
      * Добавляет хитбар для отображения здоровья сущности.
      *
      * @param goblin сущность гоблина
      */
     private void attachHealthBar(Entity goblin) {
         Rectangle healthBar = new Rectangle(40, 5, Color.LIME);
-// смещаем относительно центра гоблина
-        healthBar.setTranslateX(45); // смещаем ещё правее
-        healthBar.setTranslateY(50); // ниже, как раньше
+        healthBar.setTranslateX(45); // правее
+        healthBar.setTranslateY(50); // левее
         goblin.getViewComponent().addChild(healthBar);
 
         HealthComponent healthComp = goblin.getComponent(HealthComponent.class);
@@ -153,6 +163,5 @@ public class GoblinFactory implements EntityFactory {
             double percent = newVal.doubleValue() / healthComp.getMaxValue();
             healthBar.setWidth(40 * percent);
         });
-
     }
 }
