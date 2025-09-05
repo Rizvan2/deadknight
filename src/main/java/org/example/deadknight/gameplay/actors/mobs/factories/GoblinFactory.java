@@ -9,7 +9,6 @@ import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -42,7 +41,7 @@ import java.util.List;
  */
 public class GoblinFactory implements EntityFactory {
 
-    private final int goblinSize = 120;
+    private final int goblinSize = 140;
 
     /**
      * Создает нового гоблина с заданными параметрами.
@@ -184,7 +183,7 @@ public class GoblinFactory implements EntityFactory {
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
-                .bbox(new HitBox("BODY", new Point2D(50, 80), BoundingShape.box(10, 30)))
+                .bbox(new HitBox("BODY", new Point2D(70, 80), BoundingShape.box(10, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))
