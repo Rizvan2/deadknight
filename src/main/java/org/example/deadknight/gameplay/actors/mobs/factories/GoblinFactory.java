@@ -52,24 +52,23 @@ public class GoblinFactory implements EntityFactory {
     @Spawns("goblin")
     public Entity newGoblin(SpawnData data) {
         int health = getHealthFromData(data);
-// Загружаем кадры для каждой анимации и направления
-        ImageView[] walkRight = loadWalkFramesRight();
-        ImageView[] walkLeft = loadWalkFramesLeft();
+        // Загружаем кадры через loader
+        GoblinAnimationLoader loader = new GoblinAnimationLoader(goblinSize);
+        ImageView[] walkRight = loader.loadWalkRight();
+        ImageView[] walkLeft  = loader.loadWalkLeft();
+        ImageView[] attackRight = loader.loadAttackRight();
+        ImageView[] attackLeft  = loader.loadAttackLeft();
+        ImageView[] deathFrames  = loader.loadDeathFrames();
 
-        ImageView[] attackRight = loadAttackFramesRight();
-        ImageView[] attackLeft = loadAttackFramesLeft();
-
-        ImageView[] deathFrames = loadDeathFrames();
-
-// Создаем GoblinEntity с готовыми ImageView массивами
+        // Создаем GoblinEntity с готовыми кадрами
         GoblinEntity goblinData = new GoblinEntity(
-                100,        // скорость
-                10,         // урон
-                walkRight,  // кадры ходьбы вправо
-                walkLeft,   // кадры ходьбы влево
-                attackRight,// кадры атаки вправо
-                attackLeft, // кадры атаки влево
-                deathFrames // кадры смерти
+                100,  // скорость
+                10,   // урон
+                walkRight,
+                walkLeft,
+                attackRight,
+                attackLeft,
+                deathFrames
         );
 
         ImageView goblinView = createGoblinView(walkRight[0]);
@@ -93,78 +92,6 @@ public class GoblinFactory implements EntityFactory {
     }
 
     /**
-     * Загружает кадры анимации ходьбы для гоблина.
-     */
-    private ImageView[] loadWalkFramesRight() {
-        List<ImageView> frames = new ArrayList<>();
-        for (int i = 1; i <= 25; i++) {
-            ImageView iv = new ImageView(FXGL.image("goblin/goblin-" + i + ".png"));
-            iv.setFitWidth(goblinSize);  // пример, под нужный размер
-            iv.setFitHeight(goblinSize);
-            frames.add(iv);
-        }
-        return frames.toArray(new ImageView[0]);
-    }
-
-    private ImageView[] loadWalkFramesLeft() {
-        ImageView[] rightFrames = loadWalkFramesRight();
-        ImageView[] leftFrames = new ImageView[rightFrames.length];
-        for (int i = 0; i < rightFrames.length; i++) {
-            ImageView iv = new ImageView(rightFrames[i].getImage());
-            iv.setFitWidth(goblinSize);
-            iv.setFitHeight(goblinSize);
-            iv.setScaleX(-1); // зеркалируем для левой стороны
-            leftFrames[i] = iv;
-        }
-        return leftFrames;
-    }
-
-    /**
-     * Загружает кадры анимации атаки.
-     */
-    private ImageView[] loadAttackFramesRight() {
-        List<ImageView> frames = new ArrayList<>();
-        for (int i = 1; i <= 15; i++) {
-            ImageView iv = new ImageView(FXGL.image("goblin/goblin_attack-" + i + ".png"));
-            iv.setFitWidth(goblinSize);
-            iv.setFitHeight(goblinSize);
-            frames.add(iv);
-        }
-        return frames.toArray(new ImageView[0]);
-    }
-
-    private ImageView[] loadAttackFramesLeft() {
-        ImageView[] rightFrames = loadAttackFramesRight();
-        ImageView[] leftFrames = new ImageView[rightFrames.length];
-        for (int i = 0; i < rightFrames.length; i++) {
-            ImageView iv = new ImageView(rightFrames[i].getImage());
-            iv.setFitWidth(goblinSize);
-            iv.setFitHeight(goblinSize);
-            iv.setScaleX(-1);
-            leftFrames[i] = iv;
-        }
-        return leftFrames;
-    }
-
-    /**
-     * Загружает кадры анимации смерти.
-     */
-    private ImageView[] loadDeathFrames() {
-        List<ImageView> frames = new ArrayList<>();
-        for (int i = 1; i <= 4; i++) {
-            ImageView iv = new ImageView(FXGL.image("goblin/goblin_death-" + i + ".png"));
-            iv.setFitWidth(70);
-            iv.setFitHeight(70);
-            frames.add(iv);
-        }
-        // повтор последнего кадра
-        ImageView last = frames.get(frames.size() - 1);
-        frames.add(new ImageView(last.getImage()));
-        return frames.toArray(new ImageView[0]);
-    }
-
-
-    /**
      * Создает {@link ImageView} для визуализации гоблина.
      */
     private ImageView createGoblinView(ImageView firstFrame) {
@@ -175,15 +102,15 @@ public class GoblinFactory implements EntityFactory {
         return view;
     }
 
-
     /**
      * Строит сущность гоблина с необходимыми компонентами и коллизией.
      */
     private Entity buildGoblinEntity(SpawnData data, GoblinEntity goblinData, ImageView view, int health) {
+
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
-                .bbox(new HitBox("BODY", new Point2D(70, 80), BoundingShape.box(10, 30)))
+                .bbox(new HitBox("BODY", new Point2D(65, 80), BoundingShape.box(10, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))
@@ -194,21 +121,16 @@ public class GoblinFactory implements EntityFactory {
                 .collidable()
                 .build();
     }
-    /**
-     * Предзагружает текстуры анимаций гоблина в отдельном потоке.
-     * <p>
-     * Метод загружает кадры анимации ходьбы, атаки и смерти, чтобы при
-     * спавне гоблина не происходили задержки из-за подгрузки изображений.
-     * После завершения загрузки вызывается переданный {@link Runnable} в
-     * JavaFX-потоке через {@link Platform#runLater(Runnable)}.
-     *
-     * @param onComplete действие, которое будет выполнено после завершения предзагрузки
-     */
+
     public void preloadGoblinTextures(Runnable onComplete) {
         Thread.startVirtualThread(() -> {
-            loadWalkFramesLeft();
-            loadAttackFramesLeft();
-            loadDeathFrames();
+            GoblinAnimationLoader loader = new GoblinAnimationLoader(goblinSize);
+
+            loader.loadWalkRight();
+            loader.loadWalkLeft();
+            loader.loadAttackRight();
+            loader.loadAttackLeft();
+            loader.loadDeathFrames();
 
             Platform.runLater(onComplete);
         });
@@ -221,8 +143,9 @@ public class GoblinFactory implements EntityFactory {
      */
     private void attachHealthBar(Entity goblin) {
         Rectangle healthBar = new Rectangle(40, 5, Color.LIME);
-        healthBar.setTranslateX(25);
-        healthBar.setTranslateY(40);
+// смещаем относительно центра гоблина
+        healthBar.setTranslateX(45); // смещаем ещё правее
+        healthBar.setTranslateY(50); // ниже, как раньше
         goblin.getViewComponent().addChild(healthBar);
 
         HealthComponent healthComp = goblin.getComponent(HealthComponent.class);
@@ -230,5 +153,6 @@ public class GoblinFactory implements EntityFactory {
             double percent = newVal.doubleValue() / healthComp.getMaxValue();
             healthBar.setWidth(40 * percent);
         });
+
     }
 }
