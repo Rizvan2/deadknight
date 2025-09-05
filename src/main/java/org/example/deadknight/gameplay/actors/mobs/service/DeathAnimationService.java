@@ -3,6 +3,7 @@ package org.example.deadknight.gameplay.actors.mobs.service;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.example.deadknight.gameplay.components.AnimationComponent;
 import org.example.deadknight.gameplay.components.DeathAnimationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
@@ -47,17 +48,18 @@ public class DeathAnimationService {
      * устанавливает её позицию и направление взгляда, а затем удаляет оригинальную сущность из мира.
      */
     public void playDeathAnimation() {
-        List<Image> frames = goblinData.getDeathFrames();
-        if (frames == null || frames.isEmpty()) return;
+        ImageView[] frames = goblinData.getDeathFrames(); // теперь это массив ImageView
+        if (frames == null || frames.length == 0) return;
 
-        boolean facingRight = animationComponent.getScaleX() > 0;
+        boolean facingRight = animationComponent.isFacingRight();
 
         FXGL.entityBuilder()
-            .at(entity.getX(), entity.getY())
-            .zIndex(100)
-            .buildAndAttach()
-            .addComponent(new DeathAnimationComponent(frames, facingRight));
+                .at(entity.getX(), entity.getY())
+                .zIndex(100)
+                .buildAndAttach()
+                .addComponent(new DeathAnimationComponent(frames, facingRight));
 
         entity.removeFromWorld();
     }
+
 }

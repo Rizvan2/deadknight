@@ -69,7 +69,7 @@ public class EnemyComponent extends Component {
 
         double actualSpeed = entity.getComponent(SpeedComponent.class).getSpeed();
 
-        movementService = new MovementService(entity, animationComponent, actualSpeed);
+        movementService = new MovementService(entity, actualSpeed);
         combatService = new CombatService(attackComponent, animationComponent);
 
         deathAnimationService = new DeathAnimationService(entity, goblinData, animationComponent);

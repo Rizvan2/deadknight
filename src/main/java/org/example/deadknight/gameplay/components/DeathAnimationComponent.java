@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.geometry.Point2D;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -19,7 +20,7 @@ import java.util.Random;
  */
 public class DeathAnimationComponent extends Component {
 
-    private final List<Image> deathFrames;
+    private final ImageView[] deathFrames;
     private final boolean facingRight;
     private static final double FRAME_TIME = 0.3;
 
@@ -30,7 +31,7 @@ public class DeathAnimationComponent extends Component {
      * @param deathFrames Список кадров анимации смерти.
      * @param facingRight Направление анимации (true — вправо, false — влево).
      */
-    public DeathAnimationComponent(List<Image> deathFrames, boolean facingRight) {
+    public DeathAnimationComponent(ImageView[] deathFrames, boolean facingRight) {
         this.deathFrames = deathFrames;
         this.facingRight = facingRight;
     }
@@ -40,9 +41,10 @@ public class DeathAnimationComponent extends Component {
      */
     @Override
     public void onAdded() {
-        if (deathFrames == null || deathFrames.isEmpty()) {
+        if (deathFrames == null || deathFrames.length == 0) {
             return;
         }
+
 
         Point2D pos = getEntityPosition();
         // Шанс спавна сферы здоровья
@@ -94,7 +96,7 @@ public class DeathAnimationComponent extends Component {
      * @param deathAnim Сущность для анимации.
      */
     private void attachAnimationComponent(Entity deathAnim) {
-        deathAnim.addComponent(new AnimationRunner(List.copyOf(deathFrames), facingRight));
+        deathAnim.addComponent(new AnimationRunner(deathFrames, facingRight));
     }
 
 
@@ -102,76 +104,56 @@ public class DeathAnimationComponent extends Component {
      * Вложенный компонент, который проигрывает анимацию.
      */
     private static class AnimationRunner extends Component {
-        private final List<Image> frames;
+        private final ImageView[] frames; // берем массив кадров для анимации
         private final boolean facingRight;
         private ImageView view;
         private int frame = 0;
         private double time = 0;
 
-        /**
-         * Конструктор.
-         *
-         * @param frames Список кадров анимации.
-         * @param facingRight Направление анимации.
-         */
-        public AnimationRunner(List<Image> frames, boolean facingRight) {
+        private static final double FRAME_TIME = 0.3;
+
+        public AnimationRunner(ImageView[] frames, boolean facingRight) {
             this.frames = frames;
             this.facingRight = facingRight;
         }
 
-        /**
-         * Инициализация — создаёт ImageView и добавляет его к сущности.
-         */
         @Override
         public void onAdded() {
             createView();
         }
 
-        /**
-         * Обновление каждый кадр — меняет кадры анимации и удаляет сущность после конца.
-         *
-         * @param tpf Время кадра (time per frame).
-         */
         @Override
         public void onUpdate(double tpf) {
             updateFrame(tpf);
         }
 
-        /**
-         * Создаёт ImageView с первым кадром и добавляет к сущности.
-         */
         private void createView() {
-            if (frames.isEmpty()) return;
+            if (frames.length == 0) return;
 
-            view = new ImageView(frames.get(0));
+            view = new ImageView(frames[0].getImage());
             view.setFitWidth(100);
             view.setFitHeight(100);
             view.setScaleX(facingRight ? 1 : -1);
             entity.getViewComponent().addChild(view);
         }
 
-        /**
-         * Обновляет текущий кадр анимации.
-         * <p>
-         * После завершения всех кадров удаляет сущность.
-         *
-         * @param tpf Время кадра (time per frame).
-         */
         private void updateFrame(double tpf) {
             if (view == null) return;
 
             time += tpf;
-            if (time >= FRAME_TIME && frame < frames.size()) {
-                view.setImage(frames.get(frame));
+            if (time >= FRAME_TIME && frame < frames.length) {
+                view.setImage(frames[frame].getImage());
                 frame++;
                 time = 0;
             }
 
-            if (frame >= frames.size()) {
+            if (frame >= frames.length) {
                 entity.removeFromWorld();
             }
         }
-
-
     }
+
+
+
 }
+

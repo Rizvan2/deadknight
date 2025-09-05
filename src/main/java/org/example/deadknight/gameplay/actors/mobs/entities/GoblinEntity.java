@@ -1,6 +1,7 @@
 package org.example.deadknight.gameplay.actors.mobs.entities;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,8 +14,7 @@ import java.util.List;
  * <ul>
  *     <li>Скорость движения {@link #speed}</li>
  *     <li>Урон атаки {@link #damage}</li>
- *     <li>Кадры анимации ходьбы {@link #walkFrames}</li>
- *     <li>Кадры анимации атаки {@link #attackFrames}</li>
+
  * </ul>
  */
 @Getter
@@ -27,29 +27,26 @@ public class GoblinEntity {
     /** Урон, наносимый мобом */
     private final int damage;
 
-    /** Список кадров для анимации ходьбы */
-    private final List<Image> walkFrames;
+    // Кадры для движения и атаки
+    private final ImageView[] walkRight;
+    private final ImageView[] walkLeft;
+    private final ImageView[] attackRight;
+    private final ImageView[] attackLeft;
+    private final ImageView[] deathFrames;
 
-    /** Список кадров для анимации атаки */
-    private final List<Image> attackFrames;
-
-    /** Список кадров для анимации смерти */
-    private List<Image> deathFrames;
-
-
-    /**
-     * Конструктор для создания нового моба-гоблина.
-     *
-     * @param speed       скорость движения
-     * @param damage      урон атаки
-     * @param walkFrames  кадры анимации ходьбы
-     * @param attackFrames кадры анимации атаки
-     */
-    public GoblinEntity(double speed, int damage, List<Image> walkFrames, List<Image> attackFrames, List<Image> deathFrames) {
+    public GoblinEntity(double speed,
+                        int damage,
+                        ImageView[] walkRight,
+                        ImageView[] walkLeft,
+                        ImageView[] attackRight,
+                        ImageView[] attackLeft,
+                        ImageView[] deathFrames) {
         this.speed = speed;
         this.damage = damage;
-        this.walkFrames = walkFrames;
-        this.attackFrames = attackFrames;
+        this.walkRight = walkRight;
+        this.walkLeft = walkLeft;
+        this.attackRight = attackRight;
+        this.attackLeft = attackLeft;
         this.deathFrames = deathFrames;
     }
 }
