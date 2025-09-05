@@ -88,6 +88,8 @@ public class DeadKnightApp extends GameApplication {
      */
     @Override
     protected void initGame() {
+        setupZoom();
+
         // остальная инициализация
         FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
@@ -103,9 +105,26 @@ public class DeadKnightApp extends GameApplication {
         });
         DebugOverlayService debugService = new DebugOverlayService();
         setupDebugKeys(debugService);
-        debugService.init(); // теперь Canvas создаётся и добавляется уже безопасно
+        debugService.init(); // Canvas создаётся и добавляется безопасно
     }
 
+    /**
+     * Настраивает масштабирование сцены с помощью колёсика мыши.
+     */
+    private void setupZoom() {
+        var scene = FXGL.getGameScene();
+        var viewport = scene.getViewport();
+
+        scene.getContentRoot().setOnScroll(e -> {
+            double zoomFactor = 1.05;
+
+            if (e.getDeltaY() > 0) {
+                viewport.setZoom(viewport.getZoom() * zoomFactor);
+            } else {
+                viewport.setZoom(viewport.getZoom() / zoomFactor);
+            }
+        });
+    }
 
     /**
      * Настройка клавиш для отладки.
