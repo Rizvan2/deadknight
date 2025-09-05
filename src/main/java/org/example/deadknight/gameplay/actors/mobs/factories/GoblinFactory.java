@@ -120,6 +120,7 @@ public class GoblinFactory implements EntityFactory {
         view.setFitWidth(150);
         view.setFitHeight(150);
         view.setPreserveRatio(true);
+
         return view;
     }
 
@@ -130,7 +131,7 @@ public class GoblinFactory implements EntityFactory {
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
-                .bbox(new HitBox("BODY", new Point2D(40, 90), BoundingShape.box(10, 20)))
+                .bbox(new HitBox("BODY", new Point2D(50, 80), BoundingShape.box(10, 30)))
                 .with(new EnemyComponent(goblinData))
                 .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))

@@ -1,6 +1,7 @@
 package org.example.deadknight.gameplay.actors.mobs.service;
 
 import com.almasb.fxgl.entity.Entity;
+import javafx.geometry.Point2D;
 import org.example.deadknight.gameplay.components.AttackComponent;
 import org.example.deadknight.gameplay.components.AnimationComponent;
 
@@ -39,15 +40,11 @@ public class CombatService {
         attack.tryAttack(target, tpf);
     }
 
-    /**
-     * Проверяет, находится ли цель в радиусе атаки.
-     *
-     * @param attacker сущность, выполняющая атаку
-     * @param target цель атаки
-     * @param range радиус атаки
-     * @return true, если цель в пределах радиуса
-     */
+
     public boolean isInRange(Entity attacker, Entity target, double range) {
-        return attacker.getPosition().distance(target.getPosition()) <= range;
+        Point2D attackerCenter = attacker.getCenter();
+        Point2D targetCenter = target.getCenter();
+        return attackerCenter.distance(targetCenter) <= range;
     }
+
 }

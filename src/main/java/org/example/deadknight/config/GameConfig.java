@@ -4,6 +4,6 @@ package org.example.deadknight.config;
 public final class GameConfig {
     private GameConfig() {}
 
-    public static boolean DEBUG_HITBOXES = false;
+    public static boolean DEBUG_HITBOXES = true;
     public static boolean GOD_MODE = false;
 }

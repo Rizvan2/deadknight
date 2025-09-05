@@ -75,9 +75,7 @@ public class WaveService {
     private static double[] getOffsets(String dir, double width, double height) {
         double offsetX = (64 - width) / 2;
         double offsetY = (64 - height) / 2;
-        if (dir.equals("LEFT") || dir.equals("RIGHT")) {
-            offsetY = (64 - 2) / 2;
-        }
         return new double[]{offsetX, offsetY};
     }
+
 }

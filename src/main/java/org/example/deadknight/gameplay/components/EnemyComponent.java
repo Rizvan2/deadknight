@@ -102,9 +102,7 @@ public class EnemyComponent extends Component {
                 .orElse(null);
         if (player == null) return;
 
-        Point2D direction = player.getPosition().subtract(entity.getPosition());
-
-        if (!combatService.isInRange(entity, player, 90)) {
+        if (!combatService.isInRange(entity, player, 50)) {
             movementService.moveToTarget(player, tpf);
         } else {
             combatService.tryAttack(player, tpf);

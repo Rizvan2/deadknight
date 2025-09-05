@@ -31,7 +31,7 @@ public class KnightFactory {
     public static Entity create(KnightEntity knightData, double x, double y) {
         Entity knight = FXGL.entityBuilder()
                 .at(x, y)
-                .bbox(new HitBox("BODY", new Point2D(40, 40), BoundingShape.box(120, 210)))
+                .bbox(new HitBox("BODY", new Point2D(40, 25), BoundingShape.box(10, 50)))
                 .with(new KnightDebugHitBoxComponent())
                 .with(knightData.getHealth())
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
