@@ -36,8 +36,8 @@ public class LoadingScreenSubScene extends SubScene {
         // 1. Фон
         var bgTexture = FXGL.texture("loading_background.png");
         ImageView background = new ImageView(bgTexture.getImage());
-        background.setFitWidth(800);
-        background.setFitHeight(1000);
+        background.setFitWidth(4200);
+        background.setFitHeight(1900);
         background.setPreserveRatio(true);
         root.getChildren().add(background);
 
