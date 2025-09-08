@@ -3,11 +3,16 @@ package org.example.deadknight.services.init;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.entities.IlyasPantherEntity;
 import org.example.deadknight.gameplay.actors.mobs.entities.Spikes;
 import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
 import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
+import org.example.deadknight.infrastructure.dto.GameWorldData;
+import org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator;
+import org.example.deadknight.infrastructure.services.MapChunkService;
 import org.example.deadknight.services.GameInitializerService;
 
 /**
@@ -23,107 +28,50 @@ import org.example.deadknight.services.GameInitializerService;
  */
 public class GameInitializer {
 
-    /**
-     * Инициализирует игрового персонажа и игровой мир.
-     *
-     * @param characterType тип персонажа: "knight" или "panther"
-     * @return созданная сущность персонажа {@link Entity}
-     * @throws IllegalArgumentException если передан неизвестный тип персонажа
-     */
-    public static Entity createGameWorld(String characterType) {
-        Point2D mapSize = generateMap();
-        Point2D spawnPoint = getCenterOfMap(mapSize); // центр карты
+    public static GameWorldData createGameWorld(String characterType) {
 
-        Entity character = createCharacterAt(characterType, spawnPoint);
-        addCharacterToWorld(character);
-        bindCameraToCharacter(character, mapSize);
-        addObstacles();
+        // 1. Генерация карты
+        int mapTilesX = 32;
+        int mapTilesY = 32;
+        BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(mapTilesX, mapTilesY, 12345);
+        var groundTiles = generator.getGroundTileArray();
+        var treeTiles = generator.getTreeTileArray();
 
-        // Спавним врагов с краёв карты
-        GameInitializerService.spawnEnemiesFromAllSidesWithDelay(10, mapSize); // 100 мобов с каждой стороны
-
-
-        return character;
-    }
-
-    /**
-     * Генерирует карту среднего размера.
-     *
-     * @return объект {@link Point2D} с размерами карты (ширина, высота)
-     */
-    private static Point2D generateMap() {
-        return MapInitializer.generateMediumWorld("средний4");
-    }
-    /**
-     * Создаёт сущность персонажа в зависимости от типа и позиции.
-     *
-     * @param characterType "knight" или "panther"
-     * @param spawnPoint координаты спавна персонажа {@link Point2D}
-     * @return объект {@link Entity} персонажа
-     * @throws IllegalArgumentException если передан неизвестный тип персонажа
-     */
-    private static Entity createCharacterAt(String characterType, Point2D spawnPoint) {
-        double x = spawnPoint.getX();
-        double y = spawnPoint.getY();
-
-        return switch (characterType) {
-            case "knight" -> {
-                KnightEntity knightData = new KnightEntity(100, 0.6, "RIGHT");
-                yield KnightFactory.create(knightData, x, y);
-            }
-            case "panther" -> {
-                IlyasPantherEntity pantherData = new IlyasPantherEntity(120, 60, "RIGHT");
-                yield PantherFactory.create(pantherData, x, y);
-            }
-            default -> throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
-        };
-    }
-
-    /**
-     * Вычисляет координаты центра карты.
-     *
-     * @param mapSize размеры карты в пикселях
-     * @return координаты центра карты {@link Point2D}
-     */
-    private static Point2D getCenterOfMap(Point2D mapSize) {
-        double centerX = mapSize.getX() / 2.0;
-        double centerY = mapSize.getY() / 2.0;
-        return new Point2D(centerX, centerY);
-    }
-
-    /**
-     * Добавляет персонажа в игровой мир.
-     *
-     * @param character сущность персонажа {@link Entity}
-     */
-    private static void addCharacterToWorld(Entity character) {
-        FXGL.getGameWorld().addEntity(character);
-    }
-
-    /**
-     * Привязывает камеру к персонажу и задаёт границы карты.
-     *
-     * @param character сущность персонажа {@link Entity}
-     * @param mapSize   размеры карты {@link Point2D}
-     */
-    private static void bindCameraToCharacter(Entity character, Point2D mapSize) {
-        FXGL.getGameScene().getViewport().bindToEntity(
-                character,
-                FXGL.getAppWidth() / 2.0,
-                FXGL.getAppHeight() / 2.0
+        // 2. Создание MapChunkService
+        MapChunkService mapChunkService = new MapChunkService(
+                groundTiles,
+                treeTiles,
+                8,
+                8
         );
 
-        int mapWidth = (int) mapSize.getX();
-        int mapHeight = (int) mapSize.getY();
+        // 3. Стартовая позиция игрока — центр карты
+        double startX = mapTilesX * BattlefieldBackgroundGenerator.tileSize / 2.0;
+        double startY = mapTilesY * BattlefieldBackgroundGenerator.tileSize / 2.0;
 
-        FXGL.getGameScene().getViewport().setBounds(0, 0, mapWidth, mapHeight);
+// 4. Создаём игрока
+        Entity player = switch (characterType) {
+            case "knight" -> KnightFactory.create(new KnightEntity(100, 0.6, "RIGHT"), startX, startY);
+            case "panther" -> PantherFactory.create(new IlyasPantherEntity(120, 60, "RIGHT"), startX, startY);
+            default -> throw new IllegalArgumentException("Неизвестный тип персонажа: " + characterType);
+        };
+
+// Добавляем игрока в мир
+        FXGL.getGameWorld().addEntity(player);
+
+        // 5. Прогрузка стартовых чанков вокруг игрока
+        mapChunkService.updateVisibleChunks(startX, startY);
+
+        // --- Временная проверка отображения тайла ---
+        Image testTile = new Image("map/stone/stone-1.png"); // путь к вашей картинке тайла
+        FXGL.entityBuilder()
+                .at(100, 100) // координаты на сцене
+                .view(new ImageView(testTile))
+                .zIndex(-100)
+                .buildAndAttach();
+        return new GameWorldData(player, mapChunkService,
+                mapTilesX * BattlefieldBackgroundGenerator.tileSize,
+                mapTilesY * BattlefieldBackgroundGenerator.tileSize);
     }
 
-    /**
-     * Добавляет препятствия (шипы) на карту.
-     */
-    private static void addObstacles() {
-        FXGL.getGameWorld().addEntity(Spikes.create(200, 300));
-        FXGL.getGameWorld().addEntity(Spikes.create(400, 300));
-    }
 }

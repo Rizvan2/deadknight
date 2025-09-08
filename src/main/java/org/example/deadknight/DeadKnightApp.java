@@ -5,6 +5,7 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import org.example.deadknight.config.GameConfig;
 import org.example.deadknight.gameplay.components.HealthComponent;
@@ -17,11 +18,15 @@ import org.example.deadknight.gameplay.actors.player.controllers.KnightControlle
 import org.example.deadknight.gameplay.actors.player.controllers.MovementController;
 import org.example.deadknight.gameplay.actors.player.controllers.PantherController;
 import org.example.deadknight.gameplay.actors.player.services.HasSpeed;
+import org.example.deadknight.infrastructure.dto.GameWorldData;
+import org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator;
+import org.example.deadknight.infrastructure.services.MapChunkService;
 import org.example.deadknight.services.GameFlowService;
 import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.services.UIService;
 import org.example.deadknight.gameplay.actors.player.systems.CollisionSystem;
 import org.example.deadknight.services.debug.DebugOverlayService;
+import org.example.deadknight.services.init.GameInitializer;
 import org.example.deadknight.services.init.SettingsInitializer;
 
 import java.util.function.Supplier;
@@ -75,22 +80,17 @@ public class DeadKnightApp extends GameApplication {
      */
     private String currentCharacterType;
 
+    private MapChunkService mapChunkService;
+
     @Override
     protected void initSettings(GameSettings settings) {
         SettingsInitializer.initSettings(settings);
     }
 
-    /**
-     * Инициализация игры.
-     * <p>
-     * Создаёт все основные сервисы и системы, регистрирует фабрики сущностей
-     * и показывает экран выбора персонажа через {@link GameFlowService}.
-     */
     @Override
     protected void initGame() {
-        setupZoom();
 
-        // остальная инициализация
+
         FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
         gameInitService = new GameInitializerService();
@@ -101,11 +101,28 @@ public class DeadKnightApp extends GameApplication {
         // Показываем экран выбора персонажа
         gameFlowService.startCharacterSelection(characterType -> {
             currentCharacterType = characterType;
+
+            // Генерация карты и создание мира через GameInitializer
+            GameWorldData worldData = GameInitializer.createGameWorld(characterType);
+            player = worldData.getPlayer();
+            mapChunkService = worldData.getMapChunkService();
+
+            // Настройка камеры по размерам карты
+            FXGL.getGameScene().getViewport().bindToEntity(
+                    player,
+                    FXGL.getAppWidth() / 2.0,
+                    FXGL.getAppHeight() / 2.0
+            );
+            FXGL.getGameScene().getViewport().setBounds(0, 0, (int) worldData.getMapWidth(), (int) worldData.getMapHeight());
+
             startGame(characterType);
         });
+
+        setupZoom();
+
         DebugOverlayService debugService = new DebugOverlayService();
         setupDebugKeys(debugService);
-        debugService.init(); // Canvas создаётся и добавляется безопасно
+        debugService.init();
     }
 
     /**
@@ -243,6 +260,9 @@ public class DeadKnightApp extends GameApplication {
         collisionSystem.update(player, tpf);
         uiService.update();
         uiService.checkGameOver(player, () -> startGame(currentCharacterType));
+
+        // ленивое обновление чанков
+        mapChunkService.updateVisibleChunks(player.getX(), player.getY());
     }
 
     /**
