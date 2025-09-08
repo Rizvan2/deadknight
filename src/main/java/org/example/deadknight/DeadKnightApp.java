@@ -213,13 +213,14 @@ public class DeadKnightApp extends GameApplication {
         FXGL.getInput().clearAll();
     }
 
-    /**
-     * Создаёт игрока заданного типа и настраивает его контроллер движения.
-     *
-     * @param characterType выбранный тип персонажа ("knight" или "panther")
-     */
     private void initPlayerAndController(String characterType) {
+        // Создаём игрока
         player = gameInitService.initPlayer(characterType);
+
+        // Добавляем игрока в мир
+        FXGL.getGameWorld().addEntity(player);
+
+        // Настройка контроллера движения
         HasSpeed playerData = (HasSpeed) player.getComponent(SpeedComponent.class);
         movementController = new MovementController(playerData, player);
 
@@ -228,6 +229,13 @@ public class DeadKnightApp extends GameApplication {
             case "knight" -> KnightController.initInput(entitySupplier);
             case "panther" -> PantherController.initInput(entitySupplier);
         }
+
+        // Привязка камеры к игроку
+        FXGL.getGameScene().getViewport().bindToEntity(
+                player,
+                FXGL.getAppWidth() / 2.0,
+                FXGL.getAppHeight() / 2.0
+        );
     }
 
     /**
