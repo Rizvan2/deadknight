@@ -93,25 +93,6 @@ public class BattlefieldBackgroundGenerator {
     }
 
     /**
-     * Генерирует верхний слой — деревья — случайно поверх пола и добавляет его на {@link Pane}.
-     *
-     * <p>По умолчанию шанс появления дерева — 10% на тайл. Масштаб выставлен в {@code 6.0}
-     * (каждое дерево будет шире/выше тайла) — настрой по потребности.</p>
-     *
-     * @param root корневая панель JavaFX, куда будут добавлены {@link ImageView} деревьев
-     */
-    public void generateTreesTiles(Pane root) {
-        for (int y = 0; y < tilesY; y++) {
-            for (int x = 0; x < tilesX; x++) {
-                if (Math.random() < 0.1) { // шанс появления дерева
-                    String treePath = treeVariants[(int)(Math.random() * treeVariants.length)];
-                    placeTileForSnapshot(treePath, x * tileSize, y * tileSize, 6.0, root); // масштаб 1x
-                }
-            }
-        }
-    }
-
-    /**
      * Выбирает равновероятно случайный элемент массива.
      *
      * @param arr массив кандидатов
@@ -167,33 +148,62 @@ public class BattlefieldBackgroundGenerator {
         for (int y = 0; y < tilesY; y++) {
             for (int x = 0; x < tilesX; x++) {
                 String path = pick(grassVariants, 0.85);
-                tiles[x][y] = new Image(path);
+                tiles[x][y] = loadImage(path);  // ✅ теперь всегда берётся одна из закешированных текстур
             }
         }
 
         return tiles;
     }
 
-    /**
-     * Возвращает массив тайлов для рендеринга (верхний слой деревья).
-     */
-    public Image[][] getTreeTileArray() {
-        Image[][] tiles = new Image[tilesX][tilesY];
 
-        for (int y = 0; y < tilesY; y++) {
-            for (int x = 0; x < tilesX; x++) {
-                if (Math.random() < 0.1) {
-                    String path = treeVariants[rnd.nextInt(treeVariants.length)];
-                    tiles[x][y] = new Image(path);
-                } else {
-                    tiles[x][y] = null; // прозрачный тайл
-                }
-            }
-        }
+    private final Map<String, Image> imageCache = new HashMap<>();
 
-        return tiles;
+    private Image loadImage(String path) {
+        return imageCache.computeIfAbsent(path, p -> new Image(p));
     }
 
+
+
+
+//    /**
+//     * Генерирует верхний слой — деревья — случайно поверх пола и добавляет его на {@link Pane}.
+//     *
+//     * <p>По умолчанию шанс появления дерева — 10% на тайл. Масштаб выставлен в {@code 6.0}
+//     * (каждое дерево будет шире/выше тайла) — настрой по потребности.</p>
+//     *
+//     * @param root корневая панель JavaFX, куда будут добавлены {@link ImageView} деревьев
+//     */
+//    public void generateTreesTiles(Pane root) {
+//        for (int y = 0; y < tilesY; y++) {
+//            for (int x = 0; x < tilesX; x++) {
+//                if (Math.random() < 0.1) { // шанс появления дерева
+//                    String treePath = treeVariants[(int)(Math.random() * treeVariants.length)];
+//                    placeTileForSnapshot(treePath, x * tileSize, y * tileSize, 6.0, root); // масштаб 1x
+//                }
+//            }
+//        }
+//    }
+
+//    /**
+//     * Возвращает массив тайлов для рендеринга (верхний слой деревья).
+//     */
+//    public Image[][] getTreeTileArray() {
+//        Image[][] tiles = new Image[tilesX][tilesY];
+//
+//        for (int y = 0; y < tilesY; y++) {
+//            for (int x = 0; x < tilesX; x++) {
+//                if (Math.random() < 0.1) {
+//                    String path = treeVariants[rnd.nextInt(treeVariants.length)];
+//                    tiles[x][y] = new Image(path);
+//                } else {
+//                    tiles[x][y] = null; // прозрачный тайл
+//                }
+//            }
+//        }
+//
+//        return tiles;
+//    }
+//
 
 
 //    public void generateMapWithTrees() {

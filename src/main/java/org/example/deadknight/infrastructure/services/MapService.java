@@ -52,7 +52,7 @@ public class MapService {
         BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(tilesX, tilesY, System.currentTimeMillis());
 
         generateGroundLayerIfMissing(groundFile, generator);
-        generateTreesLayerIfMissing(treesFile, generator);
+//        generateTreesLayerIfMissing(treesFile, generator);
 
         loadLayerImage(groundFile, tilesX, tilesY, -100);
         loadLayerImage(treesFile, tilesX, tilesY, 1000);
@@ -78,16 +78,16 @@ public class MapService {
         createLayerIfMissing(groundFile, generator::generateGroundTiles, "пол");
     }
 
-    /**
-     * Генерирует слой деревьев, если PNG-файл отсутствует.
-     *
-     * @param treesFile файл слоя деревьев
-     * @param generator генератор слоев {@link BattlefieldBackgroundGenerator}
-     */
-    private static void generateTreesLayerIfMissing(File treesFile, BattlefieldBackgroundGenerator generator) {
-        createLayerIfMissing(treesFile, generator::generateTreesTiles, "деревья");
-    }
-
+//    /**
+//     * Генерирует слой деревьев, если PNG-файл отсутствует.
+//     *
+//     * @param treesFile файл слоя деревьев
+//     * @param generator генератор слоев {@link BattlefieldBackgroundGenerator}
+//     */
+//    private static void generateTreesLayerIfMissing(File treesFile, BattlefieldBackgroundGenerator generator) {
+//        createLayerIfMissing(treesFile, generator::generateTreesTiles, "деревья");
+//    }
+//
 
     /**
      * Создаёт PNG-файл слоя, если он отсутствует.

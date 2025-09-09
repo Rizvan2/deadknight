@@ -31,16 +31,17 @@ public class GameInitializer {
     public static GameWorldData createGameWorld(String characterType) {
 
         // 1. Генерация карты
-        int mapTilesX = 32;
-        int mapTilesY = 32;
+        int mapTilesX = 128;
+        int mapTilesY = 128;
         BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(mapTilesX, mapTilesY, 12345);
-        var groundTiles = generator.getGroundTileArray();
-        var treeTiles = generator.getTreeTileArray();
+        Image[][] groundTiles;
+        groundTiles = generator.getGroundTileArray();
+//        var treeTiles = generator.getTreeTileArray();
 
         // 2. Создание MapChunkService
         MapChunkService mapChunkService = new MapChunkService(
                 groundTiles,
-                treeTiles,
+//                treeTiles,
                 8,
                 8
         );
