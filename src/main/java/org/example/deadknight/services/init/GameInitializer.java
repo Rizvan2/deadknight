@@ -59,16 +59,6 @@ public class GameInitializer {
 // Добавляем игрока в мир
         FXGL.getGameWorld().addEntity(player);
 
-        // 5. Прогрузка стартовых чанков вокруг игрока
-        mapChunkService.updateVisibleChunks(startX, startY);
-
-        // --- Временная проверка отображения тайла ---
-        Image testTile = new Image("map/stone/stone-1.png"); // путь к вашей картинке тайла
-        FXGL.entityBuilder()
-                .at(100, 100) // координаты на сцене
-                .view(new ImageView(testTile))
-                .zIndex(-100)
-                .buildAndAttach();
         return new GameWorldData(player, mapChunkService,
                 mapTilesX * BattlefieldBackgroundGenerator.tileSize,
                 mapTilesY * BattlefieldBackgroundGenerator.tileSize);
