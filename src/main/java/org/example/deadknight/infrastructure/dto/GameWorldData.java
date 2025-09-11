@@ -1,34 +1,19 @@
 package org.example.deadknight.infrastructure.dto;
 
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.infrastructure.services.MapChunkService;
+import org.example.deadknight.infrastructure.render.services.MapChunkService;
 
-public class GameWorldData {
-    private final Entity player;
-    private final MapChunkService mapChunkService;
-    private final double mapWidth;
-    private final double mapHeight;
-
-    public GameWorldData(Entity player, MapChunkService mapChunkService, double mapWidth, double mapHeight) {
-        this.player = player;
-        this.mapChunkService = mapChunkService;
-        this.mapWidth = mapWidth;
-        this.mapHeight = mapHeight;
-    }
-
-    public Entity getPlayer() {
-        return player;
-    }
-
-    public MapChunkService getMapChunkService() {
-        return mapChunkService;
-    }
-
-    public double getMapWidth() {
-        return mapWidth;
-    }
-
-    public double getMapHeight() {
-        return mapHeight;
-    }
+/**
+ * Data transfer object (DTO), содержащий основные данные игрового мира.
+ * <p>
+ * Используется для хранения ссылки на игрока, сервис управления чанками карты,
+ * а также размеры игровой карты.
+ * </p>
+ *
+ * @param player         сущность игрока в игровом мире
+ * @param mapChunkService сервис, отвечающий за подгрузку и управление чанками карты
+ * @param mapWidth        ширина карты в игровых единицах
+ * @param mapHeight       высота карты в игровых единицах
+ */
+public record GameWorldData(Entity player, MapChunkService mapChunkService, double mapWidth, double mapHeight) {
 }

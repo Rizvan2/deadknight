@@ -40,7 +40,7 @@ public class GameInitializerService {
      * @return сущность игрока
      */
     public Entity initPlayer(String characterType) {
-        return GameInitializer.createGameWorld(characterType).getPlayer();
+        return GameInitializer.createGameWorld(characterType).player();
     }
 
     /**

@@ -5,7 +5,6 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import org.example.deadknight.config.GameConfig;
 import org.example.deadknight.gameplay.components.HealthComponent;
@@ -19,8 +18,7 @@ import org.example.deadknight.gameplay.actors.player.controllers.MovementControl
 import org.example.deadknight.gameplay.actors.player.controllers.PantherController;
 import org.example.deadknight.gameplay.actors.player.services.HasSpeed;
 import org.example.deadknight.infrastructure.dto.GameWorldData;
-import org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator;
-import org.example.deadknight.infrastructure.services.MapChunkService;
+import org.example.deadknight.infrastructure.render.services.MapChunkService;
 import org.example.deadknight.services.GameFlowService;
 import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.services.UIService;
@@ -104,8 +102,8 @@ public class DeadKnightApp extends GameApplication {
 
             // Генерация карты и создание мира через GameInitializer
             GameWorldData worldData = GameInitializer.createGameWorld(characterType);
-            player = worldData.getPlayer();
-            mapChunkService = worldData.getMapChunkService();
+            player = worldData.player();
+            mapChunkService = worldData.mapChunkService();
 
             // Настройка камеры по размерам карты
             FXGL.getGameScene().getViewport().bindToEntity(
@@ -113,7 +111,7 @@ public class DeadKnightApp extends GameApplication {
                     FXGL.getAppWidth() / 2.0,
                     FXGL.getAppHeight() / 2.0
             );
-            FXGL.getGameScene().getViewport().setBounds(0, 0, (int) worldData.getMapWidth(), (int) worldData.getMapHeight());
+            FXGL.getGameScene().getViewport().setBounds(0, 0, (int) worldData.mapWidth(), (int) worldData.mapHeight());
 
             startGame(characterType);
         });

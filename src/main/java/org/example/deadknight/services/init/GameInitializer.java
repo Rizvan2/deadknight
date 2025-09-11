@@ -2,18 +2,14 @@ package org.example.deadknight.services.init;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.entities.IlyasPantherEntity;
-import org.example.deadknight.gameplay.actors.mobs.entities.Spikes;
 import org.example.deadknight.gameplay.actors.player.factories.KnightFactory;
 import org.example.deadknight.gameplay.actors.player.factories.PantherFactory;
 import org.example.deadknight.infrastructure.dto.GameWorldData;
 import org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator;
-import org.example.deadknight.infrastructure.services.MapChunkService;
-import org.example.deadknight.services.GameInitializerService;
+import org.example.deadknight.infrastructure.render.services.MapChunkService;
 
 /**
  * Класс для инициализации игрового мира и персонажей.
@@ -31,20 +27,16 @@ public class GameInitializer {
     public static GameWorldData createGameWorld(String characterType) {
 
         // 1. Генерация карты
-        int mapTilesX = 128;
-        int mapTilesY = 128;
+        int mapTilesX = 1280;
+        int mapTilesY = 1280;
         BattlefieldBackgroundGenerator generator = new BattlefieldBackgroundGenerator(mapTilesX, mapTilesY, 12345);
         Image[][] groundTiles;
         groundTiles = generator.getGroundTileArray();
-//        var treeTiles = generator.getTreeTileArray();
 
         // 2. Создание MapChunkService
-        MapChunkService mapChunkService = new MapChunkService(
-                groundTiles,
-//                treeTiles,
-                8,
-                8
-        );
+// 2. Создание MapChunkService
+        MapChunkService mapChunkService = new MapChunkService(groundTiles);
+
 
         // 3. Стартовая позиция игрока — центр карты
         double startX = mapTilesX * BattlefieldBackgroundGenerator.tileSize / 2.0;
