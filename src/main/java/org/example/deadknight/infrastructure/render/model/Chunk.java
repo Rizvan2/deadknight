@@ -20,9 +20,11 @@ public class Chunk {
 
     private final Point2D coords;
     private final int size;
-    private final List<Entity> entities = new ArrayList<>();
     private final Canvas canvas;
     private final GraphicsContext gc;
+
+    // текущая FXGL-сущность для этого чанка
+    private Entity entity;
 
     public Chunk(int cx, int cy, int size) {
         this.coords = new Point2D(cx, cy);
@@ -33,15 +35,20 @@ public class Chunk {
         this.gc = canvas.getGraphicsContext2D();
     }
 
-    public void addEntity(Entity entity) {
-        entities.add(entity);
+    public GraphicsContext getGc() {
+        return gc;
     }
 
-    public void unload() {
-        for (Entity e : entities) {
-            e.removeFromWorld();
-        }
-        entities.clear();
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
+    public Point2D getCoords() {
+        return coords;
+    }
+
+    public void addEntity(Entity entity) {
+        this.entity = entity;
     }
 
     public int getWorldX() {
@@ -50,5 +57,29 @@ public class Chunk {
 
     public int getWorldY() {
         return (int) (coords.getY() * size * BattlefieldBackgroundGenerator.tileSize);
+    }
+
+    /** Прикрепить Canvas как Entity в FXGL-мир */
+    public void attach() {
+        if (entity == null || !entity.isActive()) {
+            entity = com.almasb.fxgl.dsl.FXGL.entityBuilder()
+                    .at(getWorldX(), getWorldY())
+                    .view(canvas)
+                    .zIndex(-100)
+                    .buildAndAttach();
+        }
+    }
+
+    /** Убрать с карты, но не уничтожать */
+    public void detach() {
+        if (entity != null && entity.isActive()) {
+            entity.removeFromWorld();
+        }
+    }
+
+    /** Полное уничтожение чанка */
+    public void unload() {
+        detach();
+        entity = null;
     }
 }

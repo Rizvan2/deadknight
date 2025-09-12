@@ -63,26 +63,50 @@ public class MapChunkService {
         unloadInvisibleChunks(newVisible);
     }
 
-    /** Загружаем новые чанки */
-    private void loadNewChunks(Set<Point2D> newVisible) {
-        for (Point2D coord : newVisible) {
-            if (!loadedChunks.containsKey(coord)) {
-                Chunk chunk = loadChunk((int) coord.getX(), (int) coord.getY());
-                loadedChunks.put(coord, chunk);
+    private final LinkedHashMap<Point2D, Chunk> cachedChunks =
+            new LinkedHashMap<>(16, 0.75f, true); // accessOrder = true
+    private static final int CACHE_LIMIT = 20;
+
+    private void unloadInvisibleChunks(Set<Point2D> newVisible) {
+        Iterator<Map.Entry<Point2D, Chunk>> it = loadedChunks.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Point2D, Chunk> entry = it.next();
+            Point2D coord = entry.getKey();
+            Chunk chunk = entry.getValue();
+
+            if (!newVisible.contains(coord)) {
+                chunk.detach(); // убираем из мира, но не уничтожаем
+                cachedChunks.put(coord, chunk); // перемещаем в кеш
+                it.remove();
+            }
+        }
+
+        // Ограничиваем размер LRU-кеша
+        while (cachedChunks.size() > CACHE_LIMIT) {
+            Iterator<Map.Entry<Point2D, Chunk>> cacheIt = cachedChunks.entrySet().iterator();
+            if (cacheIt.hasNext()) {
+                Map.Entry<Point2D, Chunk> oldest = cacheIt.next();
+                oldest.getValue().unload(); // реально освобождаем ресурсы
+                cacheIt.remove();
             }
         }
     }
 
-    /** Выгружаем чанки, которые больше не видны */
-    private void unloadInvisibleChunks(Set<Point2D> newVisible) {
-        loadedChunks.keySet().removeIf(coord -> {
-            if (!newVisible.contains(coord)) {
-                loadedChunks.get(coord).unload();
-                return true;
+
+    private void loadNewChunks(Set<Point2D> newVisible) {
+        for (Point2D coord : newVisible) {
+            if (loadedChunks.containsKey(coord)) continue;
+
+            Chunk chunk = cachedChunks.remove(coord); // проверяем кеш
+            if (chunk != null) {
+                chunk.attach(); // добавляем обратно в мир
+            } else {
+                chunk = loadChunk((int) coord.getX(), (int) coord.getY());
             }
-            return false;
-        });
+            loadedChunks.put(coord, chunk);
+        }
     }
+
 
     /** Загружаем чанк с Canvas */
     private Chunk loadChunk(int cx, int cy) {
