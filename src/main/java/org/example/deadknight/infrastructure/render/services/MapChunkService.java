@@ -12,6 +12,17 @@ import java.util.*;
 
 import static org.example.deadknight.infrastructure.generation.BattlefieldBackgroundGenerator.tileSize;
 
+/**
+ * Сервис для управления чанками карты и их рендеринга с использованием Canvas.
+ *
+ * <p>Особенности:
+ * <ul>
+ *     <li>Хранит загруженные чанки в loadedChunks.</li>
+ *     <li>Перемещает невидимые чанки в LRU-кеш cachedChunks.</li>
+ *     <li>Кеш автоматически удаляет старые чанки при превышении CACHE_LIMIT.</li>
+ *     <li>Повторно использует чанки из кеша вместо пересоздания.</li>
+ * </ul>
+ */
 public class MapChunkService {
 
     private final Image[][] groundTiles;
@@ -21,8 +32,23 @@ public class MapChunkService {
     /** Размер чанка в тайлах */
     private static final int CHUNK_SIZE = 5;
 
-    /** Загруженные чанки */
+    /** Максимальный размер LRU-кеша */
+    private static final int CACHE_LIMIT = 20;
+
+    /** Загруженные в мир чанки */
     private final Map<Point2D, Chunk> loadedChunks = new HashMap<>();
+
+    /** LRU-кеш чанков, accessOrder=true для автоматического удаления старых */
+    private final Map<Point2D, Chunk> cachedChunks = new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Point2D, Chunk> eldest) {
+            if (size() > CACHE_LIMIT) {
+                eldest.getValue().unload(); // реально освобождаем ресурсы
+                return true; // автоматически удаляем из кеша
+            }
+            return false;
+        }
+    };
 
     public MapChunkService(Image[][] groundTiles) {
         this.groundTiles = groundTiles;
@@ -63,11 +89,18 @@ public class MapChunkService {
         unloadInvisibleChunks(newVisible);
     }
 
-    private final LinkedHashMap<Point2D, Chunk> cachedChunks =
-            new LinkedHashMap<>(16, 0.75f, true); // accessOrder = true
-    private static final int CACHE_LIMIT = 20;
-
+    /**
+     * Переносит невидимые чанки в кеш.
+     * Старые чанки в кеше будут автоматически удалены через LRU-механику.
+     *
+     * @param newVisible множество координат чанков, которые должны быть видны
+     */
     private void unloadInvisibleChunks(Set<Point2D> newVisible) {
+        moveInvisibleChunksToCache(newVisible);
+    }
+
+    /** Переносим невидимые чанки из loadedChunks в cachedChunks */
+    private void moveInvisibleChunksToCache(Set<Point2D> newVisible) {
         Iterator<Map.Entry<Point2D, Chunk>> it = loadedChunks.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Point2D, Chunk> entry = it.next();
@@ -80,19 +113,9 @@ public class MapChunkService {
                 it.remove();
             }
         }
-
-        // Ограничиваем размер LRU-кеша
-        while (cachedChunks.size() > CACHE_LIMIT) {
-            Iterator<Map.Entry<Point2D, Chunk>> cacheIt = cachedChunks.entrySet().iterator();
-            if (cacheIt.hasNext()) {
-                Map.Entry<Point2D, Chunk> oldest = cacheIt.next();
-                oldest.getValue().unload(); // реально освобождаем ресурсы
-                cacheIt.remove();
-            }
-        }
     }
 
-
+    /** Загружаем новые чанки или достаем их из кеша */
     private void loadNewChunks(Set<Point2D> newVisible) {
         for (Point2D coord : newVisible) {
             if (loadedChunks.containsKey(coord)) continue;
@@ -107,12 +130,18 @@ public class MapChunkService {
         }
     }
 
-
     /** Загружаем чанк с Canvas */
     private Chunk loadChunk(int cx, int cy) {
+        Chunk chunk = createChunk(cx, cy);
+        renderTiles(chunk, cx, cy);
+        attachEntity(chunk);
+        return chunk;
+    }
+
+    /** Создает объект Chunk с канвасом нужного размера */
+    private Chunk createChunk(int cx, int cy) {
         Chunk chunk = new Chunk(cx, cy, CHUNK_SIZE);
 
-        // Рассчитываем сколько тайлов рисуем с дополнительным рядом справа/снизу
         int chunkWidthTiles = Math.min(CHUNK_SIZE + 1, tilesX - cx * CHUNK_SIZE);
         int chunkHeightTiles = Math.min(CHUNK_SIZE + 1, tilesY - cy * CHUNK_SIZE);
 
@@ -120,7 +149,16 @@ public class MapChunkService {
         canvas.setWidth(chunkWidthTiles * tileSize);
         canvas.setHeight(chunkHeightTiles * tileSize);
 
+        return chunk;
+    }
+
+    /** Отрисовывает тайлы на канвасе чанка */
+    private void renderTiles(Chunk chunk, int cx, int cy) {
+        Canvas canvas = chunk.getCanvas();
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        int chunkWidthTiles = (int) (canvas.getWidth() / tileSize);
+        int chunkHeightTiles = (int) (canvas.getHeight() / tileSize);
 
         for (int y = 0; y < chunkHeightTiles; y++) {
             for (int x = 0; x < chunkWidthTiles; x++) {
@@ -130,28 +168,24 @@ public class MapChunkService {
 
                 Image tile = groundTiles[worldX][worldY];
                 if (tile != null) {
-                    int renderTileSize = tileSize;
                     gc.drawImage(tile,
-                            Math.round(x * renderTileSize),
-                            Math.round(y * renderTileSize),
-                            renderTileSize,
-                            renderTileSize
+                            Math.round(x * tileSize),
+                            Math.round(y * tileSize),
+                            tileSize,
+                            tileSize
                     );
-
                 }
             }
         }
-
-        // Создаем сущность FXGL
-        Entity entity = FXGL.entityBuilder()
-                .at(Math.round(cx * CHUNK_SIZE * tileSize), Math.round(cy * CHUNK_SIZE * tileSize))
-                .view(canvas)
-                .zIndex(-100)
-                .buildAndAttach();
-
-        chunk.addEntity(entity);
-
-        return chunk;
     }
 
+    /** Создает FXGL Entity и привязывает к чанку */
+    private void attachEntity(Chunk chunk) {
+        Entity entity = FXGL.entityBuilder()
+                .at(Math.round(chunk.getWorldX()), Math.round(chunk.getWorldY()))
+                .view(chunk.getCanvas())
+                .zIndex(-100)
+                .buildAndAttach();
+        chunk.addEntity(entity);
+    }
 }
