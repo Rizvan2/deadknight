@@ -34,7 +34,6 @@ public class GameInitializer {
         groundTiles = generator.getGroundTileArray();
 
         // 2. Создание MapChunkService
-// 2. Создание MapChunkService
         MapChunkService mapChunkService = new MapChunkService(groundTiles);
 
 

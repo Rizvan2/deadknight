@@ -19,6 +19,7 @@ import org.example.deadknight.gameplay.actors.player.controllers.PantherControll
 import org.example.deadknight.gameplay.actors.player.services.HasSpeed;
 import org.example.deadknight.infrastructure.dto.GameWorldData;
 import org.example.deadknight.infrastructure.render.services.MapChunkService;
+import org.example.deadknight.services.CameraService;
 import org.example.deadknight.services.GameFlowService;
 import org.example.deadknight.services.GameInitializerService;
 import org.example.deadknight.services.UIService;
@@ -88,7 +89,6 @@ public class DeadKnightApp extends GameApplication {
     @Override
     protected void initGame() {
 
-
         FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
         gameInitService = new GameInitializerService();
@@ -105,41 +105,26 @@ public class DeadKnightApp extends GameApplication {
             player = worldData.player();
             mapChunkService = worldData.mapChunkService();
 
-            // Настройка камеры по размерам карты
-            FXGL.getGameScene().getViewport().bindToEntity(
+            // Настройка камеры через CameraService
+            CameraService cameraService = new CameraService(0.85, 2.0, 1.05);
+            cameraService.bindToEntity(
                     player,
-                    FXGL.getAppWidth() / 2.0,
-                    FXGL.getAppHeight() / 2.0
+                    FXGL.getAppWidth(),
+                    FXGL.getAppHeight(),
+                    worldData.mapWidth(),
+                    worldData.mapHeight()
             );
-            FXGL.getGameScene().getViewport().setBounds(0, 0, (int) worldData.mapWidth(), (int) worldData.mapHeight());
+            cameraService.setupZoom();
 
             startGame(characterType);
         });
 
-        setupZoom();
-
+        // Настройка отладочных клавиш
         DebugOverlayService debugService = new DebugOverlayService();
         setupDebugKeys(debugService);
         debugService.init();
     }
 
-    /**
-     * Настраивает масштабирование сцены с помощью колёсика мыши.
-     */
-    private void setupZoom() {
-        var scene = FXGL.getGameScene();
-        var viewport = scene.getViewport();
-
-        scene.getContentRoot().setOnScroll(e -> {
-            double zoomFactor = 1.05;
-
-            if (e.getDeltaY() > 0) {
-                viewport.setZoom(viewport.getZoom() * zoomFactor);
-            } else {
-                viewport.setZoom(viewport.getZoom() / zoomFactor);
-            }
-        });
-    }
 
     /**
      * Настройка клавиш для отладки.
@@ -243,8 +228,7 @@ public class DeadKnightApp extends GameApplication {
      */
     private void initUIAndEnemies(String characterType) {
         uiService.initUI(player);
-//        gameInitService.spawnEnemiesAfterMapLoaded(10);
-//        gameInitService.spawnEnemiesAfterMapLoaded(10);
+
     }
 
     /**
