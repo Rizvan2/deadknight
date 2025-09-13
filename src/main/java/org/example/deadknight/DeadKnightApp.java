@@ -4,14 +4,13 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.physics.CollisionHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
 import org.example.deadknight.config.GameConfig;
-import org.example.deadknight.gameplay.components.HealthComponent;
-import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
+import org.example.deadknight.gameplay.actors.essences.systems.EssenceCollisionInitializer;
 import org.example.deadknight.gameplay.components.types.EntityTypeEssences;
 
-import org.example.deadknight.gameplay.actors.essences.EssenceFactory;
+import org.example.deadknight.gameplay.actors.essences.factory.EssenceFactory;
 import org.example.deadknight.gameplay.components.SpeedComponent;
 import org.example.deadknight.gameplay.actors.player.controllers.KnightController;
 import org.example.deadknight.gameplay.actors.player.controllers.MovementController;
@@ -28,10 +27,8 @@ import org.example.deadknight.services.debug.DebugOverlayService;
 import org.example.deadknight.services.init.GameInitializer;
 import org.example.deadknight.services.init.SettingsInitializer;
 
+import java.util.Set;
 import java.util.function.Supplier;
-
-import static com.almasb.fxgl.dsl.FXGLForKtKt.getPhysicsWorld;
-
 
 /**
  * Главный класс приложения DeadKnight.
@@ -106,7 +103,7 @@ public class DeadKnightApp extends GameApplication {
             mapChunkService = worldData.mapChunkService();
 
             // Настройка камеры через CameraService
-            CameraService cameraService = new CameraService(0.85, 2.0, 1.05);
+            CameraService cameraService = new CameraService(0, 2.0, 1.05);
             cameraService.bindToEntity(
                     player,
                     FXGL.getAppWidth(),
@@ -151,24 +148,7 @@ public class DeadKnightApp extends GameApplication {
      */
     @Override
     protected void initPhysics() {
-        getPhysicsWorld().addCollisionHandler(
-                new CollisionHandler(EntityType.KNIGHT, EntityTypeEssences.HEALTH_ESSENCE) {
-                    @Override
-                    protected void onCollisionBegin(Entity player, Entity essence) {
-                        HealthComponent health = player.getComponent(HealthComponent.class);
-                        int healAmount = essence.getInt("healAmount");
-
-                        int oldHealth = health.getValue();
-                        int newHealth = Math.min(oldHealth + healAmount, health.getMaxValue());
-                        health.valueProperty().set(newHealth);
-
-                        essence.removeFromWorld();
-
-                        System.out.println("[DeadKnight] Player healed: +" + (newHealth - oldHealth) +
-                                " (Current: " + newHealth + "/" + health.getMaxValue() + ")");
-                    }
-                }
-        );
+        new EssenceCollisionInitializer().init();
     }
 
     /**
@@ -194,6 +174,9 @@ public class DeadKnightApp extends GameApplication {
         FXGL.getGameWorld().removeEntities(FXGL.getGameWorld().getEntitiesCopy());
         FXGL.getGameScene().clearUINodes();
         FXGL.getInput().clearAll();
+
+        // Очищаем все чанки, чтобы не осталось "белых" канвасов
+        mapChunkService.clearChunks();
     }
 
     private void initPlayerAndController(String characterType) {
@@ -229,6 +212,12 @@ public class DeadKnightApp extends GameApplication {
     private void initUIAndEnemies(String characterType) {
         uiService.initUI(player);
 
+        // определяем чанки, видимые вокруг игрока
+        Point2D playerChunk = mapChunkService.worldToChunk(player.getPosition());
+        Set<Point2D> visibleChunks = mapChunkService.calculateVisibleChunks(playerChunk);
+
+        // спавним врагов на границах видимости
+        gameInitService.spawnEnemiesAroundPlayer(player, 100, 0.5);
     }
 
     /**

@@ -30,7 +30,7 @@ public class MapChunkService {
     private final int tilesY;
 
     /** Размер чанка в тайлах */
-    private static final int CHUNK_SIZE = 5;
+    public static final int CHUNK_SIZE = 5;
 
     /** Максимальный размер LRU-кеша */
     private static final int CACHE_LIMIT = 20;
@@ -64,7 +64,7 @@ public class MapChunkService {
     }
 
     /** Рассчитываем видимые чанки вокруг игрока */
-    private Set<Point2D> calculateVisibleChunks(Point2D playerChunk) {
+    public Set<Point2D> calculateVisibleChunks(Point2D playerChunk) {
         Set<Point2D> visible = new HashSet<>();
         int cxCenter = (int) playerChunk.getX();
         int cyCenter = (int) playerChunk.getY();
@@ -187,5 +187,40 @@ public class MapChunkService {
                 .zIndex(-100)
                 .buildAndAttach();
         chunk.addEntity(entity);
+    }
+
+    /**
+     * Переводит мировые координаты в координаты чанка.
+     *
+     * @param worldPos мировая позиция (например, позиция игрока)
+     * @return координаты чанка в виде {@link Point2D}
+     */
+    public Point2D worldToChunk(Point2D worldPos) {
+        int chunkX = (int) Math.floor(worldPos.getX() / (CHUNK_SIZE * tileSize));
+        int chunkY = (int) Math.floor(worldPos.getY() / (CHUNK_SIZE * tileSize));
+        return new Point2D(chunkX, chunkY);
+    }
+
+    /**
+     * Полностью очищает все загруженные и кешированные чанки.
+     * <p>
+     * Для каждого чанка вызывается {@link Chunk#unload()}, после чего
+     * коллекции {@code loadedChunks} и {@code cachedChunks} очищаются.
+     * </p>
+     * <p>
+     * Используется, например, при перезапуске игры, смене карты или
+     * необходимости освободить ресурсы.
+     * </p>
+     */
+    public void clearChunks() {
+        for (Chunk chunk : loadedChunks.values()) {
+            chunk.unload();
+        }
+        loadedChunks.clear();
+
+        for (Chunk chunk : cachedChunks.values()) {
+            chunk.unload();
+        }
+        cachedChunks.clear();
     }
 }

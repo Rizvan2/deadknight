@@ -1,4 +1,4 @@
-package org.example.deadknight.gameplay.actors.essences;
+package org.example.deadknight.gameplay.actors.essences.factory;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
