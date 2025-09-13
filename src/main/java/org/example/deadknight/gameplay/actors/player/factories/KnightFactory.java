@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
+import org.example.deadknight.gameplay.components.DialogueComponent;
 import org.example.deadknight.gameplay.components.KnightDebugHitBoxComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
 
@@ -35,6 +36,7 @@ public class KnightFactory {
                 .with(knightData.getHealth())
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .with(new SeparationComponent(50, 2))
+                .with(new DialogueComponent())
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
                 .collidable()   // Дает возможность подбирать сферы здоровья
