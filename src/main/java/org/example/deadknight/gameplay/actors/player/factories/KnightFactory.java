@@ -5,6 +5,8 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import javafx.geometry.Point2D;
+import org.example.deadknight.gameplay.actors.player.dialog.DialogueSequenceComponent;
+import org.example.deadknight.gameplay.actors.player.dialog.PlayerDialogueComponent;
 import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
@@ -37,6 +39,8 @@ public class KnightFactory {
                 .with(knightData.getSpeedComponent()) // компонент скорости, метод возвращает SpeedComponent
                 .with(new SeparationComponent(50, 2))
                 .with(new DialogueComponent())
+                .with(new DialogueSequenceComponent())
+                .with(new PlayerDialogueComponent())
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
                 .collidable()   // Дает возможность подбирать сферы здоровья

@@ -2,7 +2,9 @@ package org.example.deadknight.gameplay.components;
 
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -24,57 +26,54 @@ import javafx.util.Duration;
  */
 public class DialogueComponent extends Component {
 
-    /**
-     * Текстовый элемент, отображаемый над сущностью.
-     */
+    private final StackPane dialoguePane;
     private final Text dialogueText;
+    private final Rectangle background;
 
-    /**
-     * Создаёт компонент диалогов и добавляет текстовый узел в сцену FXGL.
-     */
     public DialogueComponent() {
         dialogueText = new Text();
         dialogueText.setFont(Font.font("Verdana", 16));
-        dialogueText.setFill(Color.WHITE);
-        dialogueText.setStroke(Color.BLACK);
-        dialogueText.setStrokeWidth(0.5);
-        dialogueText.setVisible(false);
+        dialogueText.setFill(Color.WHITE); // белый текст
 
-        FXGL.getGameScene().addUINode(dialogueText);
+        background = new Rectangle();
+        background.setArcWidth(10);   // скругленные углы
+        background.setArcHeight(10);
+        background.setFill(Color.color(0, 0, 0, 0.7)); // черный с прозрачностью
+
+        dialoguePane = new StackPane(background, dialogueText);
+        dialoguePane.setVisible(false);
+
+        FXGL.getGameScene().addUINode(dialoguePane);
     }
 
-    /**
-     * Показывает сообщение над сущностью на указанное время.
-     * <p>
-     * Текст автоматически исчезает после истечения времени {@code durationSeconds}.
-     *
-     * @param message текст сообщения
-     * @param durationSeconds время отображения в секундах
-     */
     public void showDialogue(String message, double durationSeconds) {
         dialogueText.setText(message);
-        dialogueText.setVisible(true);
 
-        FXGL.getGameTimer().runOnceAfter(() -> dialogueText.setVisible(false),
+        // авто-подгонка фона под текст
+        background.setWidth(dialogueText.getLayoutBounds().getWidth() + 10);
+        background.setHeight(dialogueText.getLayoutBounds().getHeight() + 6);
+
+        dialoguePane.setVisible(true);
+
+        FXGL.getGameTimer().runOnceAfter(() -> dialoguePane.setVisible(false),
                 Duration.seconds(durationSeconds));
     }
 
-    /**
-     * Обновляет позицию текста каждый кадр.
-     * <p>
-     * Текст следует за сущностью, компенсируя положение камеры,
-     * и располагается немного выше сущности.
-     *
-     * @param tpf время, прошедшее с последнего кадра (time per frame)
-     */
     @Override
     public void onUpdate(double tpf) {
-        if (!dialogueText.isVisible()) return;
+        if (!dialoguePane.isVisible()) return;
 
-        double camX = FXGL.getGameScene().getViewport().getX();
-        double camY = FXGL.getGameScene().getViewport().getY();
+        var viewport = FXGL.getGameScene().getViewport();
 
-        dialogueText.setTranslateX(entity.getX() - camX);
-        dialogueText.setTranslateY(entity.getY() - camY - 50);
+        double zoom = viewport.getZoom();
+
+        // камера учитывает смещение и зум
+        double screenX = (entity.getX() - viewport.getX()) * zoom;
+        double screenY = (entity.getY() - viewport.getY()) * zoom;
+
+        dialoguePane.setTranslateX(screenX);
+        dialoguePane.setTranslateY(screenY - 50 * zoom); // чуть выше сущности
     }
+
+
 }
