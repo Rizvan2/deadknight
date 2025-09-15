@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
 import org.example.deadknight.config.GameConfig;
 import org.example.deadknight.gameplay.actors.essences.systems.EssenceCollisionInitializer;
+import org.example.deadknight.gameplay.actors.essences.systems.UpgradeEssenceCollisionInitializer;
 import org.example.deadknight.gameplay.components.types.EntityTypeEssences;
 
 import org.example.deadknight.gameplay.actors.essences.factory.EssenceFactory;
@@ -149,6 +150,7 @@ public class DeadKnightApp extends GameApplication {
     @Override
     protected void initPhysics() {
         new EssenceCollisionInitializer().init();
+        new UpgradeEssenceCollisionInitializer().init();
     }
 
     /**

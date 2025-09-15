@@ -13,6 +13,7 @@ import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.DialogueComponent;
 import org.example.deadknight.gameplay.components.KnightDebugHitBoxComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
+import org.example.deadknight.gameplay.components.UpgradeComponent;
 
 /**
  * Фабрика для создания сущностей рыцаря.
@@ -41,6 +42,7 @@ public class KnightFactory {
                 .with(new DialogueComponent())
                 .with(new DialogueSequenceComponent())
                 .with(new PlayerDialogueComponent())
+                .with(new UpgradeComponent())
                 .type(EntityType.KNIGHT)
                 .zIndex(100)
                 .collidable()   // Дает возможность подбирать сферы здоровья

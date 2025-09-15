@@ -49,9 +49,6 @@ public class EssenceCollisionInitializer {
                         health.valueProperty().set(newHealth);
 
                         essence.removeFromWorld();
-
-                        System.out.println("[DeadKnight] Player healed: +" + (newHealth - oldHealth) +
-                                " (Current: " + newHealth + "/" + health.getMaxValue() + ")");
                     }
                 }
         );

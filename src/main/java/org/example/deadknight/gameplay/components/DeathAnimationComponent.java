@@ -45,10 +45,12 @@ public class DeathAnimationComponent extends Component {
             return;
         }
 
-
         Point2D pos = getEntityPosition();
         // Шанс спавна сферы здоровья
         trySpawnHealthEssence(pos);
+        // Шанс спавна сферы апгрейда
+        trySpawnUpgradeEssence(pos);
+
         removeOriginalEntity();
         var deathAnim = createDeathAnimationEntity(pos);
         attachAnimationComponent(deathAnim);
@@ -59,6 +61,14 @@ public class DeathAnimationComponent extends Component {
         if (new Random().nextDouble() < chance) {
             FXGL.spawn("healthEssence", pos.getX(), pos.getY());
             System.out.println("[Goblin] Health essence spawned at " + pos);
+        }
+    }
+
+    public void trySpawnUpgradeEssence(Point2D pos) {
+        double chance = 0.3; // 30% шанс
+        if (new Random().nextDouble() < chance) {
+            FXGL.spawn("upgradeEssence", pos.getX(), pos.getY());
+            System.out.println("[Goblin] Upgrade essence spawned at " + pos);
         }
     }
 

@@ -8,8 +8,6 @@ import org.example.deadknight.gameplay.components.AnimationComponent;
 import org.example.deadknight.gameplay.components.DeathAnimationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 
-import java.util.List;
-
 /**
  * Сервис для проигрывания анимации смерти сущности.
  * <p>
