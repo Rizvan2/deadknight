@@ -37,7 +37,6 @@ public class GameInitializer {
         Point2D startPosition = calculateStartPosition(128, 128);
         Entity player = createPlayer(characterType, startPosition);
 
-        FXGL.getGameWorld().addEntity(player);
 
         return new GameWorldData(
                 player,
