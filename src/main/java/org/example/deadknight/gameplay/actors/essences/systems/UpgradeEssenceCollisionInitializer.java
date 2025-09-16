@@ -24,6 +24,8 @@ public class UpgradeEssenceCollisionInitializer {
                         UpgradeComponent upgrade = player.getComponent(UpgradeComponent.class);
                         upgrade.increment();
 
+                        System.out.println("[UpgradeEssence] Player collected an essence. Current count: "
+                                + upgrade.getCount());
                         essence.removeFromWorld();
                     }
                 }

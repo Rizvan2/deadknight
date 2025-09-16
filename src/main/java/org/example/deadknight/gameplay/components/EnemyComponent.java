@@ -109,19 +109,23 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /**
-     * Проверяет смерть сущности и запускает анимацию смерти, если она ещё не была проиграна.
-     *
-     * @return true, если гоблин умер и анимация проигрывается
-     */
+
     private boolean handleDeath() {
         if (isDead() && !deathPlayed) {
+            // вызываем дроп перед проигрыванием анимации
+            DropComponent drop = entity.getComponent(DropComponent.class);
+            if (drop != null) {
+                drop.dropLoot(entity.getPosition());
+            }
+
             deathAnimationService.playDeathAnimation();
             deathPlayed = true;
             return true;
         }
         return deathPlayed;
     }
+
+
 
     /**
      * Проверяет, жив ли гоблин.

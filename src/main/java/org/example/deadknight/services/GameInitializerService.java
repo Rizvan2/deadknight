@@ -5,6 +5,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import javafx.util.Duration;
 import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
+import org.example.deadknight.gameplay.services.LootService;
 import org.example.deadknight.services.init.GameInitializer;
 
 import java.util.Random;
@@ -22,12 +23,20 @@ import java.util.Random;
  */
 public class GameInitializerService {
 
-    /**
-     * Конструктор сервиса.
-     * Регистрирует {@link GoblinFactory} в игровом мире FXGL.
-     */
+    private final LootService lootService;
+
+    /** Конструктор сервиса */
     public GameInitializerService() {
-        FXGL.getGameWorld().addEntityFactory(new GoblinFactory());
+        // создаём сервис лута
+        this.lootService = new LootService();
+
+        // передаём его в фабрику
+        FXGL.getGameWorld().addEntityFactory(new GoblinFactory(lootService));
+    }
+
+    /** Геттер на случай, если нужно использовать LootService где-то ещё */
+    public LootService getLootService() {
+        return lootService;
     }
 
     /**

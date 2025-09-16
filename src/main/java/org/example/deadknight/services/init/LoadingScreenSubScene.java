@@ -11,6 +11,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
+import org.example.deadknight.gameplay.services.LootService;
 
 /**
  * Подсцена загрузочного экрана с прогресс-баром.
@@ -53,7 +54,9 @@ public class LoadingScreenSubScene extends SubScene {
     }
 
     public void loadTextures(Runnable onComplete) {
-        GoblinFactory gf = new GoblinFactory();
+        LootService lootService = new LootService(); // создаём сервис лута
+
+        GoblinFactory gf = new GoblinFactory(lootService);
         gf.preloadGoblinTextures(() -> {
             Thread.startVirtualThread(() -> {
                 String[] textures = {

@@ -3,33 +3,37 @@ package org.example.deadknight.gameplay.components;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.geometry.Point2D;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 
 /**
  * Компонент для проигрывания анимации смерти сущности.
  * <p>
- * Создаёт новую сущность с анимацией и удаляет оригинального моба.
- * Направление анимации задаётся через конструктор.
+ * Логика работы:
+ * <ul>
+ *   <li>При добавлении к сущности — фиксирует её позицию.</li>
+ *   <li>Удаляет оригинальную сущность (например, моба).</li>
+ *   <li>Создаёт временную сущность, которая проигрывает кадры анимации смерти.</li>
+ *   <li>После завершения анимации временная сущность удаляется.</li>
+ * </ul>
+ *
+ * Таким образом, данный компонент отвечает только за визуализацию смерти,
+ * не затрагивая игровую механику (лут, опыт, статистику).
  */
 public class DeathAnimationComponent extends Component {
 
+    /** Кадры анимации смерти */
     private final ImageView[] deathFrames;
-    private final boolean facingRight;
-    private static final double FRAME_TIME = 0.3;
 
+    /** Направление отображения (true — вправо, false — влево) */
+    private final boolean facingRight;
 
     /**
      * Конструктор.
+     * Создаёт компонент анимации смерти.
      *
-     * @param deathFrames Список кадров анимации смерти.
-     * @param facingRight Направление анимации (true — вправо, false — влево).
+     * @param deathFrames массив кадров анимации
+     * @param facingRight направление (true — вправо, false — влево)
      */
     public DeathAnimationComponent(ImageView[] deathFrames, boolean facingRight) {
         this.deathFrames = deathFrames;
@@ -37,7 +41,15 @@ public class DeathAnimationComponent extends Component {
     }
 
     /**
-     * Инициализация компонента — создаёт новую сущность с анимацией и удаляет оригинал.
+     * Метод вызывается при добавлении компонента к сущности.
+     * <p>
+     * Если кадры заданы:
+     * <ul>
+     *   <li>Определяет текущую позицию сущности;</li>
+     *   <li>Удаляет оригинал;</li>
+     *   <li>Создаёт новую сущность для анимации;</li>
+     *   <li>Прикрепляет к ней проигрыватель анимации.</li>
+     * </ul>
      */
     @Override
     public void onAdded() {
@@ -46,52 +58,40 @@ public class DeathAnimationComponent extends Component {
         }
 
         Point2D pos = getEntityPosition();
-        // Шанс спавна сферы здоровья
-        trySpawnHealthEssence(pos);
-        // Шанс спавна сферы апгрейда
-        trySpawnUpgradeEssence(pos);
 
         removeOriginalEntity();
         var deathAnim = createDeathAnimationEntity(pos);
         attachAnimationComponent(deathAnim);
     }
 
-    public void trySpawnHealthEssence(Point2D pos) {
-        double chance = 0.5; // 50% шанс
-        if (new Random().nextDouble() < chance) {
-            FXGL.spawn("healthEssence", pos.getX(), pos.getY());
-            System.out.println("[Goblin] Health essence spawned at " + pos);
-        }
-    }
-
-    public void trySpawnUpgradeEssence(Point2D pos) {
-        double chance = 0.3; // 30% шанс
-        if (new Random().nextDouble() < chance) {
-            FXGL.spawn("upgradeEssence", pos.getX(), pos.getY());
-            System.out.println("[Goblin] Upgrade essence spawned at " + pos);
-        }
-    }
 
     /**
-     * Возвращает позицию текущей сущности.
+     * Возвращает текущую позицию сущности.
+     *
+     * @return позиция сущности
      */
     private Point2D getEntityPosition() {
         return entity.getPosition();
     }
 
     /**
-     * Удаляет оригинальную сущность из мира и очищает её view.
+     * Удаляет оригинальную сущность из мира:
+     * <ul>
+     *   <li>Очищает список визуальных компонентов;</li>
+     *   <li>Удаляет саму сущность из игрового мира.</li>
+     * </ul>
      */
     private void removeOriginalEntity() {
         entity.getViewComponent().clearChildren();
         entity.removeFromWorld();
     }
 
+
     /**
-     * Создаёт новую сущность для проигрывания анимации.
+     * Создаёт временную сущность для отображения анимации смерти.
      *
-     * @param pos Позиция для новой сущности.
-     * @return Сущность анимации смерти.
+     * @param pos позиция, в которой должна появиться анимация
+     * @return новая сущность с анимацией
      */
     private Entity createDeathAnimationEntity(Point2D pos) {
         return FXGL.entityBuilder()
@@ -101,9 +101,10 @@ public class DeathAnimationComponent extends Component {
     }
 
     /**
-     * Добавляет компонент анимации к сущности.
+     * Прикрепляет к временной сущности компонент,
+     * отвечающий за проигрывание анимации.
      *
-     * @param deathAnim Сущность для анимации.
+     * @param deathAnim сущность для анимации
      */
     private void attachAnimationComponent(Entity deathAnim) {
         deathAnim.addComponent(new AnimationRunner(deathFrames, facingRight));
@@ -111,32 +112,63 @@ public class DeathAnimationComponent extends Component {
 
 
     /**
-     * Вложенный компонент, который проигрывает анимацию.
+     * Вложенный компонент, который последовательно проигрывает кадры анимации.
+     * <p>
+     * После показа последнего кадра сущность автоматически удаляется.
      */
     private static class AnimationRunner extends Component {
+
+        /** Кадры анимации */
         private final ImageView[] frames; // берем массив кадров для анимации
+
+        /** Направление отображения */
         private final boolean facingRight;
+
+        /** Текущий визуальный элемент */
         private ImageView view;
+
+        /** Индекс текущего кадра */
         private int frame = 0;
+
+        /** Накопленное время между кадрами */
         private double time = 0;
 
+        /** Длительность отображения одного кадра (в секундах) */
         private static final double FRAME_TIME = 0.3;
 
+        /**
+         * Создаёт компонент проигрывателя анимации.
+         *
+         * @param frames массив кадров анимации
+         * @param facingRight направление (true — вправо, false — влево)
+         */
         public AnimationRunner(ImageView[] frames, boolean facingRight) {
             this.frames = frames;
             this.facingRight = facingRight;
         }
 
+        /**
+         * Вызывается при добавлении компонента к сущности.
+         * Создаёт первый кадр и добавляет его во View.
+         */
         @Override
         public void onAdded() {
             createView();
         }
 
+        /**
+         * Обновляет состояние анимации каждый кадр игрового цикла.
+         *
+         * @param tpf время с последнего кадра (time per frame)
+         */
         @Override
         public void onUpdate(double tpf) {
             updateFrame(tpf);
         }
 
+        /**
+         * Создаёт первый кадр анимации и добавляет его в сущность.
+         */
         private void createView() {
             if (frames.length == 0) return;
 
@@ -147,6 +179,16 @@ public class DeathAnimationComponent extends Component {
             entity.getViewComponent().addChild(view);
         }
 
+        /**
+         * Обновляет кадр анимации.
+         * <ul>
+         *   <li>Накапливает время;</li>
+         *   <li>По истечении FRAME_TIME переключает кадр;</li>
+         *   <li>После показа последнего кадра удаляет сущность из мира.</li>
+         * </ul>
+         *
+         * @param tpf время с последнего кадра (time per frame)
+         */
         private void updateFrame(double tpf) {
             if (view == null) return;
 
@@ -162,8 +204,5 @@ public class DeathAnimationComponent extends Component {
             }
         }
     }
-
-
-
 }
 

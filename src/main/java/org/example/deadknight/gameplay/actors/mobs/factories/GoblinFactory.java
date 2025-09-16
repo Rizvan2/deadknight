@@ -21,6 +21,7 @@ import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.debug.DebugHitBoxComponent;
+import org.example.deadknight.gameplay.services.LootService;
 
 /**
  * Фабрика создания мобов типа "Гоблин".
@@ -41,6 +42,12 @@ public class GoblinFactory implements EntityFactory {
 
     /** Размер гоблина (ширина и высота спрайта) */
     private final int goblinSize = 140;
+
+    private final LootService lootService;
+
+    public GoblinFactory(LootService lootService) {
+        this.lootService = lootService;
+    }
 
     /**
      * Создает нового гоблина с заданными параметрами спавна.
@@ -99,6 +106,7 @@ public class GoblinFactory implements EntityFactory {
      * @return готовая сущность {@link Entity} с компонентами
      */
     private Entity buildGoblinEntity(SpawnData data, GoblinEntity goblinData, ImageView view, int health) {
+        DropComponent drop = new DropComponent("goblin_basic", lootService);
 
         return FXGL.entityBuilder(data)
                 .type(EntityType.HOSTILE_MOB)
@@ -111,8 +119,10 @@ public class GoblinFactory implements EntityFactory {
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
                 .with(new DebugHitBoxComponent())
+                .with(drop)  // компонент дропа
                 .collidable()
                 .build();
+
     }
 
     /**

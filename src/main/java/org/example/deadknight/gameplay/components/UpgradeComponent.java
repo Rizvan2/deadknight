@@ -22,8 +22,8 @@ public class UpgradeComponent extends Component {
     /** Добавить одну эссенцию */
     public void increment() {
         upgradeEssenceCount++;
+        FXGL.set("upgradeEssences", upgradeEssenceCount);
     }
-
     /** Сбросить счётчик */
     public void reset() {
         upgradeEssenceCount = 0;
