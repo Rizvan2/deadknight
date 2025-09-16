@@ -91,6 +91,7 @@ public class DeadKnightApp extends GameApplication {
 
         gameInitService = new GameInitializerService();
         uiService = new UIService();
+
         collisionSystem = new CollisionSystem();
         GameFlowService gameFlowService = new GameFlowService();
 
