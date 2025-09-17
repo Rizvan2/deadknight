@@ -1,4 +1,4 @@
-package org.example.deadknight.services.ui;
+package org.example.deadknight.gameplay.actors.player.services.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.FadeTransition;

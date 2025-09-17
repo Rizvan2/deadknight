@@ -1,8 +1,8 @@
 package org.example.deadknight.gameplay.actors.player.services.ui;
 
 import com.almasb.fxgl.entity.Entity;
-import org.example.deadknight.services.ui.GameOverUI;
-import org.example.deadknight.services.ui.UIController;
+import lombok.Getter;
+import lombok.Setter;
 import org.example.deadknight.gameplay.components.HealthComponent;
 
 /**
@@ -15,6 +15,8 @@ import org.example.deadknight.gameplay.components.HealthComponent;
  *     <li>Проверка состояния здоровья игрока и отображение экрана Game Over</li>
  * </ul>
  */
+@Getter
+@Setter
 public class UIService {
 
     private UIController uiController;
