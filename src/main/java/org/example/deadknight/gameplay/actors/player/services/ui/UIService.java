@@ -1,4 +1,4 @@
-package org.example.deadknight.services;
+package org.example.deadknight.gameplay.actors.player.services.ui;
 
 import com.almasb.fxgl.entity.Entity;
 import org.example.deadknight.services.ui.GameOverUI;

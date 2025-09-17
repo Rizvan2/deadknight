@@ -1,6 +1,7 @@
 package org.example.deadknight.services.ui;
 
 import com.almasb.fxgl.entity.Entity;
+import org.example.deadknight.gameplay.actors.player.services.ui.HealthBar;
 
 /**
  * Контроллер UI, управляющий элементами интерфейса игрока.

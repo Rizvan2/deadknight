@@ -22,7 +22,7 @@ import org.example.deadknight.infrastructure.render.services.MapChunkService;
 import org.example.deadknight.services.CameraService;
 import org.example.deadknight.services.GameFlowService;
 import org.example.deadknight.services.GameInitializerService;
-import org.example.deadknight.services.UIService;
+import org.example.deadknight.gameplay.actors.player.services.ui.UIService;
 import org.example.deadknight.gameplay.actors.player.systems.CollisionSystem;
 import org.example.deadknight.services.debug.DebugOverlayService;
 import org.example.deadknight.services.init.SettingsInitializer;
@@ -111,7 +111,6 @@ public class DeadKnightApp extends GameApplication {
                 worldData.mapHeight()
         );
         cameraService.setupZoom();
-
         // UI и враги
         uiService.initUI(player);
         Point2D playerChunk = mapChunkService.worldToChunk(player.getPosition());
