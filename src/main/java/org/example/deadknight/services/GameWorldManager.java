@@ -64,10 +64,15 @@ public class GameWorldManager {
     /**
      * Запускает игру с указанным типом персонажа.
      * <p>
-     * Метод очищает текущую сцену, создает игрока и все необходимые сервисы через {@link GameWorldFactory},
-     * настраивает камеру и ввод.
+     * Метод выполняет полный рестарт игрового мира для выбранного персонажа:
+     * <ol>
+     *     <li>Очищает текущую сцену (игрок, сущности, UI, ввод).</li>
+     *     <li>Создает новый игровой мир через {@link GameInitializerService}.</li>
+     *     <li>Инициализирует игрока, PlayerService, карту и систему коллизий через {@link GameWorldFactory}.</li>
+     *     <li>Настраивает камеру и ввод для игрока.</li>
+     * </ol>
      *
-     * @param characterType тип персонажа
+     * @param characterType Тип персонажа, например "knight" или "panther".
      */
     public void startGame(String characterType) {
         this.currentCharacterType = characterType;
@@ -75,18 +80,47 @@ public class GameWorldManager {
 
         GameWorldData worldData = initializer.initGameWorld(characterType);
 
-        // Используем фабрику
+        initializeGameWorld(worldData);
+        setupCameraAndInput(worldData);
+    }
+
+    /**
+     * Создает объекты игрового мира через фабрику {@link GameWorldFactory}.
+     * <p>
+     * Инициализируются:
+     * <ul>
+     *     <li>{@link #player} — сущность игрока</li>
+     *     <li>{@link #playerService} — сервис игрока для движения и апгрейдов</li>
+     *     <li>{@link #mapChunkService} — сервис управления картой и чанками</li>
+     *     <li>{@link #collisionSystem} — система обработки коллизий</li>
+     * </ul>
+     *
+     * @param worldData Данные игрового мира, возвращаемые {@link GameInitializerService}.
+     */
+    private void initializeGameWorld(GameWorldData worldData) {
         GameWorldFactory.GameWorldObjects gwo = GameWorldFactory.create(worldData, uiService);
 
         this.player = gwo.player;
         this.playerService = gwo.playerService;
         this.mapChunkService = gwo.mapChunkService;
         this.collisionSystem = new CollisionSystem();
+    }
 
-        // Камера и ввод
+    /**
+     * Настраивает камеру и обработку ввода для игрока.
+     * <p>
+     * Использует:
+     * <ul>
+     *     <li>{@link CameraManager} для слежения камеры за игроком</li>
+     *     <li>{@link PlayerInputService} для связывания действий клавиатуры/мыши с игроком</li>
+     * </ul>
+     *
+     * @param worldData Данные игрового мира для корректного позиционирования камеры.
+     */
+    private void setupCameraAndInput(GameWorldData worldData) {
         CameraManager cameraManager = new CameraManager();
         cameraManager.bindToPlayer(player, worldData);
-        PlayerInputService.initInput(characterType, () -> player);
+        PlayerInputService.initInput(currentCharacterType, () -> player);
     }
 
     /**
