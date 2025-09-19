@@ -4,33 +4,57 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.deadknight.gameplay.actors.player.controllers.MovementController;
 import org.example.deadknight.gameplay.actors.player.services.*;
-import org.example.deadknight.gameplay.actors.player.services.ui.PlayerUIService;
 import org.example.deadknight.gameplay.actors.player.services.ui.UIService;
 import org.example.deadknight.gameplay.actors.player.systems.CollisionSystem;
 import org.example.deadknight.infrastructure.dto.GameWorldData;
+import org.example.deadknight.infrastructure.factory.GameWorldFactory;
 import org.example.deadknight.infrastructure.render.services.MapChunkService;
 
 /**
- * Управляет игровым миром: отвечает за инициализацию карты, спавн игрока,
- * настройку камеры, обработку ввода, обновление логики и рестарт после Game Over.
+ * Менеджер игрового мира.
+ * <p>
+ * Основные задачи:
+ * <ul>
+ *     <li>Инициализация игрового мира (карта, игрок, враги)</li>
+ *     <li>Создание игрока через {@link PlayerService} и управление его логикой</li>
+ *     <li>Управление пользовательским интерфейсом через {@link UIService}</li>
+ *     <li>Обработка коллизий и обновление карты чанков</li>
+ *     <li>Перезапуск игры после смерти игрока</li>
+ * </ul>
+ * <p>
+ * Использует {@link GameWorldFactory} для создания всех игровых объектов и соблюдения принципа SRP.
  */
 @Getter
 @Setter
 public class GameWorldManager {
 
+    /** Сервис для инициализации игровых данных (карта, игроки, враги) */
     private final GameInitializerService initializer;
+
+    /** Сервис для управления UI: полоска здоровья, GameOver, апгрейды */
     private final UIService uiService;
+
+    /** Текущий выбранный тип персонажа ("knight", "panther" и т.д.) */
     private String currentCharacterType;
+
+    /** Сущность игрока */
     private Entity player;
+
+    /** Сервис игрока: движение, апгрейды */
+    private PlayerService playerService;
+
+    /** Сервис для управления отображаемыми чанками карты */
     private MapChunkService mapChunkService;
-    private MovementController movementController;
+
+    /** Система обработки коллизий */
     private CollisionSystem collisionSystem;
 
     /**
-     * @param initializer сервис для инициализации игрового мира (карта, игрок, враги)
-     * @param uiService   сервис для отображения UI
+     * Конструктор менеджера игрового мира.
+     *
+     * @param initializer сервис для инициализации игрового мира
+     * @param uiService   сервис для управления UI
      */
     public GameWorldManager(GameInitializerService initializer, UIService uiService) {
         this.initializer = initializer;
@@ -38,31 +62,37 @@ public class GameWorldManager {
     }
 
     /**
-     * Запускает игру для выбранного персонажа.
+     * Запускает игру с указанным типом персонажа.
+     * <p>
+     * Метод очищает текущую сцену, создает игрока и все необходимые сервисы через {@link GameWorldFactory},
+     * настраивает камеру и ввод.
      *
-     * @param characterType тип персонажа ("knight" или "panther")
+     * @param characterType тип персонажа
      */
     public void startGame(String characterType) {
         this.currentCharacterType = characterType;
-
         clearScene();
+
         GameWorldData worldData = initializer.initGameWorld(characterType);
-        PlayerWorld pw = WorldFactory.createPlayer(worldData);
 
-        this.player = pw.player();
-        this.mapChunkService = pw.mapChunkService();
-        this.movementController = pw.movementController();
-        collisionSystem = new CollisionSystem();
+        // Используем фабрику
+        GameWorldFactory.GameWorldObjects gwo = GameWorldFactory.create(worldData, uiService);
 
+        this.player = gwo.player;
+        this.playerService = gwo.playerService;
+        this.mapChunkService = gwo.mapChunkService;
+        this.collisionSystem = new CollisionSystem();
+
+        // Камера и ввод
         CameraManager cameraManager = new CameraManager();
-
-        PlayerInputService.initInput(characterType, () -> player);
         cameraManager.bindToPlayer(player, worldData);
-        uiService.initUI(player);
+        PlayerInputService.initInput(characterType, () -> player);
     }
 
     /**
-     * Очищает текущую игровую сцену (игрок, UI, ввод, сущности).
+     * Очищает текущую сцену: сущности, UI и ввод.
+     * <p>
+     * Используется при старте новой игры или перезапуске после Game Over.
      */
     private void clearScene() {
         if (mapChunkService != null) mapChunkService.clearChunks();
@@ -73,16 +103,25 @@ public class GameWorldManager {
 
     /**
      * Обновляет игровую логику каждый кадр.
+     * <p>
+     * Вызывает обновление:
+     * <ul>
+     *     <li>логики игрока (движение, апгрейды)</li>
+     *     <li>коллизий</li>
+     *     <li>UI (HealthBar, апгрейды)</li>
+     *     <li>проверку Game Over</li>
+     *     <li>карты чанков вокруг игрока</li>
+     * </ul>
      *
-     * @param tpf время, прошедшее с прошлого кадра (time per frame)
+     * @param tpf время, прошедшее с предыдущего кадра (time per frame)
      */
     public void update(double tpf) {
         if (player == null) return;
 
-        movementController.update(tpf);
-        collisionSystem.update(player, tpf);
-        uiService.update();
-        uiService.checkGameOver(player, () -> startGame(currentCharacterType));
+        playerService.update(tpf);                         // движение + апгрейды
+        collisionSystem.update(player, tpf);               // коллизии
+        uiService.update();                                // HealthBar и апгрейды UI
+        uiService.checkGameOver(player, () -> startGame(currentCharacterType)); // GameOver
         mapChunkService.updateVisibleChunks(player.getX(), player.getY());
     }
 }
