@@ -39,20 +39,10 @@ public class CameraService {
                              double viewportHeight,
                              double worldWidth,
                              double worldHeight) {
-        FXGL.getGameScene().getViewport().setZoom(1.3);
+        FXGL.getGameScene().getViewport().setZoom(1.6);
         var viewport = FXGL.getGameScene().getViewport();
         viewport.bindToEntity(player, viewportWidth / 2.0, viewportHeight / 2.0);
         viewport.setBounds(0, 0, (int) worldWidth, (int) worldHeight);
-    }
-
-    public void bindToEntity(Entity player) {
-        bindToEntity(
-                player,
-                FXGL.getAppWidth(),
-                FXGL.getAppHeight(),
-                FXGL.getAppWidth(),   // если карта не задана, временно делаем равной ширине экрана
-                FXGL.getAppHeight()   // то же для высоты
-        );
     }
 
     /**

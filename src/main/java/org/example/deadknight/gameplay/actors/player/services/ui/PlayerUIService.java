@@ -23,11 +23,11 @@ public class PlayerUIService {
 
     // --- Константы интерфейса ---
     private static final double PADDING = 10;            // отступ фона от краев текста/иконки
-    private static final double ICON_WIDTH = 48;         // ширина иконки осколка
-    private static final double ICON_HEIGHT = 48;        // высота иконки
-    private static final double ICON_TEXT_GAP = 5;       // расстояние между иконкой и текстом
+    private static final double ICON_WIDTH = 72;         // ширина иконки осколка
+    private static final double ICON_HEIGHT = 72;        // высота иконки
+    private static final double ICON_TEXT_GAP = 10;       // расстояние между иконкой и текстом
     private static final double TEXT_FONT_SIZE = 24;     // размер шрифта
-    private static final double TOP_OFFSET = 10;         // отступ от верхнего края окна
+    private static final double TOP_OFFSET = 20;         // отступ от верхнего края окна
 
     private Text essenceText;
     private Rectangle background;
