@@ -8,40 +8,43 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
 import org.example.deadknight.gameplay.components.UpgradeComponent;
 
 /**
  * Сервис для отображения UI игрока.
  * <p>
- * Отвечает за показ количества собранных "Осколков памяти" с иконкой
- * в правом верхнем углу экрана.
+ * Отвечает за отображение количества собранных "Осколков памяти" с иконкой
+ * в правом верхнем углу экрана. Обновление количества осколков производится
+ * при вызове метода {@link #update()}.
  * <p>
- * Все размеры и отступы вынесены в константы для удобной настройки интерфейса.
+ * Все размеры и отступы элементов UI вынесены в константы для удобной настройки интерфейса.
  */
 public class PlayerUIService {
 
     // --- Константы интерфейса ---
-    private static final double PADDING = 10;            // отступ фона от краев текста/иконки
-    private static final double ICON_WIDTH = 72;         // ширина иконки осколка
-    private static final double ICON_HEIGHT = 72;        // высота иконки
-    private static final double ICON_TEXT_GAP = 10;       // расстояние между иконкой и текстом
-    private static final double TEXT_FONT_SIZE = 24;     // размер шрифта
-    private static final double TOP_OFFSET = 20;         // отступ от верхнего края окна
+    private static final double PADDING = 10;
+    private static final double ICON_WIDTH = 72;
+    private static final double ICON_HEIGHT = 72;
+    private static final double ICON_TEXT_GAP = 10;
+    private static final double TEXT_FONT_SIZE = 24;
+    private static final double TOP_OFFSET = 20;
 
-    private Text essenceText;
-    private Rectangle background;
-    private ImageView essenceIcon;
+    private Text essenceText;       // Текстовое поле для отображения количества осколков
+    private Rectangle background;   // Фон для иконки и текста
+    private ImageView essenceIcon;  // Иконка осколка
+    private Entity player;          // Сущность игрока, чьи осколки отображаются
 
     /**
-     * Инициализирует UI игрока.
+     * Инициализирует UI для игрока.
      * <p>
-     * Создает текст, иконку и фон, добавляет их на сцену и запускает таймер для
-     * динамического обновления количества собранных осколков памяти.
+     * Создает текст, иконку и фон, добавляет их на сцену и сохраняет ссылку
+     * на игрока для обновления количества осколков.
      *
      * @param player сущность игрока, из которой читается компонент {@link UpgradeComponent}
      */
     public void initUI(Entity player) {
+        this.player = player; // сохраняем игрока для update()
+
         essenceText = new Text("0");
         essenceText.setFill(Color.WHITE);
         essenceText.setFont(Font.font("Consolas", TEXT_FONT_SIZE));
@@ -59,14 +62,20 @@ public class PlayerUIService {
         FXGL.getGameScene().addUINode(essenceText);
 
         Platform.runLater(this::updatePosition);
+    }
 
-        FXGL.getGameTimer().runAtInterval(() -> {
-            if (player.hasComponent(UpgradeComponent.class)) {
-                UpgradeComponent upgrade = player.getComponent(UpgradeComponent.class);
-                essenceText.setText(String.valueOf(upgrade.getCount()));
-                updatePosition();
-            }
-        }, Duration.seconds(0.1));
+    /**
+     * Обновляет UI игрока.
+     * <p>
+     * Метод должен вызываться каждый кадр (например, в {@code onUpdate()}).
+     * Обновляет текст осколков и корректирует позиции элементов.
+     */
+    public void update() {
+        if (player != null && player.hasComponent(UpgradeComponent.class)) {
+            UpgradeComponent upgrade = player.getComponent(UpgradeComponent.class);
+            essenceText.setText(String.valueOf(upgrade.getCount()));
+            updatePosition();
+        }
     }
 
     /**
@@ -81,18 +90,15 @@ public class PlayerUIService {
         double textWidth = essenceText.getLayoutBounds().getWidth();
         double totalWidth = ICON_WIDTH + ICON_TEXT_GAP + textWidth;
 
-        // Фон
         background.setWidth(totalWidth + PADDING);
         background.setTranslateX(x - background.getWidth());
         background.setHeight(Math.max(essenceText.getLayoutBounds().getHeight(), ICON_HEIGHT) + PADDING);
         background.setTranslateY(y);
 
-        // Иконка слева
         essenceIcon.setTranslateX(background.getTranslateX() + PADDING / 2);
         essenceIcon.setTranslateY(y + (background.getHeight() - ICON_HEIGHT) / 2);
 
-        // Текст справа от иконки
         essenceText.setTranslateX(essenceIcon.getTranslateX() + ICON_WIDTH + ICON_TEXT_GAP);
-        essenceText.setTranslateY(y + background.getHeight() / 2 + TEXT_FONT_SIZE / 3); // примерно по центру фона
+        essenceText.setTranslateY(y + background.getHeight() / 2 + TEXT_FONT_SIZE / 3);
     }
 }

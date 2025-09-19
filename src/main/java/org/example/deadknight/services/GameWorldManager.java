@@ -22,7 +22,6 @@ public class GameWorldManager {
 
     private final GameInitializerService initializer;
     private final UIService uiService;
-
     private String currentCharacterType;
     private Entity player;
     private MapChunkService mapChunkService;
@@ -60,9 +59,6 @@ public class GameWorldManager {
         PlayerInputService.initInput(characterType, () -> player);
         cameraManager.bindToPlayer(player, worldData);
         uiService.initUI(player);
-        // UI игрока
-        PlayerUIService playerUIService = new PlayerUIService();
-        playerUIService.initUI(player);
     }
 
     /**

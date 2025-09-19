@@ -19,36 +19,21 @@ import org.example.deadknight.gameplay.components.HealthComponent;
 @Setter
 public class UIService {
 
+    private PlayerUIService playerUIService; // отвечает только за "essence" UI
     private UIController uiController;
     private boolean isGameOver = false;
 
-    /**
-     * Инициализирует UI для переданного игрока.
-     *
-     * @param player сущность игрока, для которого создается интерфейс
-     */
     public void initUI(Entity player) {
-        uiController = new UIController(player);
+        uiController = new UIController(player);       // HealthBar, другие элементы
+        playerUIService = new PlayerUIService();
+        playerUIService.initUI(player);               // инициализация осколков
     }
 
-    /**
-     * Обновляет элементы интерфейса игрока.
-     * <p>
-     * Обычно вызывается каждый кадр в методе {@code onUpdate}.
-     */
     public void update() {
         if (uiController != null) uiController.update();
+        if (playerUIService != null) playerUIService.update(); // нужно добавить метод update()
     }
 
-    /**
-     * Проверяет, жив ли игрок, и при необходимости показывает экран Game Over.
-     * <p>
-     * Если здоровье игрока равно нулю, экран Game Over отображается и вызывается
-     * {@code onRestart} для перезапуска игры. После этого флаг {@code isGameOver} сбрасывается.
-     *
-     * @param player    сущность игрока, чье здоровье проверяется
-     * @param onRestart действие, выполняемое при перезапуске игры после Game Over
-     */
     public void checkGameOver(Entity player, Runnable onRestart) {
         if (isGameOver) return;
 
