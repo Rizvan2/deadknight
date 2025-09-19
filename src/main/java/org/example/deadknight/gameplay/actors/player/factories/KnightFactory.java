@@ -11,7 +11,7 @@ import org.example.deadknight.gameplay.actors.player.entities.KnightEntity;
 import org.example.deadknight.gameplay.actors.player.services.AnimationService;
 import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
 import org.example.deadknight.gameplay.components.DialogueComponent;
-import org.example.deadknight.gameplay.components.KnightDebugHitBoxComponent;
+import org.example.deadknight.gameplay.components.debug.KnightDebugHitBoxComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.components.UpgradeComponent;
 

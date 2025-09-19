@@ -1,4 +1,4 @@
-package org.example.deadknight.gameplay.components;
+package org.example.deadknight.gameplay.actors.mobs.components;
 
 import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.CacheHint;

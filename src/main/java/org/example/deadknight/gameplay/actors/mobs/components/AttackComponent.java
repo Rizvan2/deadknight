@@ -1,7 +1,8 @@
-package org.example.deadknight.gameplay.components;
+package org.example.deadknight.gameplay.actors.mobs.components;
 
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
+import org.example.deadknight.gameplay.components.HealthComponent;
 
 
 /**

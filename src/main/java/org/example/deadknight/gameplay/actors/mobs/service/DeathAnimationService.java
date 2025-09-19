@@ -2,10 +2,9 @@ package org.example.deadknight.gameplay.actors.mobs.service;
 
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.dsl.FXGL;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.example.deadknight.gameplay.components.AnimationComponent;
-import org.example.deadknight.gameplay.components.DeathAnimationComponent;
+import org.example.deadknight.gameplay.actors.mobs.components.AnimationComponent;
+import org.example.deadknight.gameplay.actors.mobs.components.DeathAnimationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 
 /**

@@ -1,14 +1,15 @@
-package org.example.deadknight.gameplay.components;
+package org.example.deadknight.gameplay.actors.mobs.components;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
-import javafx.geometry.Point2D;
 import lombok.Getter;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.service.CombatService;
 import org.example.deadknight.gameplay.actors.mobs.service.DeathAnimationService;
 import org.example.deadknight.gameplay.actors.mobs.service.MovementService;
+import org.example.deadknight.gameplay.components.HealthComponent;
+import org.example.deadknight.gameplay.components.SpeedComponent;
 
 /**
  * Компонент, управляющий поведением врага (гоблина) в игровом мире.
