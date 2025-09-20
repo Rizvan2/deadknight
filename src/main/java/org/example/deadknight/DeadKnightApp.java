@@ -6,7 +6,6 @@ import com.almasb.fxgl.dsl.FXGL;
 import javafx.scene.input.KeyCode;
 import org.example.deadknight.config.GameConfig;
 import org.example.deadknight.gameplay.actors.essences.systems.EssenceCollisionInitializer;
-import org.example.deadknight.gameplay.actors.essences.systems.UpgradeEssenceCollisionInitializer;
 import org.example.deadknight.gameplay.actors.essences.factory.EssenceFactory;
 import org.example.deadknight.gameplay.actors.mobs.factories.GoblinFactory;
 import org.example.deadknight.gameplay.actors.player.services.ui.UIService;
@@ -122,13 +121,14 @@ public class DeadKnightApp extends GameApplication {
     /**
      * Инициализация физических взаимодействий.
      * <p>
-     * Настраиваются коллизии для эссенций и апгрейдов.
+     * Настраиваются коллизии для всех эссенций и апгрейдов.
      */
     @Override
     protected void initPhysics() {
-        new EssenceCollisionInitializer().init();
-        new UpgradeEssenceCollisionInitializer().init();
+        EssenceCollisionInitializer collisionInitializer = new EssenceCollisionInitializer();
+        collisionInitializer.init(); // регистрирует коллизии для всех эссенций
     }
+
 
     /**
      * Обновление игрового мира каждый кадр.
