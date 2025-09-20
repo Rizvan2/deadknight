@@ -2,8 +2,6 @@ package org.example.deadknight.gameplay.actors.player.dialog;
 
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.dsl.FXGL;
-import org.example.deadknight.gameplay.actors.player.dialog.DialogueLine;
-import org.example.deadknight.gameplay.actors.player.dialog.DialogueScripts;
 
 public class PlayerDialogueComponent extends Component {
 
