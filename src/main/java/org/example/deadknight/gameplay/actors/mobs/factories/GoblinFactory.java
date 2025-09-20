@@ -112,15 +112,14 @@ public class GoblinFactory implements EntityFactory {
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
                 .bbox(new HitBox("BODY", new Point2D(65, 80), BoundingShape.box(10, 30)))
-                .with(new EnemyComponent(goblinData))
                 .with(new HealthComponent(health))
+                .with(new EnemyComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
                 .with(new DebugHitBoxComponent())
                 .with(drop)  // компонент дропа
                 .collidable()
                 .build();
-
     }
 
     /**

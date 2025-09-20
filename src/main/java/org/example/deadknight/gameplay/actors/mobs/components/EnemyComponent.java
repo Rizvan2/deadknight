@@ -4,6 +4,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.Entity;
 import lombok.Getter;
+import lombok.Setter;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.service.CombatService;
 import org.example.deadknight.gameplay.actors.mobs.service.DeathAnimationService;
@@ -12,137 +13,166 @@ import org.example.deadknight.gameplay.components.HealthComponent;
 import org.example.deadknight.gameplay.components.SpeedComponent;
 
 /**
- * Компонент, управляющий поведением врага (гоблина) в игровом мире.
+ * Компонент, управляющий поведением врага (например, {@link GoblinEntity}).
  * <p>
  * Отвечает за:
  * <ul>
- *     <li>Проигрывание анимаций ходьбы и атаки через {@link AnimationComponent}</li>
- *     <li>Следование за игроком и взаимодействие с ним через {@link MovementService} и {@link CombatService}</li>
- *     <li>Запуск анимации смерти через {@link DeathAnimationService}</li>
+ *     <li>инициализацию базовых компонентов (анимация, атака, скорость)</li>
+ *     <li>движение к игроку</li>
+ *     <li>проверку дистанции и атаку</li>
+ *     <li>обработку смерти и дропа</li>
  * </ul>
- * <p>
- * Основная логика атаки делегируется {@link AttackComponent}.
+ * Вся логика делегируется сервисам:
+ * {@link MovementService}, {@link CombatService}, {@link DeathAnimationService}.
  */
+@Getter
+@Setter
 public class EnemyComponent extends Component {
 
-    /** Данные гоблина, включая кадры анимации, скорость и урон. */
-    @Getter
+    /** Дистанция, с которой враг может атаковать игрока */
+    private static final double ATTACK_RANGE = 50.0;
+
+    /** Время перезарядки атаки в секундах */
+    private static final double ATTACK_COOLDOWN = 1.0;
+
+    /** Интервал поиска игрока в секундах */
+    private static final double PLAYER_SEARCH_INTERVAL = 1.0;
+
+    /** Данные врага (скорость, урон, анимации и т.д.) */
     private final GoblinEntity goblinData;
 
-    /** Флаг, показывающий, была ли проиграна анимация смерти. */
-    private boolean deathPlayed = false;
-
-    /** Компонент анимации для управления кадрами ходьбы и атаки. */
+    /** Управляет анимациями врага */
     private AnimationComponent animationComponent;
 
-    /** Компонент атаки, управляющий логикой атак. */
+    /** Логика атаки врага */
     private AttackComponent attackComponent;
 
-    /** Сервис проигрывания анимации смерти. */
+    /** Сервис проигрывания анимации смерти */
     private DeathAnimationService deathAnimationService;
 
-    /** Сервис перемещения сущности. */
+    /** Сервис перемещения врага */
     private MovementService movementService;
 
-    /** Сервис атаки и проверки дистанции до игрока. */
+    /** Сервис боевого поведения (атака, проверка дистанции) */
     private CombatService combatService;
 
+    /** Ссылка на игрока (обновляется раз в {@link #PLAYER_SEARCH_INTERVAL}) */
+    private Entity player;
+
+    /** Таймер для поиска игрока */
+    private double playerSearchTimer = 0;
+
+    /** Кэшированный компонент здоровья */
+    private HealthComponent healthComponent;
+
     /**
-     * Конструктор.
+     * Создает компонент для управления поведением врага.
      *
-     * @param data данные гоблина
+     * @param data данные врага (параметры {@link GoblinEntity})
      */
     public EnemyComponent(GoblinEntity data) {
         this.goblinData = data;
     }
 
     /**
-     * Инициализация компонентов и сервисов после добавления сущности в мир.
+     * Вызывается при добавлении врага в игровой мир.
+     * Инициализирует все компоненты, сервисы и кэширует часто используемые данные.
      */
     @Override
     public void onAdded() {
+        initComponents();
+        initServices();
+        cacheCommonComponents();
+        updatePlayer(); // первый поиск игрока
+    }
+
+    /**
+     * Вызывается каждый кадр игры. Обновляет поведение врага:
+     * <ul>
+     *     <li>обрабатывает смерть</li>
+     *     <li>обновляет игрока с интервалом</li>
+     *     <li>выполняет движение или атаку</li>
+     * </ul>
+     *
+     * @param tpf время на кадр (time per frame)
+     */
+    @Override
+    public void onUpdate(double tpf) {
+        if (handleDeath()) return;
+
+        updatePlayerIfNeeded(tpf);
+        if (player == null) return;
+
+        handleCombatAndMovement(tpf);
+    }
+
+    // --- Вспомогательные методы ---
+
+    /** Инициализирует вспомогательные компоненты врага (анимацию, атаку, скорость). */
+    private void initComponents() {
         initAnimationComponent();
         initAttackComponent();
 
         if (!entity.hasComponent(SpeedComponent.class)) {
             entity.addComponent(new SpeedComponent(goblinData.getSpeed()));
         }
+    }
 
+    /** Инициализирует сервисы поведения врага. */
+    private void initServices() {
         double actualSpeed = entity.getComponent(SpeedComponent.class).getSpeed();
-
         movementService = new MovementService(entity, actualSpeed);
         combatService = new CombatService(attackComponent, animationComponent);
-
         deathAnimationService = new DeathAnimationService(entity, goblinData, animationComponent);
     }
 
+    /** Кэширует часто используемые компоненты (например, здоровье). */
+    private void cacheCommonComponents() {
+        healthComponent = entity.getComponent(HealthComponent.class);
+    }
+
     /**
-     * Обновление состояния сущности каждый кадр.
-     * <p>
-     * Сюда входит:
-     * <ul>
-     *     <li>Проверка смерти и запуск анимации через {@link DeathAnimationService}</li>
-     *     <li>Поиск игрока в мире</li>
-     *     <li>Движение к игроку через {@link MovementService}</li>
-     *     <li>Атака игрока через {@link CombatService}</li>
-     * </ul>
-     *
-     * @param tpf время кадра (time per frame)
+     * Проверяет, нужно ли обновить игрока.
+     * Поиск игрока выполняется только с интервалом {@link #PLAYER_SEARCH_INTERVAL}.
      */
-    @Override
-    public void onUpdate(double tpf) {
-        if (handleDeath()) return;
+    private void updatePlayerIfNeeded(double tpf) {
+        playerSearchTimer += tpf;
+        if (player == null || playerSearchTimer >= PLAYER_SEARCH_INTERVAL) {
+            updatePlayer();
+            playerSearchTimer = 0;
+        }
+    }
 
-        // Находим игрока
-        Entity player = FXGL.getGameWorld()
-                .getEntities()
-                .stream()
-                .filter(e -> e.getProperties().exists("isPlayer") &&
-                        e.getProperties().getBoolean("isPlayer"))
-                .findFirst()
-                .orElse(null);
-        if (player == null) return;
-
-        if (!combatService.isInRange(entity, player, 50)) {
+    /**
+     * Выполняет движение или атаку в зависимости от дистанции до игрока.
+     *
+     * @param tpf время на кадр
+     */
+    private void handleCombatAndMovement(double tpf) {
+        if (!combatService.isInRange(entity, player, ATTACK_RANGE)) {
             movementService.moveToTarget(player, tpf);
         } else {
             combatService.tryAttack(player, tpf);
         }
     }
 
-
+    /**
+     * Обрабатывает смерть врага: проигрывает анимацию и выбрасывает дроп.
+     *
+     * @return true, если враг мертв и анимация смерти уже запущена
+     */
     private boolean handleDeath() {
-        if (isDead() && !deathPlayed) {
-            // вызываем дроп перед проигрыванием анимации
-            DropComponent drop = entity.getComponent(DropComponent.class);
-            if (drop != null) {
-                drop.dropLoot(entity.getPosition());
-            }
+        if (healthComponent.isDead() && !deathAnimationService.isDeathPlayed()) {
+            entity.getComponentOptional(DropComponent.class)
+                    .ifPresent(drop -> drop.dropLoot(entity.getPosition()));
 
             deathAnimationService.playDeathAnimation();
-            deathPlayed = true;
             return true;
         }
-        return deathPlayed;
+        return deathAnimationService.isDeathPlayed();
     }
 
-
-
-    /**
-     * Проверяет, жив ли гоблин.
-     *
-     * @return true, если здоровье гоблина равно нулю
-     */
-    public boolean isDead () {
-        HealthComponent health = entity.getComponent(HealthComponent.class);
-        return health.isDead();
-    }
-
-    /**
-     * Инициализирует компонент анимации.
-     * <p>
-     * Если компонент уже добавлен, получает его из сущности, иначе создаёт новый.
-     */
+    /** Инициализирует компонент анимации. */
     private void initAnimationComponent() {
         if (entity.hasComponent(AnimationComponent.class)) {
             animationComponent = entity.getComponent(AnimationComponent.class);
@@ -152,19 +182,23 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /**
-     * Инициализирует компонент атаки.
-     * <p>
-     * Если компонент уже добавлен, получает его из сущности, иначе создаёт новый.
-     */
+    /** Инициализирует компонент атаки. */
     private void initAttackComponent() {
         if (entity.hasComponent(AttackComponent.class)) {
             attackComponent = entity.getComponent(AttackComponent.class);
         } else {
-            attackComponent = new AttackComponent(goblinData.getDamage(), 1.0);
+            attackComponent = new AttackComponent(goblinData.getDamage(), ATTACK_COOLDOWN);
             entity.addComponent(attackComponent);
         }
     }
 
-
+    /** Выполняет поиск игрока в игровом мире. */
+    private void updatePlayer() {
+        player = FXGL.getGameWorld()
+                .getEntities()
+                .stream()
+                .filter(e -> e.getProperties().exists("isPlayer") && e.getProperties().getBoolean("isPlayer"))
+                .findFirst()
+                .orElse(null);
+    }
 }
