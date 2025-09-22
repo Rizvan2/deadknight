@@ -18,7 +18,7 @@ public class PlayerService {
     /**
      * Сущность игрока, зарегистрированная в игровом мире.
      */
-    private final Entity player;
+    private static Entity player;
 
     /**
      * Контроллер движения игрока (перемещение, управление скоростью и направлением).
@@ -60,7 +60,7 @@ public class PlayerService {
      *
      * @return {@link Entity} игрока
      */
-    public Entity getPlayer() {
+    public static Entity getPlayer() {
         return player;
     }
 }

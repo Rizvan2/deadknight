@@ -9,6 +9,7 @@ import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
 import org.example.deadknight.gameplay.actors.mobs.service.CombatService;
 import org.example.deadknight.gameplay.actors.mobs.service.DeathAnimationService;
 import org.example.deadknight.gameplay.actors.mobs.service.MovementService;
+import org.example.deadknight.gameplay.actors.player.services.PlayerService;
 import org.example.deadknight.gameplay.components.HealthComponent;
 import org.example.deadknight.gameplay.components.SpeedComponent;
 
@@ -194,11 +195,6 @@ public class EnemyComponent extends Component {
 
     /** Выполняет поиск игрока в игровом мире. */
     private void updatePlayer() {
-        player = FXGL.getGameWorld()
-                .getEntities()
-                .stream()
-                .filter(e -> e.getProperties().exists("isPlayer") && e.getProperties().getBoolean("isPlayer"))
-                .findFirst()
-                .orElse(null);
+        player = PlayerService.getPlayer(); //для сетевой игры придется перебирать каждую сущность со свойством игрока.
     }
 }
