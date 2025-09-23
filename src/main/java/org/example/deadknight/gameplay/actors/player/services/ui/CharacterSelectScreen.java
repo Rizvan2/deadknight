@@ -1,4 +1,4 @@
-package org.example.deadknight.services.ui;
+package org.example.deadknight.gameplay.actors.player.services.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.application.Platform;
@@ -8,7 +8,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
