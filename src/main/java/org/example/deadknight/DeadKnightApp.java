@@ -71,7 +71,9 @@ public class DeadKnightApp extends GameApplication {
         FXGL.getGameWorld().addEntityFactory(new EssenceFactory());
 
         GameInitializerService gameInitService = new GameInitializerService();
-        FXGL.getGameWorld().addEntityFactory(new GoblinFactory(gameInitService.getLootService()));
+        GoblinFactory goblinFactory = new GoblinFactory(gameInitService.getLootService());
+        FXGL.getGameWorld().addEntityFactory(goblinFactory);
+        goblinFactory.preloadGoblinTextures(() -> {});
     }
 
     /**

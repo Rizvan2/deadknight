@@ -22,5 +22,8 @@ public class SettingsInitializer {
         settings.setFullScreenAllowed(true);      // разрешаем fullscreen
         settings.setFullScreenFromStart(true);    // включаем fullscreen при старте
         settings.setTitle("Dead KnightFactory");
+
+        // Включаем сбор метрик/профайлинг
+        settings.setProfilingEnabled(true);
     }
 }
