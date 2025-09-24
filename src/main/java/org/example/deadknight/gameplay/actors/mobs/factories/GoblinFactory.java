@@ -13,7 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.example.deadknight.gameplay.actors.mobs.components.DropComponent;
-import org.example.deadknight.gameplay.actors.mobs.factories.util.GoblinAnimationLoader;
+import org.example.deadknight.infrastructure.assets.GoblinAnimationLoader;
 import org.example.deadknight.gameplay.components.*;
 import org.example.deadknight.gameplay.actors.mobs.components.EnemyComponent;
 import org.example.deadknight.gameplay.components.PushComponent;
