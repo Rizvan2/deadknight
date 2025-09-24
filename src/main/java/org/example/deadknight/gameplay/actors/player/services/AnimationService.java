@@ -5,6 +5,10 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import lombok.Getter;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -51,7 +55,11 @@ public class AnimationService {
      * Запускает анимацию движения персонажа с обновлением кадров каждые 0.1 секунды.
      */
     public void start() {
+        //для анимации рыцаря с цепями
+//        FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.05));
+
         FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.1));
+
     }
 
     /**
@@ -124,6 +132,74 @@ public class AnimationService {
 
         ImageView idleLeft = createFrame(baseFrameNames[0], FRAME_SIZE);
         ImageView idleRight = new ImageView(idleLeft.getImage());
+        idleRight.setFitWidth(FRAME_SIZE);
+        idleRight.setFitHeight(FRAME_SIZE);
+        idleRight.setScaleX(-1);
+
+        new AnimationService(entity, rightFrames, leftFrames, idleRight, idleLeft).start();
+    }
+
+    /**
+     * Инициализирует анимацию персонажа из одного или нескольких спрайт-листов.
+     * Каждый спрайт-лист должен содержать кадры в одной строке с равной шириной/высотой кадра.
+     *
+     * @param entity      сущность персонажа
+     * @param sheetPaths  пути к изображениям спрайт-листов
+     * @param frameWidth  ширина одного кадра в исходном спрайте
+     * @param frameHeight высота одного кадра в исходном спрайте
+     */
+    public static void attachFromSpritesheets(Entity entity,
+                                              String[] sheetPaths,
+                                              int frameWidth,
+                                              int frameHeight) {
+        List<ImageView> baseFramesList = new ArrayList<>();
+
+        for (String path : sheetPaths) {
+            Image sheet = FXGL.image(path);
+            // Если размер кадра не задан, считаем, что кадр квадратный и равен высоте листа (одна строка)
+            int fw = frameWidth > 0 ? frameWidth : (int) sheet.getHeight();
+            int fh = frameHeight > 0 ? frameHeight : (int) sheet.getHeight();
+
+            int columns = (int) Math.floor(sheet.getWidth() / fw);
+            int rows = (int) Math.floor(sheet.getHeight() / fh);
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < columns; col++) {
+                    int x = col * fw;
+                    int y = row * fh;
+                    ImageView iv = new ImageView(sheet);
+                    iv.setViewport(new Rectangle2D(x, y, fw, fh));
+                    iv.setFitWidth(FRAME_SIZE);
+                    iv.setFitHeight(FRAME_SIZE);
+                    baseFramesList.add(iv);
+                }
+            }
+        }
+
+        ImageView[] baseFrames = baseFramesList.toArray(new ImageView[0]);
+
+        ImageView[] leftFrames = new ImageView[baseFrames.length];
+        ImageView[] rightFrames = new ImageView[baseFrames.length];
+
+        for (int i = 0; i < baseFrames.length; i++) {
+            // Левые кадры — как есть
+            leftFrames[i] = baseFrames[i];
+
+            // Правые кадры — отзеркаленные
+            ImageView right = new ImageView(baseFrames[i].getImage());
+            right.setViewport(baseFrames[i].getViewport());
+            right.setFitWidth(FRAME_SIZE);
+            right.setFitHeight(FRAME_SIZE);
+            right.setScaleX(-1);
+            rightFrames[i] = right;
+        }
+
+        // Idle кадры — первый кадр
+        ImageView idleLeft = new ImageView(baseFrames[0].getImage());
+        idleLeft.setViewport(baseFrames[0].getViewport());
+        idleLeft.setFitWidth(FRAME_SIZE);
+        idleLeft.setFitHeight(FRAME_SIZE);
+        ImageView idleRight = new ImageView(idleLeft.getImage());
+        idleRight.setViewport(idleLeft.getViewport());
         idleRight.setFitWidth(FRAME_SIZE);
         idleRight.setFitHeight(FRAME_SIZE);
         idleRight.setScaleX(-1);

@@ -2,7 +2,7 @@ package org.example.deadknight.gameplay.actors.mobs.service;
 
 import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
-import org.example.deadknight.gameplay.components.AnimationComponent;
+import org.example.deadknight.gameplay.actors.mobs.components.AnimationComponent;
 
 /**
  * Сервис для управления перемещением сущности в игровом мире.

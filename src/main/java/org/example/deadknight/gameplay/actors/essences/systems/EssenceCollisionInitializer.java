@@ -1,56 +1,61 @@
 package org.example.deadknight.gameplay.actors.essences.systems;
 
-import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.physics.CollisionHandler;
+import com.almasb.fxgl.dsl.FXGL;
+import org.example.deadknight.gameplay.actors.essences.services.EssenceCollisionService;
 import org.example.deadknight.gameplay.components.HealthComponent;
-import org.example.deadknight.gameplay.actors.player.entities.types.EntityType;
+import org.example.deadknight.gameplay.components.UpgradeComponent;
 import org.example.deadknight.gameplay.components.types.EntityTypeEssences;
 
-import static com.almasb.fxgl.dsl.FXGLForKtKt.getPhysicsWorld;
-
 /**
- * Инициализатор коллизий эссенций.
+ * Инициализатор коллизий для всех игровых эссенций.
  * <p>
- * Регистрирует обработчики столкновений между игроком и различными типами эссенций.
- * В текущей реализации:
+ * Регистрирует обработчики столкновений между игроком ({@code EntityType.KNIGHT})
+ * и различными типами эссенций:
  * <ul>
- *     <li>При столкновении {@link EntityType#KNIGHT} с {@link EntityTypeEssences#HEALTH_ESSENCE} —
- *     игрок получает лечение.</li>
- *     <li>Значение здоровья увеличивается на величину, хранящуюся в параметре "healAmount" сущности эссенции.</li>
- *     <li>Здоровье не превышает максимального значения из {@link HealthComponent}.</li>
- *     <li>Сущность эссенции удаляется из игрового мира.</li>
+ *     <li>{@link EntityTypeEssences#HEALTH_ESSENCE} — увеличивает здоровье игрока на величину healAmount
+ *     из эссенции, но не выше максимального значения.</li>
+ *     <li>{@link EntityTypeEssences#UPGRADE_ESSENCE} — увеличивает счётчик апгрейдов
+ *     в {@link UpgradeComponent} и удаляет эссенцию из мира.</li>
  * </ul>
+ * <p>
+ * Позволяет легко добавлять новые типы эссенций с кастомной логикой, регистрируя их через
+ * {@link EssenceCollisionService#registerCollision(Enum, java.util.function.BiConsumer)}.
  * </p>
  */
 public class EssenceCollisionInitializer {
 
     /**
-     * Регистрирует все обработчики коллизий для эссенций в текущем {@code PhysicsWorld}.
+     * Регистрирует коллизии для всех эссенций.
      * <p>
-     * В текущей версии:
-     * <ul>
-     *     <li>Рыцарь ({@link EntityType#KNIGHT}) может подбирать эссенцию здоровья
-     *     ({@link EntityTypeEssences#HEALTH_ESSENCE}).</li>
-     *     <li>При подборе здоровье увеличивается, но не выше максимального значения.</li>
-     *     <li>Эссенция после столкновения удаляется из игрового мира.</li>
-     * </ul>
-     * </p>
+     * Для каждой эссенции задаётся конкретный эффект на игрока.
+     * После применения эффекта сущность автоматически удаляется из игрового мира.
      */
     public void init() {
-        getPhysicsWorld().addCollisionHandler(
-                new CollisionHandler(EntityType.KNIGHT, EntityTypeEssences.HEALTH_ESSENCE) {
-                    @Override
-                    protected void onCollisionBegin(Entity player, Entity essence) {
-                        HealthComponent health = player.getComponent(HealthComponent.class);
-                        int healAmount = essence.getInt("healAmount");
+        EssenceCollisionService collisionService =
+                new EssenceCollisionService(FXGL.getPhysicsWorld());
 
-                        int oldHealth = health.getValue();
-                        int newHealth = Math.min(oldHealth + healAmount, health.getMaxValue());
-                        health.valueProperty().set(newHealth);
+        registerHealthEssence(collisionService);
+        registerUpgradeEssence(collisionService);
 
-                        essence.removeFromWorld();
-                    }
-                }
-        );
+        // Можно легко добавлять новые эссенции:
+        // registerNewEssence(collisionService);
+    }
+
+    /** Регистрирует коллизию для эссенции здоровья */
+    private void registerHealthEssence(EssenceCollisionService collisionService) {
+        collisionService.registerCollision(EntityTypeEssences.HEALTH_ESSENCE, (player, essence) -> {
+            HealthComponent health = player.getComponent(HealthComponent.class);
+            int healAmount = essence.getInt("healAmount"); // берём из эссенции
+            int newHealth = Math.min(health.getValue() + healAmount, health.getMaxValue());
+            health.valueProperty().set(newHealth);
+        });
+    }
+
+    /** Регистрирует коллизию для эссенции апгрейда */
+    private void registerUpgradeEssence(EssenceCollisionService collisionService) {
+        collisionService.registerCollision(EntityTypeEssences.UPGRADE_ESSENCE, (player, essence) -> {
+            UpgradeComponent upgrade = player.getComponent(UpgradeComponent.class);
+            upgrade.increment();
+        });
     }
 }

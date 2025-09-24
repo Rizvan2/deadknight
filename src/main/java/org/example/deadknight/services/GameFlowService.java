@@ -2,7 +2,7 @@ package org.example.deadknight.services;
 
 import com.almasb.fxgl.dsl.FXGL;
 import org.example.deadknight.services.init.LoadingScreenSubScene;
-import org.example.deadknight.services.ui.CharacterSelectScreen;
+import org.example.deadknight.gameplay.actors.player.services.ui.CharacterSelectScreen;
 
 import java.util.function.Consumer;
 

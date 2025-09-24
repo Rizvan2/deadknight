@@ -12,10 +12,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.example.deadknight.gameplay.actors.mobs.factories.util.GoblinAnimationLoader;
+import org.example.deadknight.gameplay.actors.mobs.components.DropComponent;
+import org.example.deadknight.infrastructure.assets.GoblinAnimationLoader;
 import org.example.deadknight.gameplay.components.*;
-import org.example.deadknight.gameplay.components.AnimationComponent;
-import org.example.deadknight.gameplay.components.EnemyComponent;
+import org.example.deadknight.gameplay.actors.mobs.components.EnemyComponent;
 import org.example.deadknight.gameplay.components.PushComponent;
 import org.example.deadknight.gameplay.components.SeparationComponent;
 import org.example.deadknight.gameplay.actors.mobs.entities.GoblinEntity;
@@ -112,17 +112,14 @@ public class GoblinFactory implements EntityFactory {
                 .type(EntityType.HOSTILE_MOB)
                 .view(view)
                 .bbox(new HitBox("BODY", new Point2D(65, 80), BoundingShape.box(10, 30)))
-                .with(new EnemyComponent(goblinData))
-                .with(new SpeedComponent(goblinData.getSpeed()))
                 .with(new HealthComponent(health))
-                .with(new AnimationComponent(goblinData))
+                .with(new EnemyComponent(goblinData))
                 .with(new SeparationComponent(50, 0.5))
                 .with(new PushComponent())
                 .with(new DebugHitBoxComponent())
                 .with(drop)  // компонент дропа
                 .collidable()
                 .build();
-
     }
 
     /**

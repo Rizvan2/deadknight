@@ -43,6 +43,11 @@ public class DebugOverlayService {
     private void draw() {
         g.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
+        // если дебаг хитбоксов выключен — ничего не рисуем
+        if (!GameConfig.DEBUG_HITBOXES) {
+            return;
+        }
+
         double camX = FXGL.getGameScene().getViewport().getX();
         double camY = FXGL.getGameScene().getViewport().getY();
 
@@ -52,7 +57,7 @@ public class DebugOverlayService {
         g.setFill(Color.color(1, 0, 0, 0.2));
 
         for (Entity e : entities) {
-            BoundingBoxComponent bbox = e.getComponent(BoundingBoxComponent.class);
+            BoundingBoxComponent bbox = e.getComponentOptional(BoundingBoxComponent.class).orElse(null);
             if (bbox == null) continue;
 
             for (HitBox hb : bbox.hitBoxesProperty()) {
