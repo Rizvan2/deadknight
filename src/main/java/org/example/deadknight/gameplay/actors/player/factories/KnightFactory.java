@@ -70,7 +70,6 @@ public class KnightFactory {
         knight.getProperties().setValue("direction", knightData.getDirection());
         knight.getProperties().setValue("spriteDir", knightData.getDirection());
         knight.getProperties().setValue("shootDir", knightData.getDirection());
-
         // Подключаем анимацию ходьбы
         String[] frames = {
                 "knight/knight_left-1.png",
@@ -80,6 +79,18 @@ public class KnightFactory {
                 "knight/knight_left-5.png"
         };
         AnimationService.attach(knight, frames);
+
+
+//
+//        // Подключаем анимацию ходьбы из спрайт-листов цепной брони
+//        String[] sheets = {
+//                "knight/chain/spritesheet-1.png",
+//                "knight/chain/spritesheet-2.png",
+//                "knight/chain/spritesheet-3.png",
+//                "knight/chain/spritesheet-4.png"
+//        };
+//        // 5x5 кадров на листе 720x720 => размер кадра 144x144, последовательно по листам
+//        AnimationService.attachFromSpritesheets(knight, sheets, 200, 200);
 
         // Метод атаки: запускается через Runnable
         knight.getProperties().setValue("playAttack", (Runnable) () ->
