@@ -29,7 +29,7 @@ public class CameraManager {
      *     <li>zoomFactor = 1.05 (скорость изменения зума при прокрутке колесика)</li>
      * </ul>
      */
-    private final CameraService cameraService = new CameraService(0, 2.0, 1.05);
+    private final CameraService cameraService = new CameraService(0, 5.0, 1.05);
 
     /**
      * Привязывает камеру к игроку и ограничивает движение границами карты.

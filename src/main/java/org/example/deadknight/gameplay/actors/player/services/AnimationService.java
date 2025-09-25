@@ -56,9 +56,9 @@ public class AnimationService {
      */
     public void start() {
         //для анимации рыцаря с цепями
-//        FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.05));
+        FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.05));
 
-        FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.1));
+//        FXGL.getGameTimer().runAtInterval(this::update, Duration.seconds(0.1));
 
     }
 
